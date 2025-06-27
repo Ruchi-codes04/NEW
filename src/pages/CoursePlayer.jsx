@@ -1,11 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ChevronDown, HelpCircle, Star, Bell } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import arrowLeft from '../assets/image (1).png';
+import { ThemeContext } from '../pages/Profiledashboard/ThemeContext';
 
 export default function CoursePlayer() {
+  const context = useContext(ThemeContext);
+  const theme = context ? context.theme : 'light'; // Fallback to 'light' if context is undefined
   const { courseId } = useParams();
   const navigate = useNavigate();
   const [modules, setModules] = useState([]);
@@ -42,6 +45,12 @@ export default function CoursePlayer() {
   const [errorMsg, setErrorMsg] = useState('');
   const [contactCourses, setContactCourses] = useState([]);
   const notificationsPopupRef = useRef(null);
+
+  useEffect(() => {
+    console.log('CoursePlayer: Context:', context);
+    console.log('CoursePlayer: Current theme:', theme);
+    console.log('CoursePlayer: Document classes:', document.documentElement.classList.toString());
+  }, [theme, context]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -345,22 +354,41 @@ export default function CoursePlayer() {
   };
 
   return (
-    <div className="bg-gray-100 dark:bg-t600 p-4 flex flex-col min-h-[calc(100vh-3.5rem)] w-full">
+    <div
+      className={`p-4 flex flex-col min-h-[calc(100vh-3.5rem)] w-full transition-colors duration-300 ${
+        theme === 'dark' ? 'bg-gray-900' : 'bg-gray-100'
+      }`}
+    >
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-white dark:bg-gray-800 px-3 py-2 rounded-xl shadow w-full gap-y-2"
+        className={`flex flex-col sm:flex-row sm:items-center sm:justify-between px-3 py-2 rounded-xl shadow w-full gap-y-2 ${
+          theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+        }`}
       >
         <div className="flex items-center gap-3 min-w-[12rem] w-full sm:flex-1">
-          <Link to="/courses" className="p-1 w-[2.5rem] h-[2.5rem] rounded-full bg-gray-100 dark:bg-gray-700 flex-shrink-0">
+          <Link
+            to="/courses"
+            className={`p-1 w-[2.5rem] h-[2.5rem] rounded-full ${
+              theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'
+            } flex-shrink-0`}
+          >
             <img src={arrowLeft} alt="Back" className="w-full h-full rounded-md" />
           </Link>
           <div className="w-full flex-1">
-            <h1 className="font-medium text-sm truncate text-gray-900 dark:text-gray-100">
+            <h1
+              className={`font-medium text-sm truncate ${
+                theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+              }`}
+            >
               Course: {courseTitle}
             </h1>
-            <p className="text-xs w-fit text-white bg-green-300 dark:bg-green-500 px-2 py-1 rounded">
+            <p
+              className={`text-xs w-fit text-white ${
+                theme === 'dark' ? 'bg-green-500' : 'bg-green-300'
+              } px-2 py-1 rounded`}
+            >
               {instructorName}
             </p>
           </div>
@@ -369,7 +397,11 @@ export default function CoursePlayer() {
           <div className="relative flex items-center">
             <button
               onClick={toggleNotificationsModal}
-              className="bg-transparent text-gray-900 dark:text-gray-100 px-4 py-2 rounded-md text-sm hover:bg-[#49BBBD] hover:text-white border border-[#49BBBD] transition flex items-center gap-1 flex-1 sm:flex-none justify-center sm:justify-start"
+              className={`bg-transparent px-4 py-2 rounded-md text-sm border border-[#49BBBD] transition flex items-center gap-1 flex-1 sm:flex-none justify-center sm:justify-start ${
+                theme === 'dark'
+                  ? 'text-gray-100 hover:bg-[#49BBBD] hover:text-white'
+                  : 'text-gray-900 hover:bg-[#49BBBD] hover:text-white'
+              }`}
             >
               <Bell className="w-4 h-4" />
               Notifications
@@ -382,13 +414,19 @@ export default function CoursePlayer() {
           </div>
           <button
             onClick={toggleAssessmentsModal}
-            className="bg-[#49BBBD] text-white px-4 py-2 rounded-md text-sm hover:bg-[#3AA8AA] transition flex-1 sm:flex-none"
+            className={`px-4 py-2 rounded-md text-sm text-white transition flex-1 sm:flex-none ${
+              theme === 'dark' ? 'bg-[#49BBBD] hover:bg-[#3AA8AA]' : 'bg-[#49BBBD] hover:bg-[#3AA8AA]'
+            }`}
           >
             Assessments
           </button>
           <button
             onClick={toggleHelpSidebar}
-            className="bg-transparent text-gray-900 dark:text-gray-100 px-4 py-2 rounded-md text-sm hover:bg-[#49BBBD] hover:text-white border border-[#49BBBD] transition flex items-center gap-1 flex-1 sm:flex-none justify-center sm:justify-start"
+            className={`bg-transparent px-4 py-2 rounded-md text-sm border border-[#49BBBD] transition flex items-center gap-1 flex-1 sm:flex-none justify-center sm:justify-start ${
+              theme === 'dark'
+                ? 'text-gray-100 hover:bg-[#49BBBD] hover:text-white'
+                : 'text-gray-900 hover:bg-[#49BBBD] hover:text-white'
+              }`}
           >
             <HelpCircle className="w-4 h-4" />
             Help
@@ -397,7 +435,11 @@ export default function CoursePlayer() {
       </motion.div>
 
       {contentError && (
-        <div className="bg-red-100 dark:bg-red-900 p-2 rounded-md mt-2 text-sm text-center text-gray-900 dark:text-gray-100">
+        <div
+          className={`p-2 rounded-md mt-2 text-sm text-center ${
+            theme === 'dark' ? 'bg-red-900 text-gray-100' : 'bg-red-100 text-gray-900'
+          }`}
+        >
           {contentError}
         </div>
       )}
@@ -408,19 +450,31 @@ export default function CoursePlayer() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-75 flex items-center justify-center z-50 p-4"
+            className={`fixed inset-0 bg-black flex items-center justify-center z-50 p-4 ${
+              theme === 'dark' ? 'bg-opacity-75' : 'bg-opacity-50'
+            }`}
           >
             <div
               ref={notificationsPopupRef}
-              className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-lg w-full max-h-[80vh] overflow-y-auto"
+              className={`rounded-lg p-6 max-w-lg w-full max-h-[80vh] overflow-y-auto ${
+                theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+              }`}
             >
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Notifications</h2>
+                <h2
+                  className={`text-xl font-semibold ${
+                    theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+                  }`}
+                >
+                  Notifications
+                </h2>
                 <div className="flex items-center gap-2">
                   {notifications.length > 0 && (
                     <button
                       onClick={markAllNotificationsAsRead}
-                      className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                      className={`text-sm hover:underline ${
+                        theme === 'dark' ? 'text-blue-400' : 'text-blue-600'
+                      }`}
                       aria-label="Mark all notifications as read"
                     >
                       Mark All Read
@@ -428,7 +482,11 @@ export default function CoursePlayer() {
                   )}
                   <button
                     onClick={toggleNotificationsModal}
-                    className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                    className={`hover:${
+                      theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
+                    } ${
+                      theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                    }`}
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -437,21 +495,55 @@ export default function CoursePlayer() {
                 </div>
               </div>
               {notificationsError ? (
-                <p className="text-red-500 dark:text-red-400 text-sm">{notificationsError}</p>
+                <p
+                  className={`text-sm ${
+                    theme === 'dark' ? 'text-red-400' : 'text-red-500'
+                  }`}
+                >
+                  {notificationsError}
+                </p>
               ) : notifications.length === 0 ? (
-                <p className="text-gray-600 dark:text-gray-400 text-sm">No new notifications.</p>
+                <p
+                  className={`text-sm ${
+                    theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                  }`}
+                >
+                  No new notifications.
+                </p>
               ) : (
                 <div className="space-y-4">
                   {notifications.map((notification) => (
                     <div
                       key={notification._id}
-                      className="border dark:border-gray-700 rounded-lg p-3 flex justify-between items-center bg-white dark:bg-gray-800 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                      className={`border rounded-lg p-3 flex justify-between items-center cursor-pointer hover:${
+                        theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'
+                      } ${
+                        theme === 'dark'
+                          ? 'bg-gray-800 border-gray-700'
+                          : 'bg-white border-gray-200'
+                      }`}
                       onClick={() => handleNotificationClick(notification.actionUrl)}
                     >
                       <div>
-                        <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">{notification.title}</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">{notification.message}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-500">
+                        <h3
+                          className={`text-base font-semibold ${
+                            theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+                          }`}
+                        >
+                          {notification.title}
+                        </h3>
+                        <p
+                          className={`text-sm ${
+                            theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                          }`}
+                        >
+                          {notification.message}
+                        </p>
+                        <p
+                          className={`text-xs ${
+                            theme === 'dark' ? 'text-gray-500' : 'text-gray-500'
+                          }`}
+                        >
                           {new Date(notification.createdAt).toLocaleString()}
                         </p>
                       </div>
@@ -470,14 +562,30 @@ export default function CoursePlayer() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-75 flex items-center justify-center z-50 p-4"
+            className={`fixed inset-0 bg-black flex items-center justify-center z-50 p-4 ${
+              theme === 'dark' ? 'bg-opacity-75' : 'bg-opacity-50'
+            }`}
           >
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-lg w-full max-h-[80vh] overflow-y-auto">
+            <div
+              className={`rounded-lg p-6 max-w-lg w-full max-h-[80vh] overflow-y-auto ${
+                theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+              }`}
+            >
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Course Assessments</h2>
+                <h2
+                  className={`text-xl font-semibold ${
+                    theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+                  }`}
+                >
+                  Course Assessments
+                </h2>
                 <button
                   onClick={toggleAssessmentsModal}
-                  className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                  className={`hover:${
+                    theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
+                  } ${
+                    theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                  }`}
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -485,20 +593,55 @@ export default function CoursePlayer() {
                 </button>
               </div>
               {assessmentsError ? (
-                <p className="text-red-500 dark:text-red-400 text-sm">{assessmentsError}</p>
+                <p
+                  className={`text-sm ${
+                    theme === 'dark' ? 'text-red-400' : 'text-red-500'
+                  }`}
+                >
+                  {assessmentsError}
+                </p>
               ) : assessments.length === 0 ? (
-                <p className="text-gray-600 dark:text-gray-400 text-sm">No assessments available.</p>
+                <p
+                  className={`text-sm ${
+                    theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                  }`}
+                >
+                  No assessments available.
+                </p>
               ) : (
                 <div className="space-y-4">
                   {assessments.map((assessment) => (
-                    <div key={assessment._id} className="border dark:border-gray-700 rounded-lg p-3 flex justify-between items-center bg-white dark:bg-gray-800">
+                    <div
+                      key={assessment._id}
+                      className={`border rounded-lg p-3 flex justify-between items-center ${
+                        theme === 'dark'
+                          ? 'bg-gray-800 border-gray-700'
+                          : 'bg-white border-gray-200'
+                      }`}
+                    >
                       <div>
-                        <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">{assessment.title}</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">{assessment.description}</p>
+                        <h3
+                          className={`text-base font-semibold ${
+                            theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+                          }`}
+                        >
+                          {assessment.title}
+                        </h3>
+                        <p
+                          className={`text-sm ${
+                            theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                          }`}
+                        >
+                          {assessment.description}
+                        </p>
                       </div>
                       <button
                         onClick={() => handleAttemptAssessment(assessment._id)}
-                        className="bg-green-500 dark:bg-green-600 text-white px-3 py-1 rounded-md text-sm hover:bg-green-600 dark:hover:bg-green-700 transition"
+                        className={`px-3 py-1 rounded-md text-sm text-white transition ${
+                          theme === 'dark'
+                            ? 'bg-green-600 hover:bg-green-700'
+                            : 'bg-green-500 hover:bg-green-600'
+                        }`}
                       >
                         Attempt
                       </button>
@@ -518,13 +661,29 @@ export default function CoursePlayer() {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'tween', duration: 0.3 }}
-            className="fixed inset-y-0 right-0 w-full sm:w-96 bg-white dark:bg-gray-800 shadow-xl z-50 overflow-y-auto"
+            className={`fixed inset-y-0 right-0 w-full sm:w-96 shadow-xl z-50 overflow-y-auto ${
+              theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+            }`}
           >
-            <div className="flex justify-between items-center p-4 border-b dark:border-gray-700">
-              <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-gray-100">Contact Support</h2>
+            <div
+              className={`flex justify-between items-center p-4 border-b ${
+                theme === 'dark' ? 'border-gray-700' : 'border-gray-200'
+              }`}
+            >
+              <h2
+                className={`text-xl sm:text-2xl font-semibold ${
+                  theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+                }`}
+              >
+                Contact Support
+              </h2>
               <button
                 onClick={toggleHelpSidebar}
-                className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                className={`hover:${
+                  theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
+                  } ${
+                    theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                  }`}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -539,18 +698,30 @@ export default function CoursePlayer() {
               className="p-4 sm:p-6"
             >
               {successMsg && (
-                <p className="text-green-600 dark:text-green-400 text-sm sm:text-base mb-4 sm:mb-6 text-center">
+                <p
+                  className={`text-sm sm:text-base mb-4 sm:mb-6 text-center ${
+                    theme === 'dark' ? 'text-green-400' : 'text-green-600'
+                  }`}
+                >
                   {successMsg}
                 </p>
               )}
               {errorMsg && (
-                <p className="text-red-600 dark:text-red-400 text-sm sm:text-base mb-4 sm:mb-6 text-center">
+                <p
+                  className={`text-sm sm:text-base mb-4 sm:mb-6 text-center ${
+                    theme === 'dark' ? 'text-red-400' : 'text-red-600'
+                  }`}
+                >
                   {errorMsg}
                 </p>
               )}
               <div className="space-y-4 sm:space-y-5">
                 <div>
-                  <label className="block text-gray-900 dark:text-gray-100 mb-1 text-sm sm:text-base font-medium">
+                  <label
+                    className={`block mb-1 text-sm sm:text-base font-medium ${
+                      theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+                    }`}
+                  >
                     Name
                   </label>
                   <input
@@ -558,18 +729,30 @@ export default function CoursePlayer() {
                     name="name"
                     value={form.name}
                     disabled
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-2 sm:p-3 bg-gray-100 dark:bg-gray-700 cursor-not-allowed text-gray-600 dark:text-gray-300 text-sm sm:text-base focus:ring-0"
+                    className={`w-full border rounded-lg p-2 sm:p-3 cursor-not-allowed text-sm sm:text-base focus:ring-0 ${
+                      theme === 'dark'
+                        ? 'border-gray-600 bg-gray-700 text-gray-300'
+                        : 'border-gray-300 bg-gray-100 text-gray-600'
+                    }`}
                   />
                 </div>
                 <div>
-                  <label className="block text-gray-900 dark:text-gray-100 mb-1 text-sm sm:text-base font-medium">
+                  <label
+                    className={`block mb-1 text-sm sm:text-base font-medium ${
+                      theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+                    }`}
+                  >
                     Related Course
                   </label>
                   <select
                     name="relatedCourse"
                     value={form.relatedCourse}
                     onChange={handleChange}
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-2 sm:p-3 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400"
+                    className={`w-full border rounded-lg p-2 sm:p-3 text-sm sm:text-base focus:ring-2 focus:border-blue-500 ${
+                      theme === 'dark'
+                        ? 'border-gray-600 bg-gray-800 text-gray-100 focus:ring-blue-400'
+                        : 'border-gray-300 bg-white text-gray-900 focus:ring-blue-500'
+                    }`}
                   >
                     <option value="">Select a course (optional)</option>
                     {contactCourses.map((course) => (
@@ -580,7 +763,11 @@ export default function CoursePlayer() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-gray-900 dark:text-gray-100 mb-1 text-sm sm:text-base font-medium">
+                  <label
+                    className={`block mb-1 text-sm sm:text-base font-medium ${
+                      theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+                    }`}
+                  >
                     Subject
                   </label>
                   <input
@@ -588,32 +775,52 @@ export default function CoursePlayer() {
                     name="subject"
                     value={form.subject}
                     onChange={handleChange}
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-2 sm:p-3 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400"
+                    className={`w-full border rounded-lg p-2 sm:p-3 text-sm sm:text-base focus:ring-2 focus:border-blue-500 ${
+                      theme === 'dark'
+                        ? 'border-gray-600 bg-gray-800 text-gray-100 focus:ring-blue-400'
+                        : 'border-gray-300 bg-white text-gray-900 focus:ring-blue-500'
+                    }`}
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-gray-900 dark:text-gray-100 mb-1 text-sm sm:text-base font-medium">
+                  <label
+                    className={`block mb-1 text-sm sm:text-base font-medium ${
+                      theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+                    }`}
+                  >
                     Message
                   </label>
                   <textarea
                     name="message"
                     value={form.message}
                     onChange={handleChange}
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-2 sm:p-3 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 resize-y"
+                    className={`w-full border rounded-lg p-2 sm:p-3 text-sm sm:text-base focus:ring-2 focus:border-blue-500 resize-y ${
+                      theme === 'dark'
+                        ? 'border-gray-600 bg-gray-800 text-gray-100 focus:ring-blue-400'
+                        : 'border-gray-300 bg-white text-gray-900 focus:ring-blue-500'
+                    }`}
                     rows={4}
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-gray-900 dark:text-gray-100 mb-1 text-sm sm:text-base font-medium">
+                  <label
+                    className={`block mb-1 text-sm sm:text-base font-medium ${
+                      theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+                    }`}
+                  >
                     Category
                   </label>
                   <select
                     name="category"
                     value={form.category}
                     onChange={handleChange}
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-2 sm:p-3 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400"
+                    className={`w-full border rounded-lg p-2 sm:p-3 text-sm sm:text-base focus:ring-2 focus:border-blue-500 ${
+                      theme === 'dark'
+                        ? 'border-gray-600 bg-gray-800 text-gray-100 focus:ring-blue-400'
+                        : 'border-gray-300 bg-white text-gray-900 focus:ring-blue-500'
+                    }`}
                     disabled
                   >
                     <option value="course">Course</option>
@@ -623,7 +830,11 @@ export default function CoursePlayer() {
                   type="button"
                   onClick={handleSubmit}
                   disabled={loading}
-                  className="w-full bg-[#49BBBD] text-white py-2 sm:py-3 px-4 rounded-lg hover:bg-[#3AA8AA] transition duration-200 text-sm sm:text-base font-medium disabled:bg-blue-300 disabled:cursor-not-allowed"
+                  className={`w-full py-2 sm:py-3 px-4 rounded-lg text-sm sm:text-base font-medium text-white transition duration-200 ${
+                    theme === 'dark'
+                      ? 'bg-[#49BBBD] hover:bg-[#3AA8AA] disabled:bg-blue-300'
+                      : 'bg-[#49BBBD] hover:bg-[#3AA8AA] disabled:bg-blue-300'
+                  } disabled:cursor-not-allowed`}
                 >
                   {loading ? 'Submitting...' : 'Submit Ticket'}
                 </button>
@@ -640,7 +851,11 @@ export default function CoursePlayer() {
           transition={{ duration: 0.5 }}
           className="lg:col-span-2 flex flex-col gap-4"
         >
-          <div className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow p-3 flex flex-col">
+          <div
+            className={`rounded-lg overflow-hidden shadow p-3 flex flex-col ${
+              theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+            }`}
+          >
             {selectedVideo?.url ? (
               <video
                 src={selectedVideo.url}
@@ -649,25 +864,57 @@ export default function CoursePlayer() {
                 className="rounded-lg object-cover w-full max-h-[500px]"
               />
             ) : (
-              <div className="rounded-lg w-full bg-gray-200 dark:bg-gray-700 h-[400px] flex items-center justify-center">
-                <p className="text-gray-600 dark:text-gray-400 text-sm">Select a lesson to play the video.</p>
+              <div
+                className={`rounded-lg w-full h-[400px] flex items-center justify-center ${
+                  theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'
+                }`}
+              >
+                <p
+                  className={`text-sm ${
+                    theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                  }`}
+                >
+                  Select a lesson to play the video.
+                </p>
               </div>
             )}
             {selectedVideo && (
               <div className="mt-4">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">{selectedVideo.title || 'Untitled Video'}</h2>
-                <p className="text-sm text-gray-600 dark:text-gray-400">{selectedVideo.description || 'No description available.'}</p>
+                <h2
+                  className={`text-lg font-semibold mb-1 ${
+                    theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+                  }`}
+                >
+                  {selectedVideo.title || 'Untitled Video'}
+                </h2>
+                <p
+                  className={`text-sm ${
+                    theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                  }`}
+                >
+                  {selectedVideo.description || 'No description available.'}
+                </p>
               </div>
             )}
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-3 flex flex-col">
+          <div
+            className={`rounded-lg shadow p-3 flex flex-col ${
+              theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+            }`}
+          >
             <div
               className="flex justify-between items-center cursor-pointer lg:cursor-default"
               onClick={() => {
                 if (window.innerWidth < 1024) toggleFeedback();
               }}
             >
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Leave Feedback</h2>
+              <h2
+                className={`text-lg font-semibold ${
+                  theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+                }`}
+              >
+                Leave Feedback
+              </h2>
               <ChevronDown
                 className={`w-5 h-5 lg:hidden transform transition-transform ${
                   isFeedbackOpen ? 'rotate-180' : ''
@@ -685,20 +932,42 @@ export default function CoursePlayer() {
                   className="overflow-hidden"
                 >
                   {feedbackSuccess && (
-                    <p className="text-green-600 dark:text-green-400 text-sm mt-3 mb-3 text-center">{feedbackSuccess}</p>
+                    <p
+                      className={`text-sm mt-3 mb-3 text-center ${
+                        theme === 'dark' ? 'text-green-400' : 'text-green-600'
+                      }`}
+                    >
+                      {feedbackSuccess}
+                    </p>
                   )}
                   {feedbackError && (
-                    <p className="text-red-600 dark:text-red-400 text-sm mt-3 mb-3 text-center">{feedbackError}</p>
+                    <p
+                      className={`text-sm mt-3 mb-3 text-center ${
+                        theme === 'dark' ? 'text-red-400' : 'text-red-600'
+                      }`}
+                    >
+                      {feedbackError}
+                    </p>
                   )}
 
                   <div className="flex items-center mb-3">
-                    <label className="text-gray-700 dark:text-gray-300 text-sm font-medium mr-3">Rating:</label>
+                    <label
+                      className={`text-sm font-medium mr-3 ${
+                        theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                      }`}
+                    >
+                      Rating:
+                    </label>
                     <div className="flex gap-1">
                       {[1, 2, 3, 4, 5].map((star) => (
                         <Star
                           key={star}
                           className={`w-5 h-5 cursor-pointer ${
-                            feedback.rating >= star ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300 dark:text-gray-500'
+                            feedback.rating >= star
+                              ? 'text-yellow-400 fill-yellow-400'
+                              : theme === 'dark'
+                              ? 'text-gray-500'
+                              : 'text-gray-300'
                           }`}
                           onClick={() => handleStarClick(star)}
                         />
@@ -707,12 +976,22 @@ export default function CoursePlayer() {
                   </div>
 
                   <div className="mb-3">
-                    <label className="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium">Comment</label>
+                    <label
+                      className={`block mb-1 text-sm font-medium ${
+                        theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                      }`}
+                    >
+                      Comment
+                    </label>
                     <textarea
                       name="comment"
                       value={feedback.comment}
                       onChange={handleFeedbackChange}
-                      className="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 text-sm focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 resize-y"
+                      className={`w-full border rounded-lg p-2 text-sm focus:ring-2 focus:border-blue-500 resize-y ${
+                        theme === 'dark'
+                          ? 'border-gray-600 bg-gray-800 text-gray-100 focus:ring-blue-400'
+                          : 'border-gray-300 bg-white text-gray-900 focus:ring-blue-500'
+                      }`}
                       rows={3}
                       placeholder="Share your thoughts about the course..."
                     />
@@ -721,7 +1000,11 @@ export default function CoursePlayer() {
                   <button
                     onClick={handleFeedbackSubmit}
                     disabled={feedbackLoading || feedback.rating === 0}
-                    className="bg-[#49BBBD] text-white py-2 px-4 rounded-lg hover:bg-[#3AA8AA] transition duration-200 text-sm font-medium disabled:bg-blue-300 disabled:cursor-not-allowed"
+                    className={`py-2 px-4 rounded-lg text-sm font-medium text-white transition duration-200 ${
+                      theme === 'dark'
+                        ? 'bg-[#49BBBD] hover:bg-[#3AA8AA] disabled:bg-blue-300'
+                        : 'bg-[#49BBBD] hover:bg-[#3AA8AA] disabled:bg-blue-300'
+                    } disabled:cursor-not-allowed`}
                   >
                     {feedbackLoading ? 'Submitting...' : 'Submit Feedback'}
                   </button>
@@ -737,10 +1020,26 @@ export default function CoursePlayer() {
           transition={{ duration: 0.5 }}
           className="lg:col-span-1 flex flex-col"
         >
-          <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow h-fit flex flex-col overflow-hidden">
+          <div
+            className={`p-3 rounded-lg shadow h-fit flex flex-col overflow-hidden ${
+              theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+            }`}
+          >
             <div>
-              <h2 className="font-bold text-base text-gray-900 dark:text-gray-100">{instructorName}</h2>
-              <p className="text-xs text-green-600 dark:text-green-400">{modules.length} Modules</p>
+              <h2
+                className={`font-bold text-base ${
+                  theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+                }`}
+              >
+                {instructorName}
+              </h2>
+              <p
+                className={`text-xs ${
+                  theme === 'dark' ? 'text-green-400' : 'text-green-600'
+                }`}
+              >
+                {modules.length} Modules
+              </p>
             </div>
             <div className="flex-1 overflow-y-auto mt-3 pr-2" style={{ maxHeight: 'calc(100vh - 230px)' }}>
               {modules.map((mod, i) => (
@@ -751,9 +1050,15 @@ export default function CoursePlayer() {
                   transition={{ delay: i * 0.1 }}
                   className={i !== modules.length - 1 ? 'mb-3' : ''}
                 >
-                  <div className="border dark:border-gray-700 rounded-lg p-2">
+                  <div
+                    className={`border rounded-lg p-2 ${
+                      theme === 'dark' ? 'border-gray-700' : 'border-gray-200'
+                    }`}
+                  >
                     <div
-                      className={`flex justify-between font-semibold items-center cursor-pointer text-gray-900 dark:text-gray-100 ${mod.active ? 'text-black' : ''}`}
+                      className={`flex justify-between font-semibold items-center cursor-pointer ${
+                        theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+                      } ${mod.active ? 'text-black' : ''}`}
                       onClick={() => toggleModule(i)}
                     >
                       <span className="truncate text-sm">{mod.title}</span>
@@ -768,8 +1073,16 @@ export default function CoursePlayer() {
                         {mod.lessons.map((lesson, idx) => (
                           <div
                             key={idx}
-                            className={`flex justify-between items-center p-1 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-[#00c8a0] cursor-pointer ${
-                              activeLecture.moduleIndex === i && activeLecture.lessonIndex === idx ? 'bg-green-50 dark:bg-green-900' : ''
+                            className={`flex justify-between items-center p-1 cursor-pointer text-[#00c8a0] hover:${
+                              theme === 'dark' ? 'bg-gray-600' : 'bg-gray-100'
+                            } ${
+                              activeLecture.moduleIndex === i && activeLecture.lessonIndex === idx
+                                ? theme === 'dark'
+                                  ? 'bg-green-900'
+                                  : 'bg-green-50'
+                                : theme === 'dark'
+                                ? 'bg-gray-700'
+                                : 'bg-gray-50'
                             }`}
                             onClick={() => {
                               if (lesson.content?.url) {
@@ -782,8 +1095,20 @@ export default function CoursePlayer() {
                               }
                             }}
                           >
-                            <span className="text-gray-900 dark:text-gray-100">{lesson.title || `Lesson ${idx + 1}`}</span>
-                            <span className="text-[10px] text-gray-600 dark:text-gray-400">{lesson.time || '0:00'}</span>
+                            <span
+                              className={`${
+                                theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+                              }`}
+                            >
+                              {lesson.title || `Lesson ${idx + 1}`}
+                            </span>
+                            <span
+                              className={`text-[10px] ${
+                                theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                              }`}
+                            >
+                              {lesson.time || '0:00'}
+                            </span>
                           </div>
                         ))}
                       </div>
@@ -792,22 +1117,50 @@ export default function CoursePlayer() {
                 </motion.div>
               ))}
             </div>
-            <div className="p-3 rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-800 shadow mt-3">
-              <h2 className="font-bold text-base text-gray-900 dark:text-gray-100 mb-2">Explore more</h2>
+            <div
+              className={`p-3 rounded-lg border shadow mt-3 ${
+                theme === 'dark'
+                  ? 'border-gray-700 bg-gray-800'
+                  : 'border-gray-200 bg-white'
+              }`}
+            >
+              <h2
+                className={`font-bold text-base mb-2 ${
+                  theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+                }`}
+              >
+                Explore more
+              </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {courses.map((course, idx) => (
                   <Link
                     to={`/courses/${course._id}`}
                     key={idx}
-                    className="p-1 rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-800 shadow hover:shadow-md transition-shadow"
+                    className={`p-1 rounded-lg border shadow hover:shadow-md transition-shadow ${
+                      theme === 'dark'
+                        ? 'border-gray-700 bg-gray-800'
+                        : 'border-gray-200 bg-white'
+                    }`}
                   >
                     <img
                       src={course.thumbnail}
                       className="rounded-lg mb-1 h-24 object-cover w-full"
                       alt={course.title}
                     />
-                    <p className="text-xs font-semibold text-gray-900 dark:text-gray-100 truncate">{course.title}</p>
-                    <p className="text-xs text-green-600 dark:text-green-400">₹{course.discountPrice || course.price}</p>
+                    <p
+                      className={`text-xs font-semibold truncate ${
+                        theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+                      }`}
+                    >
+                      {course.title}
+                    </p>
+                    <p
+                      className={`text-xs ${
+                        theme === 'dark' ? 'text-green-400' : 'text-green-600'
+                      }`}
+                    >
+                      ₹{course.discountPrice || course.price}
+                    </p>
                   </Link>
                 ))}
               </div>

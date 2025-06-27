@@ -164,13 +164,13 @@ const ParentLayout = () => {
       >
         {renderPage()}
       </div>
-      <div
+      {/* <div
         className={`fixed bottom-4 right-4 p-2 rounded-lg shadow ${
           theme === 'dark' ? 'bg-gray-800 text-gray-200' : 'bg-gray-200 text-gray-800'
         }`}
       >
         Current Theme: {theme}
-      </div>
+      </div> */}
     </div>
   );
 };
