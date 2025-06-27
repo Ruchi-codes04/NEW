@@ -1,16 +1,13 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ChevronDown, HelpCircle, Star } from 'lucide-react';
+import { ChevronDown, HelpCircle, Star, Bell } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
-// import { useContext } from 'react';
-// import { ThemeContext } from './Profiledashboard/ThemeContext'; // Ensure this is correct
-import arrowLeft from '../assets/image (1).png'; // Verify the image file name
+import arrowLeft from '../assets/image (1).png';
 
 export default function CoursePlayer() {
   const { courseId } = useParams();
   const navigate = useNavigate();
-  // const themeContext = useContext(ThemeContext);
   const [modules, setModules] = useState([]);
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [courseTitle, setCourseTitle] = useState('Course Player');
@@ -21,6 +18,9 @@ export default function CoursePlayer() {
   const [isAssessmentsModalOpen, setIsAssessmentsModalOpen] = useState(false);
   const [isHelpSidebarOpen, setIsHelpSidebarOpen] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [notificationsError, setNotificationsError] = useState('');
   const [assessmentsError, setAssessmentsError] = useState('');
   const [contentError, setContentError] = useState('');
   const [form, setForm] = useState({
@@ -28,7 +28,7 @@ export default function CoursePlayer() {
     subject: '',
     message: '',
     category: 'course',
-    relatedCourse: courseId || '', // Fixed: Use courseId from useParams
+    relatedCourse: courseId || '',
   });
   const [feedback, setFeedback] = useState({
     rating: 0,
@@ -41,6 +41,7 @@ export default function CoursePlayer() {
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [contactCourses, setContactCourses] = useState([]);
+  const notificationsPopupRef = useRef(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -50,7 +51,7 @@ export default function CoursePlayer() {
           throw new Error('No authentication token found');
         }
 
-        const [contentRes, enrollmentRes, coursesRes, assessmentsRes, profileRes] = await Promise.all([
+        const [contentRes, enrollmentRes, coursesRes, assessmentsRes, profileRes, notificationsRes] = await Promise.all([
           axios.get(`https://lms-backend-flwq.onrender.com/api/v1/courses/${courseId}/content`, {
             headers: { Authorization: `Bearer ${token}` },
           }).catch((err) => ({ data: { success: false }, error: err })),
@@ -66,6 +67,9 @@ export default function CoursePlayer() {
           axios.get('https://lms-backend-flwq.onrender.com/api/v1/students/profile', {
             headers: { Authorization: `Bearer ${token}` },
           }),
+          axios.get(`https://new-lms-backend-vmgr.onrender.com/api/v1/notifications/course/${courseId}?page=1&limit=10&isRead=false`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }).catch((err) => ({ data: { success: false }, error: err })),
         ]);
 
         if (profileRes.data.data) {
@@ -83,7 +87,7 @@ export default function CoursePlayer() {
             setInstructorName(`${course.course.instructor.firstName} ${course.course.instructor.lastName}`);
           } else {
             setCourseTitle('Course Not Found');
-            setInstructorName('N/A');
+            setInstructorName('ixo');
           }
 
           setContactCourses(
@@ -144,6 +148,13 @@ export default function CoursePlayer() {
         } else {
           setAssessmentsError('No assessments found for this course.');
         }
+
+        if (notificationsRes.data.success) {
+          setNotifications(notificationsRes.data.data);
+        } else {
+          setNotificationsError('Failed to load notifications.');
+          console.error('Notifications API Error:', notificationsRes.error?.message || 'Unknown error');
+        }
       } catch (error) {
         console.error('Failed to fetch data:', error);
         setErrorMsg(
@@ -156,6 +167,19 @@ export default function CoursePlayer() {
 
     fetchData();
   }, [courseId]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isNotificationsOpen && notificationsPopupRef.current && !notificationsPopupRef.current.contains(event.target)) {
+        setIsNotificationsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isNotificationsOpen]);
 
   const toggleModule = (index) => {
     setModules((prevModules) =>
@@ -178,9 +202,50 @@ export default function CoursePlayer() {
     setIsFeedbackOpen(!isFeedbackOpen);
   };
 
+  const toggleNotificationsModal = () => {
+    setIsNotificationsOpen((prev) => !prev);
+  };
+
+  const markAllNotificationsAsRead = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setNotificationsError('Authentication failed. Please log in again.');
+        navigate('/login');
+        return;
+      }
+
+      const response = await axios.put(
+        'https://new-lms-backend-vmgr.onrender.com/api/v1/notifications/mark-all-read',
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (response.data.success) {
+        setNotifications([]);
+        setNotificationsError('');
+        setIsNotificationsOpen(false);
+      } else {
+        setNotificationsError('Failed to mark all notifications as read.');
+      }
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+      setNotificationsError(error.message || 'Failed to mark all notifications as read.');
+    }
+  };
+
   const handleAttemptAssessment = (assessmentId) => {
     navigate(`/courses/${courseId}/assessments/${assessmentId}`);
     setIsAssessmentsModalOpen(false);
+  };
+
+  const handleNotificationClick = (actionUrl) => {
+    if (actionUrl) {
+      window.location.href = actionUrl;
+    }
+    setIsNotificationsOpen(false);
   };
 
   const handleChange = (e) => {
@@ -280,7 +345,7 @@ export default function CoursePlayer() {
   };
 
   return (
-    <div className="bg-gray-100 dark:bg-t600 p-4 flex flex-col min-h-[calc(100vh-3.5rem)] w-full ">
+    <div className="bg-gray-100 dark:bg-t600 p-4 flex flex-col min-h-[calc(100vh-3.5rem)] w-full">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -301,6 +366,20 @@ export default function CoursePlayer() {
           </div>
         </div>
         <div className="flex flex-row gap-2 w-full sm:flex-row justify-end sm:gap-2">
+          <div className="relative flex items-center">
+            <button
+              onClick={toggleNotificationsModal}
+              className="bg-transparent text-gray-900 dark:text-gray-100 px-4 py-2 rounded-md text-sm hover:bg-[#49BBBD] hover:text-white border border-[#49BBBD] transition flex items-center gap-1 flex-1 sm:flex-none justify-center sm:justify-start"
+            >
+              <Bell className="w-4 h-4" />
+              Notifications
+              {notifications.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {notifications.length}
+                </span>
+              )}
+            </button>
+          </div>
           <button
             onClick={toggleAssessmentsModal}
             className="bg-[#49BBBD] text-white px-4 py-2 rounded-md text-sm hover:bg-[#3AA8AA] transition flex-1 sm:flex-none"
@@ -322,6 +401,68 @@ export default function CoursePlayer() {
           {contentError}
         </div>
       )}
+
+      <AnimatePresence>
+        {isNotificationsOpen && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-75 flex items-center justify-center z-50 p-4"
+          >
+            <div
+              ref={notificationsPopupRef}
+              className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-lg w-full max-h-[80vh] overflow-y-auto"
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Notifications</h2>
+                <div className="flex items-center gap-2">
+                  {notifications.length > 0 && (
+                    <button
+                      onClick={markAllNotificationsAsRead}
+                      className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                      aria-label="Mark all notifications as read"
+                    >
+                      Mark All Read
+                    </button>
+                  )}
+                  <button
+                    onClick={toggleNotificationsModal}
+                    className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              {notificationsError ? (
+                <p className="text-red-500 dark:text-red-400 text-sm">{notificationsError}</p>
+              ) : notifications.length === 0 ? (
+                <p className="text-gray-600 dark:text-gray-400 text-sm">No new notifications.</p>
+              ) : (
+                <div className="space-y-4">
+                  {notifications.map((notification) => (
+                    <div
+                      key={notification._id}
+                      className="border dark:border-gray-700 rounded-lg p-3 flex justify-between items-center bg-white dark:bg-gray-800 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                      onClick={() => handleNotificationClick(notification.actionUrl)}
+                    >
+                      <div>
+                        <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">{notification.title}</h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">{notification.message}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-500">
+                          {new Date(notification.createdAt).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {isAssessmentsModalOpen && (

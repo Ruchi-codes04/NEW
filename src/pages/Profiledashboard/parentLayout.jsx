@@ -8,6 +8,7 @@ import Contact from './Contact';
 import AssessmentScores from './assessmentscore';
 import Interest from './Interest';
 import Settings from './Settings';
+import CoursePlayer from '../CoursePlayer'; // Import CoursePlayer
 import { Navigate, useNavigate } from 'react-router-dom';
 import Navbar from './Navbar';
 
@@ -30,6 +31,7 @@ const Notification = ({ message, type, onClose }) => {
 
 const ParentLayout = () => {
   const [activePage, setActivePage] = useState('dashboard');
+  const [courseId, setCourseId] = useState(null); // Store courseId for CoursePlayer
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState('64px');
   const [userName, setUserName] = useState(null);
@@ -90,22 +92,43 @@ const ParentLayout = () => {
 
   const renderPage = () => {
     switch (activePage) {
-      case 'home': return <Navigate to="/" />;
-      case 'dashboard': return <Dashboard sidebarWidth={sidebarWidth} />;
-      case 'Achievements': return <MyCourses sidebarWidth={sidebarWidth} />;
-      case 'contact': return <Contact sidebarWidth={sidebarWidth} relatedCourseId={null} />;
-      case 'assessmentscore': return <AssessmentScores sidebarWidth={sidebarWidth} />;
-      case 'Interest': return <Interest sidebarWidth={sidebarWidth} />;
-      case 'Settings': return <Settings sidebarWidth={sidebarWidth} />;
-      default: return <Dashboard sidebarWidth={sidebarWidth} />;
+      case 'home':
+        return <Navigate to="/" />;
+      case 'dashboard':
+        return <Dashboard sidebarWidth={sidebarWidth} />;
+      case 'Achievements':
+        return <MyCourses sidebarWidth={sidebarWidth} />;
+      case 'contact':
+        return <Contact sidebarWidth={sidebarWidth} relatedCourseId={null} />;
+      case 'assessmentscore':
+        return <AssessmentScores sidebarWidth={sidebarWidth} />;
+      case 'Interest':
+        return <Interest sidebarWidth={sidebarWidth} />;
+      case 'Settings':
+        return <Settings sidebarWidth={sidebarWidth} />;
+      case 'courseplayer':
+        return <CoursePlayer sidebarWidth={sidebarWidth} courseId={courseId} />;
+      default:
+        return <Dashboard sidebarWidth={sidebarWidth} />;
     }
   };
 
   return (
     <ThemeProvider>
       <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-700">
-        <Notification message={notification.message} type={notification.type} onClose={() => setNotification({ message: '', type: '' })} />
-        <Navbar activePage={activePage} sidebarWidth={sidebarWidth} isSidebarOpen={isSidebarOpen} userName={userName} />
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification({ message: '', type: '' })}
+        />
+        <Navbar
+          activePage={activePage}
+          sidebarWidth={sidebarWidth}
+          isSidebarOpen={isSidebarOpen}
+          userName={userName}
+          setActivePage={setActivePage} // Pass setActivePage to Navbar
+          setCourseId={setCourseId} // Pass setCourseId to Navbar
+        />
         <button
           className="md:hidden fixed top-4 right-4 z-20 p-2 bg-[#49BBBD] dark:bg-[#2A9D8F] text-white dark:text-gray-100 rounded-md"
           onClick={toggleSidebar}
@@ -121,7 +144,11 @@ const ParentLayout = () => {
         >
           <Sidebar
             activePage={activePage}
-            setActivePage={(page) => { setActivePage(page); setIsSidebarOpen(false); }}
+            setActivePage={(page, courseId) => {
+              setActivePage(page);
+              if (courseId) setCourseId(courseId); // Set courseId for CoursePlayer
+              setIsSidebarOpen(false);
+            }}
           />
         </div>
         {isSidebarOpen && (
