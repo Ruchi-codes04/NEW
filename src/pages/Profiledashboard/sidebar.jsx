@@ -2,13 +2,13 @@ import React, { useState, useContext } from 'react';
 import { FiGrid, FiHeart, FiHome, FiFileText, FiSettings, FiMessageSquare, FiStar } from 'react-icons/fi';
 import { RiMedalLine } from 'react-icons/ri';
 import { FaSignOutAlt } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
-import { ThemeContext } from '../../contexts/ThemeContext'; // Import ThemeContext
+import { useNavigate } from 'react-router-dom'; // Ensure this import is present
+import { ThemeContext } from '../../contexts/ThemeContext';
 
 const Sidebar = ({ activePage, setActivePage }) => {
   const navigate = useNavigate();
   const [isExpanded, setIsExpanded] = useState(false);
-  const { theme } = useContext(ThemeContext); // Access theme from ThemeContext
+  const { theme } = useContext(ThemeContext);
 
   const menu = [
     { name: 'home', icon: <FiHome className="w-5 h-5 sm:w-6 sm:h-6" />, label: 'Go to Home' },
@@ -29,7 +29,7 @@ const Sidebar = ({ activePage, setActivePage }) => {
     <div
       className={`shadow-md flex flex-col items-center py-6 space-y-1 fixed left-0 h-screen transition-all duration-300 ${
         isExpanded ? 'w-64' : 'w-16'
-      } ${theme === 'dark' ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-600'}`} // Theme-based background and text
+      } ${theme === 'dark' ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-600'}`}
       onMouseEnter={() => setIsExpanded(true)}
       onMouseLeave={() => setIsExpanded(false)}
     >

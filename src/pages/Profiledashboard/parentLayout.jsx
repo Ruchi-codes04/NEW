@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { ThemeProvider } from '../../contexts/ThemeContext';
-import Sidebar from './Sidebar';
+import Sidebar from './sidebar';
 import Dashboard from './Dashboard';
 import MyCourses from './MyCourses';
 import Contact from './Contact';
 import AssessmentScores from './assessmentscore';
 import Interest from './Interest';
 import Settings from './Settings';
-import CoursePlayer from '../CoursePlayer'; // Import CoursePlayer
+import CoursePlayer from '../CoursePlayer';
 import { Navigate, useNavigate } from 'react-router-dom';
 import Navbar from './Navbar';
 
@@ -31,7 +31,7 @@ const Notification = ({ message, type, onClose }) => {
 
 const ParentLayout = () => {
   const [activePage, setActivePage] = useState('dashboard');
-  const [courseId, setCourseId] = useState(null); // Store courseId for CoursePlayer
+  const [courseId, setCourseId] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState('64px');
   const [userName, setUserName] = useState(null);
@@ -126,15 +126,10 @@ const ParentLayout = () => {
           sidebarWidth={sidebarWidth}
           isSidebarOpen={isSidebarOpen}
           userName={userName}
-          setActivePage={setActivePage} // Pass setActivePage to Navbar
-          setCourseId={setCourseId} // Pass setCourseId to Navbar
+          setActivePage={setActivePage}
+          setCourseId={setCourseId}
+          toggleSidebar={toggleSidebar} // Pass toggleSidebar to Navbar
         />
-        <button
-          className="md:hidden fixed top-4 right-4 z-20 p-2 bg-[#49BBBD] dark:bg-[#2A9D8F] text-white dark:text-gray-100 rounded-md"
-          onClick={toggleSidebar}
-        >
-          {isSidebarOpen ? 'Close' : 'Menu'}
-        </button>
         <div
           className={`fixed left-0 h-screen transition-all duration-300 ease-in-out ${
             isSidebarOpen ? 'translate-x-0 w-64' : 'md:w-16 w-0 -translate-x-full md:translate-x-0'
@@ -146,7 +141,7 @@ const ParentLayout = () => {
             activePage={activePage}
             setActivePage={(page, courseId) => {
               setActivePage(page);
-              if (courseId) setCourseId(courseId); // Set courseId for CoursePlayer
+              if (courseId) setCourseId(courseId);
               setIsSidebarOpen(false);
             }}
           />

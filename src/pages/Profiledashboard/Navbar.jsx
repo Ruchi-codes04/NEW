@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Bell } from 'lucide-react';
@@ -13,7 +13,6 @@ const Navbar = ({ activePage, sidebarWidth, isSidebarOpen, userName }) => {
   const [notificationCount, setNotificationCount] = useState(0);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [error, setError] = useState(null);
-  const popupRef = useRef(null);
 
   const fetchNotifications = async () => {
     const token = localStorage.getItem('token');
@@ -113,22 +112,6 @@ const Navbar = ({ activePage, sidebarWidth, isSidebarOpen, userName }) => {
     fetchNotifications();
   }, []);
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (popupRef.current && !popupRef.current.contains(event.target)) {
-        setIsPopupOpen(false);
-      }
-    };
-
-    if (isPopupOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isPopupOpen]);
-
   const toggleThemeHandler = () => {
     console.log('Toggling theme from:', theme);
     setTheme(theme === 'light' ? 'dark' : 'light');
@@ -209,10 +192,7 @@ const Navbar = ({ activePage, sidebarWidth, isSidebarOpen, userName }) => {
 
       {/* Notification Popup */}
       {isPopupOpen && (
-        <div
-          ref={popupRef}
-          className="absolute top-16 right-4 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg w-80 max-h-96 overflow-y-auto z-50"
-        >
+        <div className="absolute top-16 right-4 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg w-80 max-h-96 overflow-y-auto z-50">
           <div className="p-4">
             <div className="flex justify-between items-center mb-2">
               <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Notifications</h2>
