@@ -7,10 +7,16 @@ const Dashboard = () => {
   const [student, setStudent] = useState(null);
   const [showAllTargets, setShowAllTargets] = useState(false);
 
+  // Debug theme on mount
+  useEffect(() => {
+    console.log('Dashboard: Current theme from localStorage:', localStorage.getItem('theme'));
+    console.log('Dashboard: Document classes:', document.documentElement.classList.toString());
+  }, []);
+
   // Fetch student data on component mount
   useEffect(() => {
     const fetchProfile = async () => {
-      const token = localStorage.getItem('token'); // Assuming token is stored in localStorage
+      const token = localStorage.getItem('token');
       if (!token) {
         console.log('Authentication required. Please log in.');
         return;
@@ -30,68 +36,20 @@ const Dashboard = () => {
   }, []);
 
   const recentlyEarnedBadges = [
-    {
-      name: 'Warrior',
-      description: 'Badge for completing first course',
-      date: 'Aug 24, 2024',
-      icon: '🛡️',
-    },
-    {
-      name: 'Ace',
-      description: 'Badge for completing 25 quiz resources',
-      date: 'Aug 17, 2024',
-      icon: '🎯',
-    },
-    {
-      name: 'Duelist',
-      description: 'Badge for completing first quiz resource',
-      date: 'Aug 17, 2024',
-      icon: '⚔️',
-    },
-    {
-      name: 'The Fledgling',
-      description: 'Badge for registering on Wingspan platform',
-      date: 'Aug 6, 2024',
-      icon: '🐣',
-    },
+    { name: 'Warrior', description: 'Badge for completing first course', date: 'Aug 24, 2024', icon: '🛡️' },
+    { name: 'Ace', description: 'Badge for completing 25 quiz resources', date: 'Aug 17, 2024', icon: '🎯' },
+    { name: 'Duelist', description: 'Badge for completing first quiz resource', date: 'Aug 17, 2024', icon: '⚔️' },
+    { name: 'The Fledgling', description: 'Badge for registering on Wingspan platform', date: 'Aug 6, 2024', icon: '🐣' },
   ];
 
   const nextTargets = [
-    {
-      name: 'Management Jedi',
-      description: 'Badge for completing the MBA management HBP courses',
-      icon: '🏹',
-    },
-    {
-      name: 'Quizzer',
-      description: 'Badge for completing 100 quiz resources',
-      icon: '❓',
-    },
-    {
-      name: 'Champion',
-      description: 'Badge for completing 25 courses',
-      icon: '🏆',
-    },
-    {
-      name: 'Knight',
-      description: 'Badge for completing 10 courses',
-      icon: '⚔️',
-    },
-    {
-      name: 'Sensei',
-      description: 'Badge for completing 100 courses',
-      icon: '👨‍🏫',
-    },
-    {
-      name: 'Wizard',
-      description: 'Badge for completing 250 quiz resources',
-      icon: '🎩',
-    },
-    {
-      name: 'Genie',
-      description: 'Badge for completing 100 quiz resources',
-      icon: '🧞',
-    },
+    { name: 'Management Jedi', description: 'Badge for completing the MBA management HBP courses', icon: '🏹' },
+    { name: 'Quizzer', description: 'Badge for completing 100 quiz resources', icon: '❓' },
+    { name: 'Champion', description: 'Badge for completing 25 courses', icon: '🏆' },
+    { name: 'Knight', description: 'Badge for completing 10 courses', icon: '⚔️' },
+    { name: 'Sensei', description: 'Badge for completing 100 courses', icon: '👨‍🏫' },
+    { name: 'Wizard', description: 'Badge for completing 250 quiz resources', icon: '🎩' },
+    { name: 'Genie', description: 'Badge for completing 100 quiz resources', icon: '🧞' },
   ];
 
   const handleViewToggle = () => {
@@ -99,18 +57,22 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 text-black">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-black dark:text-white">
       {/* Tabs */}
-      <div className="flex justify-center mb-4 bg-gray-800 p-2 rounded-t-lg">
-        <div className="flex space-x-4">
+      <div className="flex justify-center mb-4 bg-white dark:bg-gray-800 p-2 rounded-t-lg">
+        <div className="flex w-full">
           <button
-            className={`px-4 py-2 rounded-t-lg ${activeTab === 'badges' ? 'bg-blue-700 text-white' : 'bg-gray-700 text-gray-300'}`}
+            className={`flex-1 px-4 py-2 rounded-t-lg ${
+              activeTab === 'badges' ? 'bg-blue-400 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+            }`}
             onClick={() => setActiveTab('badges')}
           >
             Badges
           </button>
           <button
-            className={`px-4 py-2 rounded-t-lg ${activeTab === 'certificates' ? 'bg-blue-700 text-white' : 'bg-gray-700 text-gray-300'}`}
+            className={`flex-1 px-4 py-2 rounded-t-lg ${
+              activeTab === 'certificates' ? 'bg-blue-400 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+            }`}
             onClick={() => setActiveTab('certificates')}
           >
             Certificates
@@ -124,32 +86,34 @@ const Dashboard = () => {
           <>
             {/* Header Section */}
             <div className="mb-6">
-              <h2 className="text-xl font-semibold">Hi {student?.firstName || 'User'}!</h2>
-              <p className="text-lg">Congratulations for your recently earned badges</p>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Hi {student?.firstName || 'User'}!
+              </h2>
+              <p className="text-lg text-gray-700 dark:text-gray-300">Congratulations for your recently earned badges</p>
             </div>
 
             {/* Recently Earned Badges Section */}
             <div className="mb-8">
-              <h3 className="text-lg font-medium mb-4">Recently earned badges</h3>
+              <h3 className="text-lg font-medium mb-4 text-gray-900 dark:text-white">Recently earned badges</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 {recentlyEarnedBadges.map((badge, index) => (
                   <div
                     key={index}
-                    className="bg-white p-4 rounded-lg shadow-sm border border-gray-200"
+                    className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
-                        <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-2xl">
+                        <div className="w-12 h-12 bg-gray-200 dark:bg-gray-600 rounded-full flex items-center justify-center text-2xl">
                           {badge.icon}
                         </div>
                         <div className="ml-3">
-                          <p className="text-sm text-gray-600">Awarded on {badge.date}</p>
-                          <p className="text-sm text-purple-600 font-medium">
+                          <p className="text-sm text-gray-600 dark:text-gray-400">Awarded on {badge.date}</p>
+                          <p className="text-sm text-purple-600 dark:text-purple-400 font-medium">
                             {badge.name} {badge.description}
                           </p>
                         </div>
                       </div>
-                      <span className="text-purple-600 text-sm">✔</span>
+                      <span className="text-purple-600 dark:text-purple-400 text-sm">✔</span>
                     </div>
                   </div>
                 ))}
@@ -158,30 +122,30 @@ const Dashboard = () => {
 
             {/* Next Target Section */}
             <div>
-              <h3 className="text-lg font-medium mb-4">Your Next Target</h3>
+              <h3 className="text-lg font-medium mb-4 text-gray-900 dark:text-white">Your Next Target</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 {nextTargets.slice(0, showAllTargets ? nextTargets.length : 4).map((target, index) => (
                   <div
                     key={index}
-                    className="bg-white p-4 rounded-lg shadow-sm border border-gray-200"
+                    className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
-                        <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-2xl">
+                        <div className="w-12 h-12 bg-gray-200 dark:bg-gray-600 rounded-full flex items-center justify-center text-2xl">
                           {target.icon}
                         </div>
                         <div className="ml-3">
-                          <p className="text-sm text-gray-600">{target.name}</p>
-                          <p className="text-sm text-blue-600 font-medium">{target.description}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">{target.name}</p>
+                          <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">{target.description}</p>
                         </div>
                       </div>
-                      <span className="text-green-600 text-sm">✔</span>
+                      <span className="text-green-600 dark:text-green-400 text-sm">✔</span>
                     </div>
                   </div>
                 ))}
               </div>
               <button
-                className="mt-4 bg-gray-200 text-gray-700 px-4 py-2 rounded-full hover:bg-gray-300"
+                className="mt-4 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600"
                 onClick={handleViewToggle}
               >
                 {showAllTargets ? 'View Less' : 'View More'}

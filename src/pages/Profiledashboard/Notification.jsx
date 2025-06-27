@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import { ThemeContext } from "../Profiledashboard/ThemeContext"; // Adjust path
+import { ThemeContext } from "../../contexts/ThemeContext"; // Adjust path
 
 const Notification = ({ message, type, onClose }) => {
   const { theme } = useContext(ThemeContext); // Access theme

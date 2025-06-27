@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
-import { ThemeContext } from '../Profiledashboard/ThemeContext';
+import { ThemeContext } from '../../contexts/ThemeContext';
 
 const Notification = ({ message, type, onClose }) => {
   const { theme } = useContext(ThemeContext);
@@ -66,6 +66,9 @@ const Settings = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = res.data.data;
+        if (!data) {
+          throw new Error('No profile data returned from the server.');
+        }
         setStudent(data);
         setFormData({
           firstName: data.firstName || '',
@@ -78,7 +81,16 @@ const Settings = () => {
         });
         setAvatarPreview(data.avatar || null);
       } catch (err) {
-        setNotification({ message: 'Unable to retrieve profile data. Please try again later.', type: 'error' });
+        console.error('Error fetching profile:', err);
+        if (err.response?.status === 401) {
+          setNotification({ message: 'Session expired. Please log in again.', type: 'error' });
+          localStorage.removeItem('token');
+        } else {
+          setNotification({
+            message: err.response?.data?.message || 'Unable to retrieve profile data. Please try again later.',
+            type: 'error',
+          });
+        }
       }
     };
 
@@ -163,6 +175,7 @@ const Settings = () => {
   };
 
   const handleThemeChange = (e) => {
+    console.log('Changing theme to:', e.target.value);
     setTheme(e.target.value);
   };
 
@@ -188,7 +201,7 @@ const Settings = () => {
       <div className="bg-white dark:bg-gray-800 rounded-lg p-5 mb-5 shadow-md">
         <h2 className="text-xl mb-2 text-gray-900 dark:text-gray-100">Choose Your Theme</h2>
         <div className="flex items-center gap-5">
-          <label className="flex flex-col items-center gap-2">
+          <label className="flex flex-col items-center gap-2 cursor-pointer">
             <input
               type="radio"
               name="theme"
@@ -197,10 +210,14 @@ const Settings = () => {
               onChange={handleThemeChange}
               className="hidden"
             />
-            <div className={`w-48 h-16 border border-gray-300 bg-white cursor-pointer rounded ${theme === 'light' ? 'ring-2 ring-blue-500' : ''}`}></div>
+            <div
+              className={`w-48 h-16 border border-gray-300 bg-white rounded ${
+                theme === 'light' ? 'ring-2 ring-blue-500' : ''
+              }`}
+            ></div>
             <span className="text-gray-900 dark:text-gray-100">Light</span>
           </label>
-          <label className="flex flex-col items-center gap-2">
+          <label className="flex flex-col items-center gap-2 cursor-pointer">
             <input
               type="radio"
               name="theme"
@@ -209,7 +226,11 @@ const Settings = () => {
               onChange={handleThemeChange}
               className="hidden"
             />
-            <div className={`w-48 h-16 border border-gray-300 bg-gray-800 cursor-pointer rounded ${theme === 'dark' ? 'ring-2 ring-blue-500' : ''}`}></div>
+            <div
+              className={`w-48 h-16 border border-gray-300 bg-gray-800 rounded ${
+                theme === 'dark' ? 'ring-2 ring-blue-500' : ''
+              }`}
+            ></div>
             <span className="text-gray-900 dark:text-gray-100">Dark</span>
           </label>
         </div>
@@ -241,7 +262,7 @@ const Settings = () => {
                       htmlFor="avatar-upload"
                       className="absolute bottom-0 right-0 bg-blue-500 dark:bg-blue-600 text-white rounded-full p-2 cursor-pointer hover:bg-blue-600 dark:hover:bg-blue-700"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                       </svg>
                     </label>

@@ -67,7 +67,6 @@ const AssessmentScore = () => {
       setIsResultPopupOpen(false);
       return;
     }
-    setIsAssessmentPopupOpen(true);
 
     const fetchAssessments = async () => {
       setLoading(true);
@@ -93,7 +92,9 @@ const AssessmentScore = () => {
         setSelectedAssessmentId("");
         setAssessmentResult(null);
         if (assessmentData.length === 0) {
-          showNotification("No assessments found for this course.");
+          showNotification("No assessments found in this course.");
+        } else {
+          setIsAssessmentPopupOpen(true);
         }
       } catch (error) {
         console.error("Error fetching assessments:", error);
@@ -153,19 +154,6 @@ const AssessmentScore = () => {
     setSelectedCourseId(courseId);
   };
 
-  // Generate star rating component
-  const renderStars = (rating) => {
-    const stars = [];
-    for (let i = 1; i <= 5; i++) {
-      stars.push(
-        <span key={i} className={i <= rating ? "text-yellow-400" : "text-gray-300"}>
-          ★
-        </span>
-      );
-    }
-    return stars;
-  };
-
   // Close popups
   const closePopups = () => {
     setIsAssessmentPopupOpen(false);
@@ -175,15 +163,13 @@ const AssessmentScore = () => {
   };
 
   return (
-    <div
-      className="sm:p-0 mt-12 md:mt-6 h-fit px-[10px] lg:py-6 lg:px-6 bg-white rounded-lg space-y-6 max-w-4xl mx-auto transition-colors duration-300"
-    >
+    <div className="sm:p-0 mt-12 md:mt-0 h-fit px-[10px] lg:py-6 lg:px-6 bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-lg space-y-6 max-w-7xl mx-auto transition-colors duration-300">
       <Notification
         message={notification.message}
         type={notification.type}
         onClose={() => setNotification({ message: "", type: "" })}
       />
-      <h1 className="text-[2rem] font-bold text-slate-900 pb-2">
+      <h1 className="text-[2rem] font-bold text-gray-900 dark:text-white pb-2">
         Assessment Scores
       </h1>
       <div className="space-y-5">
@@ -191,7 +177,7 @@ const AssessmentScore = () => {
         {loading && (
           <div className="flex justify-center items-center">
             <svg
-              className="animate-spin h-5 w-5 text-[#49BBBD]"
+              className="animate-spin h-5 w-5 text-[#49BBBD] dark:text-blue-400"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
@@ -210,17 +196,17 @@ const AssessmentScore = () => {
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               ></path>
             </svg>
-            <span className="ml-2 text-gray-700">Loading...</span>
+            <span className="ml-2 text-gray-700 dark:text-gray-300">Loading...</span>
           </div>
         )}
 
         {/* Course List */}
         <div className="space-y-3">
-          <h2 className="text-lg font-medium text-gray-700">
+          <h2 className="text-lg font-medium text-gray-700 dark:text-gray-300">
             Available Courses
           </h2>
           {courses.length === 0 && !loading ? (
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               No courses available.
             </p>
           ) : (
@@ -230,14 +216,14 @@ const AssessmentScore = () => {
                   <div
                     key={course.course._id}
                     onClick={() => handleCourseClick(course.course._id)}
-                    className={`p-4 rounded-lg shadow-md bg-white border border-gray-200 cursor-pointer transition ${
+                    className={`p-4 rounded-lg shadow-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 cursor-pointer transition ${
                       selectedCourseId === course.course._id
-                        ? "border-[#49BBBD] bg-opacity-10"
-                        : "hover:bg-gray-50"
+                        ? "border-[#49BBBD] dark:border-blue-400 bg-opacity-10"
+                        : "hover:bg-gray-50 dark:hover:bg-gray-700"
                     }`}
                   >
                     {/* Dynamic Course Thumbnail */}
-                    <div className="w-full h-24 rounded-md mb-2 flex items-center justify-center overflow-hidden">
+                    <div className="w-full h-24 rounded-md mb-2 flex items-center justify-center overflow-hidden bg-gray-200 dark:bg-gray-600">
                       {course.course.thumbnail ? (
                         <img
                           src={course.course.thumbnail}
@@ -245,36 +231,29 @@ const AssessmentScore = () => {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <span className="text-gray-500">
+                        <span className="text-gray-500 dark:text-gray-300">
                           {course.course.title.substring(0, 2).toUpperCase()}
                         </span>
                       )}
                     </div>
                     {/* Course Title */}
-                    <h3 className="text-md font-semibold text-gray-900">
+                    <h3 className="text-md font-semibold text-gray-900 dark:text-white">
                       {course.course.title}
                     </h3>
                     {/* Course Description or Subtitle */}
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                       {course.course.description || "No description available"}
                     </p>
-                    {/* Price */}
-                    <p className="text-sm text-green-600 mt-2">
-                      ₹{course.course.price || "Free"}
-                    </p>
-                    {/* Instructor and Rating */}
+                    {/* Instructor */}
                     <div className="flex items-center mt-2">
                       <img
                         src={course.course.instructor?.avatar || "https://via.placeholder.com/24"}
                         alt={course.course.instructor?.firstName || "Instructor"}
                         className="w-6 h-6 rounded-full mr-2"
                       />
-                      <span className="text-sm text-gray-700 mr-2">
+                      <span className="text-sm text-gray-700 dark:text-gray-300">
                         {course.course.instructor?.firstName || "Unknown"}{" "}
                         {course.course.instructor?.lastName || ""}
-                      </span>
-                      <span className="text-yellow-400">
-                        {renderStars(course.course.rating || 0)}
                       </span>
                     </div>
                   </div>
@@ -286,15 +265,15 @@ const AssessmentScore = () => {
 
         {/* Assessment Selection Popup */}
         {isAssessmentPopupOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                 Select Assessment
               </h2>
               <select
                 value={selectedAssessmentId}
                 onChange={(e) => setSelectedAssessmentId(e.target.value)}
-                className="w-full border border-gray-300 rounded-md p-3 text-base focus:ring-2 focus:ring-[#49BBBD] focus:border-transparent transition bg-white text-gray-900"
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-md p-3 text-base focus:ring-2 focus:ring-[#49BBBD] dark:focus:ring-blue-400 focus:border-transparent transition bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 disabled={loading || assessments.length === 0}
               >
                 <option value="">Select an assessment</option>
@@ -305,13 +284,13 @@ const AssessmentScore = () => {
                 ))}
               </select>
               {!loading && assessments.length === 0 && (
-                <p className="text-sm text-gray-500 mt-2">
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                   No assessments available for this course.
                 </p>
               )}
               <button
                 onClick={closePopups}
-                className="mt-4 w-full bg-[#49BBBD] text-white p-2 rounded-md hover:bg-[#3da4a6] transition"
+                className="mt-4 w-full bg-[#49BBBD] dark:bg-blue-600 text-white p-2 rounded-md hover:bg-[#3da4a6] dark:hover:bg-blue-500 transition"
               >
                 Close
               </button>
@@ -321,52 +300,52 @@ const AssessmentScore = () => {
 
         {/* Assessment Result Popup */}
         {isResultPopupOpen && assessmentResult && !loading && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">
+          <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
                 {assessmentResult.assessment.title}
               </h2>
               <div className="grid grid-cols-1 gap-4">
                 <div>
-                  <p className="text-sm font-medium text-gray-700">Type:</p>
-                  <p className="text-base text-gray-900 capitalize">
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Type:</p>
+                  <p className="text-base text-gray-900 dark:text-gray-100 capitalize">
                     {assessmentResult.assessment.type}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-700">Status:</p>
-                  <p className="text-base text-gray-900 capitalize">
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Status:</p>
+                  <p className="text-base text-gray-900 dark:text-gray-100 capitalize">
                     {assessmentResult.status}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-700">Score:</p>
-                  <p className="text-base text-gray-900">
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Score:</p>
+                  <p className="text-base text-gray-900 dark:text-gray-100">
                     {assessmentResult.score}/{assessmentResult.totalPoints || "100 (based on questions)"}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-700">Passing Score:</p>
-                  <p className="text-base text-gray-900">
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Passing Score:</p>
+                  <p className="text-base text-gray-900 dark:text-gray-100">
                     {assessmentResult.assessment.passingScore}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-700">Due Date:</p>
-                  <p className="text-base text-gray-900">
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Due Date:</p>
+                  <p className="text-base text-gray-900 dark:text-gray-100">
                     {new Date(assessmentResult.assessment.dueDate).toLocaleDateString()}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-700">Submission Date:</p>
-                  <p className="text-base text-gray-900">
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Submission Date:</p>
+                  <p className="text-base text-gray-900 dark:text-gray-100">
                     {new Date(assessmentResult.submissionDate).toLocaleString()}
                   </p>
                 </div>
               </div>
               <button
                 onClick={closePopups}
-                className="mt-4 w-full bg-[#49BBBD] text-white p-2 rounded-md hover:bg-[#3da4a6] transition"
+                className="mt-4 w-full bg-[#49BBBD] dark:bg-blue-600 text-white p-2 rounded-md hover:bg-[#3da4a6] dark:hover:bg-blue-500 transition"
               >
                 Close
               </button>

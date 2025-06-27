@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { FaPlay, FaBookmark } from "react-icons/fa";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { ThemeContext } from "../../contexts/ThemeContext";
 
 const Notification = ({ message, type, onClose }) => {
   if (!message) return null;
@@ -9,14 +10,14 @@ const Notification = ({ message, type, onClose }) => {
   return (
     <div
       className={`fixed top-4 right-4 p-4 rounded-md shadow-lg text-white transition-opacity duration-300 z-50 ${
-        type === "error" ? "bg-red-500" : "bg-green-500"
+        type === "error" ? "bg-red-500 dark:bg-red-600" : "bg-green-500 dark:bg-green-600"
       }`}
     >
       <div className="flex items-center justify-between">
         <span>{message}</span>
         <button
           onClick={onClose}
-          className="ml-4 hover:text-gray-200"
+          className="ml-4 hover:text-gray-200 dark:hover:text-gray-100 cursor-pointer"
         >
           ✕
         </button>
@@ -30,8 +31,9 @@ const CoursesPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [notification, setNotification] = useState({ message: '', type: '' });
-  const [showAll, setShowAll] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
+  const { theme } = useContext(ThemeContext);
 
   const API_BASE_URL = "https://new-lms-backend-vmgr.onrender.com/api/v1/students";
 
@@ -125,27 +127,38 @@ const CoursesPage = () => {
   };
 
   const handlePlayCourse = (courseId) => {
+    console.log("Navigating to course-player with ID:", courseId);
     navigate(`/course-player/${courseId}`);
   };
 
-  const displayedCourses = showAll ? bookmarkedCourses : bookmarkedCourses.slice(0, 3);
-  const shouldShowViewAllButton = bookmarkedCourses.length > 3 && !showAll;
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
+
+  const displayedCourses = bookmarkedCourses.slice(0, 3);
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className={`flex justify-center items-center h-64 ${
+        theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+      }`}>
+        <div className={`animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 ${
+          theme === 'dark' ? 'border-blue-400' : 'border-blue-500'
+        }`}></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-100 p-4 rounded-lg text-center">
-        <p className="text-red-700">{error}</p>
+      <div className={`p-4 rounded-lg text-center ${
+        theme === 'dark' ? 'bg-red-900 text-red-200' : 'bg-red-100 text-red-700'
+      }`}>
+        <p>{error}</p>
         <button
           onClick={() => window.location.reload()}
-          className="mt-2 text-sm bg-red-500 text-white px-3 py-1 rounded"
+          className={`mt-2 text-sm text-white px-3 py-1 rounded cursor-pointer ${
+            theme === 'dark' ? 'bg-red-700 hover:bg-red-800' : 'bg-red-500 hover:bg-red-600'
+          }`}
         >
           Retry
         </button>
@@ -154,7 +167,7 @@ const CoursesPage = () => {
   }
 
   return (
-    <div className="w-full">
+    <div className={`w-full ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'} p-6 rounded-lg`}>
       <Notification 
         message={notification.message} 
         type={notification.type} 
@@ -162,19 +175,25 @@ const CoursesPage = () => {
       />
 
       <div className="flex justify-between items-start mb-6">
-        <h2 className="text-xl font-semibold text-gray-800">
+        <h2 className={`text-xl font-semibold ${
+          theme === 'dark' ? 'text-gray-200' : 'text-gray-800'
+        }`}>
           My Bookmarked Courses
         </h2>
       </div>
 
       {bookmarkedCourses.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-gray-600 text-lg">
+        <div className={`text-center py-12 ${
+          theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+        }`}>
+          <p className="text-lg">
             You haven't bookmarked any courses yet.
           </p>
           <button
             onClick={() => navigate('/courses')}
-            className="mt-4 px-8 py-3 bg-[#59c1c3] text-white rounded-full font-semibold text-lg hover:bg-[#7ddedf] transition-colors duration-300 shadow-lg"
+            className={`mt-4 px-8 py-3 rounded-full font-semibold text-lg text-white shadow-lg transition-colors duration-300 cursor-pointer ${
+              theme === 'dark' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'
+            }`}
           >
             Browse Courses
           </button>
@@ -185,9 +204,15 @@ const CoursesPage = () => {
             {displayedCourses.map((course) => (
               <div
                 key={course._id}
-                className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow"
+                className={`p-2 rounded-lg shadow-md hover:shadow-lg transition-shadow relative cursor-pointer ${
+                  theme === 'dark' ? 'bg-gray-900' : 'bg-white'
+                }`}
+                onClick={() => handlePlayCourse(course._id)}
+                aria-label={`View course ${course.title}`}
               >
-                <div className="relative h-48 mb-4 rounded-md overflow-hidden">
+                <div className={`relative h-48 rounded-lg overflow-hidden flex items-center justify-center ${
+                  theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'
+                }`}>
                   {course.thumbnail ? (
                     <img
                       src={course.thumbnail}
@@ -198,66 +223,277 @@ const CoursesPage = () => {
                       }}
                     />
                   ) : (
-                    <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                      <span className="text-gray-500">No thumbnail</span>
+                    <div className="flex items-center justify-center w-full h-full">
+                      {course.title.includes("C++") && (
+                        <img
+                          src="https://via.placeholder.com/300x200?text=C++"
+                          alt="C++ Thumbnail"
+                          className="w-full h-full object-contain"
+                        />
+                      )}
+                      {course.title.includes("Python") && (
+                        <img
+                          src="https://via.placeholder.com/300x200?text=Python"
+                          alt="Python Thumbnail"
+                          className="w-full h-full object-contain"
+                        />
+                      )}
+                      {course.title.includes("MERN") && (
+                        <img
+                          src="https://via.placeholder.com/300x200?text=MERN"
+                          alt="MERN Thumbnail"
+                          className="w-full h-full object-contain"
+                        />
+                      )}
+                      {!course.title.includes("C++") && !course.title.includes("Python") && !course.title.includes("MERN") && (
+                        <span className={theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}>
+                          No thumbnail
+                        </span>
+                      )}
                     </div>
                   )}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
+                      handlePlayCourse(course._id);
+                    }}
+                    className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white p-2 rounded-full shadow-lg hover:scale-110 z-10 cursor-pointer ${
+                      theme === 'dark' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'
+                    }`}
+                    aria-label={`Play course ${course.title}`}
+                  >
+                    <FaPlay />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
                       handleBookmark(course._id);
                     }}
-                    className={`absolute top-2 right-2 p-2 rounded-full ${
+                    className={`absolute top-2 right-2 p-2 rounded-full cursor-pointer ${
                       bookmarkedCourses.some(c => c._id === course._id)
-                        ? 'text-yellow-500 bg-white bg-opacity-90'
-                        : 'text-gray-500 bg-white bg-opacity-70 hover:bg-opacity-90'
+                        ? theme === 'dark' 
+                          ? 'text-yellow-400 bg-gray-800 bg-opacity-90'
+                          : 'text-yellow-500 bg-white bg-opacity-90'
+                        : theme === 'dark'
+                          ? 'text-gray-400 bg-gray-800 bg-opacity-70 hover:bg-opacity-90'
+                          : 'text-gray-500 bg-white bg-opacity-70 hover:bg-opacity-90'
                     }`}
+                    aria-label={bookmarkedCourses.some(c => c._id === course._id) ? `Remove bookmark for ${course.title}` : `Bookmark ${course.title}`}
                   >
                     <FaBookmark />
                   </button>
                 </div>
-                <h3 className="font-medium text-lg text-gray-800 mb-2">
-                  {course.title}
-                </h3>
-                <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                  {course.description}
-                </p>
-                <div className="flex justify-between items-center">
-                  <div>
-                    {course.discountPrice ? (
-                      <>
-                        <span className="font-bold text-gray-800">
-                          ₹{course.discountPrice}
-                        </span>
-                        <span className="ml-2 text-sm text-gray-500 line-through">
-                          ₹{course.price}
-                        </span>
-                      </>
-                    ) : (
-                      <span className="font-bold text-gray-800">
+                <div className="p-3">
+                  <h3 className={`font-medium text-md mb-1 ${
+                    theme === 'dark' ? 'text-gray-200' : 'text-gray-800'
+                  }`}>
+                    {course.title}
+                  </h3>
+                  <p className={`text-sm mb-2 line-clamp-2 ${
+                    theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+                  }`}>
+                    {course.description || "Learn about this course"}
+                  </p>
+                  <div className={`flex justify-between items-center text-sm ${
+                    theme === 'dark' ? 'text-gray-200' : 'text-gray-800'
+                  }`}>
+                    <span className="font-bold">
+                      ₹{course.discountPrice || course.price || 'N/A'}
+                    </span>
+                    {course.discountPrice && course.price && (
+                      <span className={`line-through ${
+                        theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                      }`}>
                         ₹{course.price}
                       </span>
                     )}
                   </div>
-                  <button
-                    onClick={() => handlePlayCourse(course._id)}
-                    className="flex items-center gap-2 text-sm bg-[#49BBBD] hover:bg-[#3AA8AA] text-white px-4 py-2 rounded"
-                  >
-                    <FaPlay size={10} /> Continue
-                  </button>
+                  <div className="flex items-center mt-2">
+                    <img
+                      src={course.instructor?.avatar || "https://via.placeholder.com/24"}
+                      alt={course.instructor?.firstName || "Instructor"}
+                      className="w-6 h-6 rounded-full mr-2"
+                    />
+                    <span className={`text-sm mr-2 ${
+                      theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                    }`}>
+                      {course.instructor?.firstName || "Unknown"}{" "}
+                      {course.instructor?.lastName || ""}
+                    </span>
+                    <span className="text-yellow-500">⭐ {course.rating || 0}</span>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
 
-          {shouldShowViewAllButton && (
-            <div className="flex justify-center mt-8">
+          {bookmarkedCourses.length > 3 && (
+            <div className="flex justify-center mt-6">
               <button
-                onClick={() => setShowAll(true)}
-                className="px-8 py-3 bg-[#59c1c3] text-white rounded-full font-semibold text-lg hover:bg-[#7ddedf] transition-colors duration-300 shadow-lg"
+                onClick={openModal}
+                className={`px-8 py-3 rounded-full font-semibold text-lg text-white shadow-lg transition-colors duration-300 cursor-pointer ${
+                  theme === 'dark' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'
+                }`}
               >
                 View All Bookmarked Courses
               </button>
+            </div>
+          )}
+
+          {isModalOpen && (
+            <div className={`fixed inset-0 flex items-center justify-center z-50 ${
+              theme === 'dark' ? 'bg-gray-900 bg-opacity-70' : 'bg-black bg-opacity-50'
+            }`}>
+              <div className={`p-6 rounded-lg shadow-lg max-w-4xl w-full max-h-[80vh] overflow-y-auto ${
+                theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+              }`}>
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className={`text-lg font-semibold ${
+                    theme === 'dark' ? 'text-gray-200' : 'text-gray-800'
+                  }`}>
+                    All Bookmarked Courses
+                  </h3>
+                  <button
+                    onClick={closeModal}
+                    className={`cursor-pointer ${
+                      theme === 'dark' ? 'text-gray-300 hover:text-gray-100' : 'text-gray-600 hover:text-gray-800'
+                    }`}
+                    aria-label="Close modal"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {bookmarkedCourses.map((course) => (
+                    <div
+                      key={course._id}
+                      className={`p-2 rounded-lg shadow-md hover:shadow-lg transition-shadow relative cursor-pointer ${
+                        theme === 'dark' ? 'bg-gray-900' : 'bg-white'
+                      }`}
+                      onClick={() => {
+                        handlePlayCourse(course._id);
+                        closeModal();
+                      }}
+                      aria-label={`View course ${course.title}`}
+                    >
+                      <div className={`relative h-48 rounded-lg overflow-hidden flex items-center justify-center ${
+                        theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'
+                      }`}>
+                        {course.thumbnail ? (
+                          <img
+                            src={course.thumbnail}
+                            alt={course.title}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.target.src = "https://via.placeholder.com/300x200?text=No+Thumbnail";
+                            }}
+                          />
+                        ) : (
+                          <div className="flex items-center justify-center w-full h-full">
+                            {course.title.includes("C++") && (
+                              <img
+                                src="https://via.placeholder.com/300x200?text=C++"
+                                alt="C++ Thumbnail"
+                                className="w-full h-full object-contain"
+                              />
+                            )}
+                            {course.title.includes("Python") && (
+                              <img
+                                src="https://via.placeholder.com/300x200?text=Python"
+                                alt="Python Thumbnail"
+                                className="w-full h-full object-contain"
+                              />
+                            )}
+                            {course.title.includes("MERN") && (
+                              <img
+                                src="https://via.placeholder.com/300x200?text=MERN"
+                                alt="MERN Thumbnail"
+                                className="w-full h-full object-contain"
+                              />
+                            )}
+                            {!course.title.includes("C++") && !course.title.includes("Python") && !course.title.includes("MERN") && (
+                              <span className={theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}>
+                                No thumbnail
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handlePlayCourse(course._id);
+                            closeModal();
+                          }}
+                          className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white p-2 rounded-full shadow-lg hover:scale-110 z-10 cursor-pointer ${
+                            theme === 'dark' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'
+                          }`}
+                          aria-label={`Play course ${course.title}`}
+                        >
+                          <FaPlay />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleBookmark(course._id);
+                          }}
+                          className={`absolute top-2 right-2 p-2 rounded-full cursor-pointer ${
+                            bookmarkedCourses.some(c => c._id === course._id)
+                              ? theme === 'dark' 
+                                ? 'text-yellow-400 bg-gray-800 bg-opacity-90'
+                                : 'text-yellow-500 bg-white bg-opacity-90'
+                              : theme === 'dark'
+                                ? 'text-gray-400 bg-gray-800 bg-opacity-70 hover:bg-opacity-90'
+                                : 'text-gray-500 bg-white bg-opacity-70 hover:bg-opacity-90'
+                          }`}
+                          aria-label={bookmarkedCourses.some(c => c._id === course._id) ? `Remove bookmark for ${course.title}` : `Bookmark ${course.title}`}
+                        >
+                          <FaBookmark />
+                        </button>
+                      </div>
+                      <div className="p-3">
+                        <h3 className={`font-medium text-md mb-1 ${
+                          theme === 'dark' ? 'text-gray-200' : 'text-gray-800'
+                        }`}>
+                          {course.title}
+                        </h3>
+                        <p className={`text-sm mb-2 line-clamp-2 ${
+                          theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+                        }`}>
+                          {course.description || "Learn about this course"}
+                        </p>
+                        <div className={`flex justify-between items-center text-sm ${
+                          theme === 'dark' ? 'text-gray-200' : 'text-gray-800'
+                        }`}>
+                          <span className="font-bold">
+                            ₹{course.discountPrice || course.price || 'N/A'}
+                          </span>
+                          {course.discountPrice && course.price && (
+                            <span className={`line-through ${
+                              theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                            }`}>
+                              ₹{course.price}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center mt-2">
+                          <img
+                            src={course.instructor?.avatar || "https://via.placeholder.com/24"}
+                            alt={course.instructor?.firstName || "Instructor"}
+                            className="w-6 h-6 rounded-full mr-2"
+                          />
+                          <span className={`text-sm mr-2 ${
+                            theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                          }`}>
+                            {course.instructor?.firstName || "Unknown"}{" "}
+                            {course.instructor?.lastName || ""}
+                          </span>
+                          <span className="text-yellow-500">⭐ {course.rating || 0}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
         </>

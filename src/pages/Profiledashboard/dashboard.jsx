@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import dashboardImage from '../../assets/dashboard.png';
 import { FaPlay } from 'react-icons/fa';
+import { ThemeContext } from '../../contexts/ThemeContext';
 import CourseCards from '../Profiledashboard/Coursecard';
 
 const Notification = ({ message, type, onClose }) => {
@@ -11,24 +12,26 @@ const Notification = ({ message, type, onClose }) => {
   return (
     <div
       className={`fixed top-4 right-4 p-4 rounded-md shadow-lg text-white transition-opacity duration-300 z-50 ${
-        type === 'error' ? 'bg-red-500' : 'bg-green-500'
+        type === 'error' ? 'bg-red-500 dark:bg-red-600' : 'bg-green-500 dark:bg-green-600'
       }`}
     >
       <div className="flex items-center justify-between">
         <span>{message}</span>
-        <button onClick={onClose} className="ml-4 hover:text-gray-200">
+        <button onClick={onClose} className="ml-4 hover:text-gray-200 dark:hover:text-gray-100">
           ✕
         </button>
       </div>
     </div>
   );
 };
+
 const MyCourses = () => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [notification, setNotification] = useState({ message: '', type: '' });
   const navigate = useNavigate();
+  const { theme } = useContext(ThemeContext);
 
   useEffect(() => {
     if (notification.message) {
@@ -57,7 +60,7 @@ const MyCourses = () => {
           }
         );
         const validCourses = response.data.data.filter((c) => c.course !== null);
-        console.log('Fetched courses with thumbnails:', validCourses); // Debug all courses
+        console.log('Fetched courses with thumbnails:', validCourses);
         setCourses(validCourses);
       } catch (error) {
         console.error('Error fetching student courses:', error);
@@ -94,25 +97,53 @@ const MyCourses = () => {
 
   return (
     <div className="w-full">
-      <Notification message={notification.message} type={notification.type} onClose={() => setNotification({ message: '', type: '' })} />
+      <Notification
+        message={notification.message}
+        type={notification.type}
+        onClose={() => setNotification({ message: '', type: '' })}
+      />
       <div className="flex justify-between items-start mb-4">
-        <h3 className="text-lg font-semibold text-gray-800">Assigned Courses</h3>
+        <h3
+          className={`text-lg font-semibold ${
+            theme === 'dark' ? 'text-gray-200' : 'text-gray-800'
+          }`}
+        >
+          Our Courses
+        </h3>
       </div>
 
       {loading ? (
-        <p className="text-gray-600 text-sm text-center">Loading courses...</p>
+        <p
+          className={`text-sm text-center ${
+            theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+          }`}
+        >
+          Loading courses...
+        </p>
       ) : courses.length === 0 ? (
-        <p className="text-gray-600 text-sm text-center">No enrolled courses found.</p>
+        <p
+          className={`text-sm text-center ${
+            theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+          }`}
+        >
+          No enrolled courses found.
+        </p>
       ) : (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {displayedCourses.map((item) => (
               <div
                 key={item._id}
-                className="bg-white p-3 rounded-xl shadow-md transition-transform transform hover:scale-105 cursor-pointer relative"
+                className={`p-3 rounded-xl shadow-md transition-transform transform hover:scale-105 cursor-pointer relative ${
+                  theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+                }`}
                 onClick={() => navigate(`/course-player/${item.course._id}`)}
               >
-                <div className="w-full h-36 bg-gray-200 rounded-md mb-4 overflow-hidden relative group">
+                <div
+                  className={`w-full h-36 rounded-md mb-4 overflow-hidden relative group ${
+                    theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'
+                  }`}
+                >
                   {console.log('Thumbnail URL for', item.course.title, ':', item.course.thumbnail)}
                   {item.course.thumbnail ? (
                     <img
@@ -121,7 +152,7 @@ const MyCourses = () => {
                       className="w-full h-full object-cover rounded-md"
                       onError={(e) => {
                         console.error(`Failed to load thumbnail for ${item.course.title}: ${item.course.thumbnail}`);
-                        e.target.src = 'https://via.placeholder.com/300x150'; // Dynamic fallback
+                        e.target.src = 'https://via.placeholder.com/300x150';
                       }}
                       onLoad={() => console.log(`Successfully loaded thumbnail for ${item.course.title}`)}
                     />
@@ -132,35 +163,67 @@ const MyCourses = () => {
                       className="w-full h-full object-cover rounded-md"
                     />
                   )}
-                  <div className="absolute inset-0 bg-opacity-0 group-hover:bg-opacity-30 transition-opacity duration-300" style={{ backgroundColor: 'transparent' }} />
+                  <div
+                    className="absolute inset-0 bg-opacity-0 group-hover:bg-opacity-30 transition-opacity duration-300"
+                    style={{ backgroundColor: 'transparent' }}
+                  />
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       handlePlay(item.course._id);
                     }}
-                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#49BBBD] text-white p-2 rounded-full shadow-lg hover:scale-110 z-50"
+                    className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white p-2 rounded-full shadow-lg hover:scale-110 z-50 ${
+                      theme === 'dark' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'
+                    }`}
                     title="Play Course"
+                    aria-label={`Play course ${item.course.title}`}
                   >
                     <FaPlay className="text-xs" />
                   </button>
                 </div>
-                <h3 className="text-sm font-semibold text-slate-800 mb-1 truncate">{item.course.title}</h3>
-                <p className="text-xs text-gray-600 mb-2 line-clamp-2">{item.course.description}</p>
-                <div className="flex justify-between items-center text-xs">
-                  {item.course.discountPrice ? (
+                <h3
+                  className={`text-sm font-semibold mb-1 truncate ${
+                    theme === 'dark' ? 'text-gray-200' : 'text-slate-800'
+                  }`}
+                >
+                  {item.course.title}
+                </h3>
+                <p
+                  className={`text-xs mb-2 line-clamp-2 ${
+                    theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+                  }`}
+                >
+                  {item.course.description}
+                </p>
+                <div
+                  className={`flex justify-between items-center text-xs ${
+                    theme === 'dark' ? 'text-gray-200' : 'text-slate-700'
+                  }`}
+                >
+                  {item.course.discountPrice && item.course.price ? (
                     <>
-                      <span className="font-semibold text-slate-700">₹{item.course.price - item.course.discountPrice}</span>
-                      <span className="text-gray-500 line-through">₹{item.course.price}</span>
+                      <span className="font-semibold">₹{item.course.price - item.course.discountPrice}</span>
+                      <span
+                        className={`line-through ${
+                          theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                        }`}
+                      >
+                        ₹{item.course.price}
+                      </span>
                     </>
                   ) : (
-                    <span className="font-semibold text-slate-700">₹{item.course.price}</span>
+                    <span className="font-semibold">{item.course.price ? `₹${item.course.price}` : 'Price unavailable'}</span>
                   )}
                 </div>
                 <div className="flex justify-between items-center mt-2 text-xs">
-                  <span className="text-gray-700 truncate">
-                    👨‍🏫 {item.course.instructor?.firstName} {item.course.instructor?.lastName}
+                  <span
+                    className={`truncate ${
+                      theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                    }`}
+                  >
+                    👨‍🏫 {item.course.instructor?.firstName || 'Unknown'} {item.course.instructor?.lastName || ''}
                   </span>
-                  <span className="text-yellow-500">⭐ {item.course.rating}</span>
+                  <span className="text-yellow-500">⭐ {item.course.rating || 'N/A'}</span>
                 </div>
               </div>
             ))}
@@ -170,20 +233,42 @@ const MyCourses = () => {
             <div className="mt-6 flex justify-center">
               <button
                 onClick={openModal}
-                className="px-8 py-3 bg-[#59c1c3] text-white rounded-full font-semibold text-lg hover:bg-[#7ddedf] transition-colors duration-300 shadow-lg"
+                className={`px-8 py-3 rounded-full font-semibold text-lg text-white shadow-lg transition-colors duration-300 ${
+                  theme === 'dark' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'
+                }`}
               >
                 View All Courses
               </button>
             </div>
           )}
-              <CourseCards courses={courses} />
+          <CourseCards courses={courses} />
 
           {isModalOpen && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white p-6 rounded-xl shadow-lg max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+            <div
+              className={`fixed inset-0 flex items-center justify-center z-50 ${
+                theme === 'dark' ? 'bg-gray-900 bg-opacity-70' : 'bg-black bg-opacity-50'
+              }`}
+            >
+              <div
+                className={`p-6 rounded-xl shadow-lg max-w-4xl w-full max-h-[80vh] overflow-y-auto ${
+                  theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+                }`}
+              >
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-semibold text-gray-800">All Enrolled Courses</h3>
-                  <button onClick={closeModal} className="text-gray-600 hover:text-gray-800">
+                  <h3
+                    className={`text-lg font-semibold ${
+                      theme === 'dark' ? 'text-gray-200' : 'text-gray-800'
+                    }`}
+                  >
+                    All Enrolled Courses
+                  </h3>
+                  <button
+                    onClick={closeModal}
+                    className={`${
+                      theme === 'dark' ? 'text-gray-300 hover:text-gray-100' : 'text-gray-600 hover:text-gray-800'
+                    }`}
+                    aria-label="Close modal"
+                  >
                     ✕
                   </button>
                 </div>
@@ -191,13 +276,20 @@ const MyCourses = () => {
                   {courses.map((item) => (
                     <div
                       key={item._id}
-                      className="bg-white p-3 rounded-xl shadow-md transition-transform transform hover:scale-105 cursor-pointer relative"
+                      className={`p-3 rounded-xl shadow-md transition-transform transform hover:scale-105 cursor-pointer relative ${
+                        theme === 'dark' ? 'bg-gray-900' : 'bg-white'
+                      }`}
                       onClick={() => {
                         navigate(`/course-player/${item.course._id}`);
                         closeModal();
                       }}
+                      aria-label={`View course ${item.course.title}`}
                     >
-                      <div className="w-full h-36 bg-gray-200 rounded-md mb-4 overflow-hidden relative group">
+                      <div
+                        className={`w-full h-36 rounded-md mb-4 overflow-hidden relative group ${
+                          theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'
+                        }`}
+                      >
                         {console.log('Modal Thumbnail URL for', item.course.title, ':', item.course.thumbnail)}
                         {item.course.thumbnail ? (
                           <img
@@ -217,36 +309,68 @@ const MyCourses = () => {
                             className="w-full h-full object-cover rounded-md"
                           />
                         )}
-                        <div className="absolute inset-0 bg-opacity-0 group-hover:bg-opacity-30 transition-opacity duration-300" style={{ backgroundColor: 'transparent' }} />
+                        <div
+                          className="absolute inset-0 bg-opacity-0 group-hover:bg-opacity-30 transition-opacity duration-300"
+                          style={{ backgroundColor: 'transparent' }}
+                        />
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             handlePlay(item.course._id);
                             closeModal();
                           }}
-                          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#49BBBD] text-white p-2 rounded-full shadow-lg hover:scale-110 z-50"
+                          className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white p-2 rounded-full shadow-lg hover:scale-110 z-50 ${
+                            theme === 'dark' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'
+                          }`}
                           title="Play Course"
+                          aria-label={`Play course ${item.course.title}`}
                         >
                           <FaPlay className="text-xs" />
                         </button>
                       </div>
-                      <h3 className="text-sm font-semibold text-slate-800 mb-1 truncate">{item.course.title}</h3>
-                      <p className="text-xs text-gray-600 mb-2 line-clamp-2">{item.course.description}</p>
-                      <div className="flex justify-between items-center text-xs">
-                        {item.course.discountPrice ? (
+                      <h3
+                        className={`text-sm font-semibold mb-1 truncate ${
+                          theme === 'dark' ? 'text-gray-200' : 'text-slate-800'
+                        }`}
+                      >
+                        {item.course.title}
+                      </h3>
+                      <p
+                        className={`text-xs mb-2 line-clamp-2 ${
+                          theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+                        }`}
+                      >
+                        {item.course.description}
+                      </p>
+                      <div
+                        className={`flex justify-between items-center text-xs ${
+                          theme === 'dark' ? 'text-gray-200' : 'text-slate-700'
+                        }`}
+                      >
+                        {item.course.discountPrice && item.course.price ? (
                           <>
-                            <span className="font-semibold text-slate-700">₹{item.course.price - item.course.discountPrice}</span>
-                            <span className="text-gray-500 line-through">₹{item.course.price}</span>
+                            <span className="font-semibold">₹{item.course.price - item.course.discountPrice}</span>
+                            <span
+                              className={`line-through ${
+                                theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                              }`}
+                            >
+                              ₹{item.course.price}
+                            </span>
                           </>
                         ) : (
-                          <span className="font-semibold text-slate-700">₹{item.course.price}</span>
+                          <span className="font-semibold">{item.course.price ? `₹${item.course.price}` : 'Price unavailable'}</span>
                         )}
                       </div>
                       <div className="flex justify-between items-center mt-2 text-xs">
-                        <span className="text-gray-700 truncate">
-                          👨‍🏫 {item.course.instructor?.firstName} {item.course.instructor?.lastName}
+                        <span
+                          className={`truncate ${
+                            theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                          }`}
+                        >
+                          👨‍🏫 {item.course.instructor?.firstName || 'Unknown'} {item.course.instructor?.lastName || ''}
                         </span>
-                        <span className="text-yellow-500">⭐ {item.course.rating}</span>
+                        <span className="text-yellow-500">⭐ {item.course.rating || 'N/A'}</span>
                       </div>
                     </div>
                   ))}
@@ -264,6 +388,7 @@ const Dashboard = () => {
   const [student, setStudent] = useState(null);
   const [notification, setNotification] = useState({ message: '', type: '' });
   const navigate = useNavigate();
+  const { theme } = useContext(ThemeContext);
 
   useEffect(() => {
     if (notification.message) {
@@ -309,22 +434,50 @@ const Dashboard = () => {
   }, [navigate]);
 
   return (
-    <div className="bg-gradient-to-r from-[#D8C4E5] to-[#E8D9F0] p-6 rounded-lg shadow w-full">
-      <Notification message={notification.message} type={notification.type} onClose={() => setNotification({ message: '', type: '' })} />
+    <div
+      className={`p-6 rounded-lg shadow w-full min-h-screen ${
+        theme === 'dark'
+          ? 'bg-gradient-to-r from-gray-800 to-gray-900'
+          : 'bg-gradient-to-r from-[#e2e2e2] to-[#eaeaea]'
+      }`}
+    >
+      <Notification
+        message={notification.message}
+        type={notification.type}
+        onClose={() => setNotification({ message: '', type: '' })}
+      />
 
-      <div className="bg-white p-6 rounded-xl shadow flex justify-between items-center mb-8">
+      <div
+        className={`p-6 rounded-xl shadow flex justify-between items-center mb-8 ${
+          theme === 'dark' ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-800'
+        }`}
+      >
         <div className="max-w-[70%]">
-          <h1 className="font-bold text-xl text-gray-800">Hey {student?.firstName || 'User'}.</h1>
-          <p className="text-sm text-gray-600 mt-2">
+          <h1 className="font-bold text-xl">
+            Hey {student?.firstName || 'User'}.
+          </h1>
+          <p
+            className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'} mt-2`}
+          >
             Welcome back! We’re here to support you on your learning journey. Dive into your classes and keep progressing towards your goals
           </p>
         </div>
         <div className="w-[120px] sm:w-[150px] md:w-[180px] lg:w-[200px]">
-          <img src={dashboardImage} alt="Illustration" className="w-full h-auto" />
+          <img
+            src={dashboardImage}
+            alt="Illustration"
+            className={`w-full h-auto ${
+              theme === 'dark' ? 'border-gray-700' : 'border-gray-200'
+            } border-2 rounded-md`}
+          />
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-xl shadow mb-8">
+      <div
+        className={`p-6 rounded-xl shadow ${
+          theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+        }`}
+      >
         <MyCourses />
       </div>
     </div>

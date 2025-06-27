@@ -17,7 +17,7 @@ import NotFound from './pages/NotFound';
 import Login from './pages/Profiledashboard/Login';
 import ProfileDashboard from './pages/Profiledashboard/parentLayout';
 import CoursePlayer from './pages/CoursePlayer';
-import { ThemeProvider } from './pages/Profiledashboard/ThemeContext'; // Import the CoursePlayer component
+
 import {
   ParticipantReviews,
   VideoReviews,
@@ -70,7 +70,7 @@ const Home = () => {
 // Layout component to handle conditional Header and Footer rendering
 const AppLayout = () => {
   const location = useLocation();
-  const hideHeaderAndFooter = location.pathname === '/profile-dashboard';
+  const hideHeaderAndFooter = location.pathname === '/profile-dashboard' || location.pathname.startsWith('/course-player');
 
   return (
     <div className="min-h-screen overflow-x-hidden">
@@ -80,7 +80,7 @@ const AppLayout = () => {
         <Route path="/" element={<Home />} />
         <Route path="/Login" element={<Login />} />
         <Route path="/profile-dashboard" element={<ProfileDashboard />} />
-        <Route path="/course-player/:courseId" element={<CoursePlayer />} /> {/* Add CoursePlayer route */}
+        <Route path="/course-player/:courseId" element={<CoursePlayer />} />
         <Route path="/reviews/participant" element={<ParticipantReviews />} />
         <Route path="/reviews/video" element={<VideoReviews />} />
         <Route path="/reviews/corporate" element={<CorporateTrainingReviews />} />
