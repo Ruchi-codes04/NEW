@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { SignUpProvider } from './contexts/SignUpContext';
+import { ThemeProvider } from './contexts/ThemeContext'; // Import ThemeProvider
 import Header from './components/Header';
 import HeroSection from './components/HeroSection';
 import Courses from './components/Courses';
@@ -17,7 +18,6 @@ import NotFound from './pages/NotFound';
 import Login from './pages/Profiledashboard/Login';
 import ProfileDashboard from './pages/Profiledashboard/parentLayout';
 import CoursePlayer from './pages/CoursePlayer';
-
 import {
   ParticipantReviews,
   VideoReviews,
@@ -117,9 +117,11 @@ const AppLayout = () => {
 function App() {
   return (
     <SignUpProvider>
-      <Router>
-        <AppLayout />
-      </Router>
+      <ThemeProvider> {/* Add ThemeProvider here */}
+        <Router>
+          <AppLayout />
+        </Router>
+      </ThemeProvider>
     </SignUpProvider>
   );
 }

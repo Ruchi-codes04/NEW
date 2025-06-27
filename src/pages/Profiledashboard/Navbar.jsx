@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Bell } from 'lucide-react';
 
-const Navbar = ({ activePage, sidebarWidth, isSidebarOpen, userName }) => {
+const Navbar = ({ activePage, sidebarWidth, isSidebarOpen, userName, toggleSidebar }) => {
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
   const pageName = activePage.charAt(0).toUpperCase() + activePage.slice(1);
@@ -102,7 +102,7 @@ const Navbar = ({ activePage, sidebarWidth, isSidebarOpen, userName }) => {
       } else {
         throw new Error('API response unsuccessful');
       }
-    } catch (error) {
+    } catch (error) { // Fixed from 'personally' to 'error'
       console.error('Error marking all notifications as read:', error);
       setError(error.message || 'Failed to mark all notifications as read');
     }
@@ -133,18 +133,26 @@ const Navbar = ({ activePage, sidebarWidth, isSidebarOpen, userName }) => {
 
   return (
     <nav
-      className="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 p-4 shadow-md flex items-center justify-between"
+      className={`p-4 shadow-md flex items-center justify-between transition-colors duration-300 ${
+        theme === 'dark' ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-800'
+      }`}
       style={{ marginLeft: isSidebarOpen ? '256px' : sidebarWidth }}
     >
       <div className="flex items-center space-x-4">
-        <button className="md:hidden p-2" aria-label="Toggle sidebar">
+        <button
+          onClick={toggleSidebar}
+          className="md:hidden p-2"
+          aria-label="Toggle sidebar"
+        >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7" />
           </svg>
         </button>
         <div>
           <h1 className="text-xl font-bold">{pageName}</h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400">{subtitle}</p>
+          <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+            {subtitle}
+          </p>
         </div>
       </div>
       <div className="flex items-center space-x-4">
@@ -170,7 +178,9 @@ const Navbar = ({ activePage, sidebarWidth, isSidebarOpen, userName }) => {
         </button>
         <div className="relative flex items-center">
           <button
-            className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full text-sm relative flex items-center"
+            className={`p-2 rounded-full text-sm relative flex items-center ${
+              theme === 'dark' ? 'bg-gray-700 text-gray-200' : 'bg-gray-200 text-gray-600'
+            }`}
             onClick={togglePopup}
             aria-label={`Notifications, ${notificationCount} new`}
           >
@@ -183,22 +193,27 @@ const Navbar = ({ activePage, sidebarWidth, isSidebarOpen, userName }) => {
           </button>
         </div>
         <button
-          className="p-2 bg-purple-600 text-white rounded-full w-8 h-8 flex items-center justify-center"
+          className={`p-2 text-white rounded-full w-8 h-8 flex items-center justify-center ${
+            theme === 'dark' ? 'bg-purple-700' : 'bg-purple-600'
+          }`}
           aria-label={`User profile for ${userName || 'User'}`}
         >
           {initials}
         </button>
       </div>
 
-      {/* Notification Popup */}
       {isPopupOpen && (
-        <div className="absolute top-16 right-4 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg w-80 max-h-96 overflow-y-auto z-50">
+        <div
+          className={`absolute top-16 right-4 rounded-lg shadow-lg w-80 max-h-96 overflow-y-auto z-50 border ${
+            theme === 'dark' ? 'bg-gray-800 border-gray-600 text-gray-200' : 'bg-white border-gray-300 text-gray-800'
+          }`}
+        >
           <div className="p-4">
             <div className="flex justify-between items-center mb-2">
-              <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Notifications</h2>
+              <h2 className="text-lg font-semibold">Notifications</h2>
               {notifications.length > 0 && (
                 <button
-                  className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                  className={`text-sm ${theme === 'dark' ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-500'}`}
                   onClick={markAllAsRead}
                   aria-label="Mark all notifications as read"
                 >
@@ -207,10 +222,10 @@ const Navbar = ({ activePage, sidebarWidth, isSidebarOpen, userName }) => {
               )}
             </div>
             {error ? (
-              <div className="text-sm text-red-600 dark:text-red-400">
+              <div className={`text-sm ${theme === 'dark' ? 'text-red-400' : 'text-red-600'}`}>
                 <p>{error}</p>
                 <button
-                  className="text-sm mt-2 text-blue-600 dark:text-blue-400 hover:underline"
+                  className={`text-sm mt-2 ${theme === 'dark' ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-500'}`}
                   onClick={handleRetry}
                   aria-label="Retry loading notifications"
                 >
@@ -221,19 +236,21 @@ const Navbar = ({ activePage, sidebarWidth, isSidebarOpen, userName }) => {
               notifications.map((notification) => (
                 <div
                   key={notification._id}
-                  className="p-3 border-b border-gray-200 dark:border-gray-700 last:border-b-0 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  className={`p-3 border-b last:border-b-0 hover:bg-opacity-10 transition-colors ${
+                    theme === 'dark' ? 'border-gray-700 hover:bg-gray-700' : 'border-gray-200 hover:bg-gray-100'
+                  }`}
                 >
-                  <h3 className="text-sm font-medium text-gray-800 dark:text-gray-200">
-                    {notification.title}
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">{notification.message}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-500">
+                  <h3 className="text-sm font-medium">{notification.title}</h3>
+                  <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                    {notification.message}
+                  </p>
+                  <p className={`text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
                     {new Date(notification.createdAt).toLocaleString()}
                   </p>
                   {notification.actionUrl && (
                     <Link
                       to={`../CoursePlayer.jsx/${notification.relatedEntity._id}`}
-                      className="text-xs text-blue-600 dark:text-blue-400 hover:underline mt-1 block"
+                      className={`text-xs ${theme === 'dark' ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-500'} hover:underline mt-1 block`}
                       onClick={() => {
                         togglePopup();
                         markAsRead(notification._id);
@@ -246,10 +263,12 @@ const Navbar = ({ activePage, sidebarWidth, isSidebarOpen, userName }) => {
                 </div>
               ))
             ) : (
-              <p className="text-sm text-gray-600 dark:text-gray-400">No new notifications</p>
+              <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                No new notifications
+              </p>
             )}
             <button
-              className="mt-2 w-full text-sm text-blue-600 dark:text-blue-400 hover:underline"
+              className={`mt-2 w-full text-sm ${theme === 'dark' ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-500'} hover:underline`}
               onClick={togglePopup}
               aria-label="Close notifications popup"
             >

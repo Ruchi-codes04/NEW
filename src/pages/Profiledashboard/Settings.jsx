@@ -11,16 +11,21 @@ const Notification = ({ message, type, onClose }) => {
       className={`fixed top-4 right-4 p-4 rounded-md shadow-lg text-white transition-opacity duration-300 z-50 ${
         type === 'error'
           ? theme === 'dark'
-            ? 'bg-red-600 dark:bg-red-700'
+            ? 'bg-red-700'
             : 'bg-red-500'
           : theme === 'dark'
-          ? 'bg-green-600 dark:bg-green-700'
+          ? 'bg-green-700'
           : 'bg-green-500'
       }`}
     >
       <div className="flex items-center justify-between">
         <span>{message}</span>
-        <button onClick={onClose} className="ml-4 hover:text-gray-200 dark:hover:text-gray-300">
+        <button
+          onClick={onClose}
+          className={`ml-4 ${
+            theme === 'dark' ? 'hover:text-gray-300' : 'hover:text-gray-200'
+          }`}
+        >
           ✕
         </button>
       </div>
@@ -37,7 +42,6 @@ const Settings = () => {
     phone: '',
     role: '',
     skills: '',
-   
     email: '',
   });
   const [avatarFile, setAvatarFile] = useState(null);
@@ -60,7 +64,6 @@ const Settings = () => {
         setNotification({ message: 'Authentication required. Please log in to access your profile.', type: 'error' });
         return;
       }
-
       try {
         const res = await axios.get('https://lms-backend-flwq.onrender.com/api/v1/students/profile', {
           headers: { Authorization: `Bearer ${token}` },
@@ -76,7 +79,6 @@ const Settings = () => {
           phone: data.phone || '',
           role: data.role || '',
           skills: data.skills || '',
-          interest: data.interest || '',
           email: data.email || '',
         });
         setAvatarPreview(data.avatar || null);
@@ -93,7 +95,6 @@ const Settings = () => {
         }
       }
     };
-
     fetchProfile();
   }, []);
 
@@ -121,26 +122,22 @@ const Settings = () => {
   const handleUpdate = async () => {
     setSaving(true);
     setNotification({ message: '', type: '' });
-
     const token = localStorage.getItem('token');
     if (!token) {
       setNotification({ message: 'Authentication required. Please log in.', type: 'error' });
       setSaving(false);
       return;
     }
-
     try {
       const payload = new FormData();
       Object.keys(formData).forEach((key) => payload.append(key, formData[key]));
       if (avatarFile) payload.append('avatar', avatarFile);
-
       const res = await axios.put('https://lms-backend-flwq.onrender.com/api/v1/auth/updatedetails', payload, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
         },
       });
-
       const updatedData = res.data.data;
       setStudent((prev) => ({
         ...prev,
@@ -180,26 +177,60 @@ const Settings = () => {
   };
 
   return (
-    <div className="bg-gray-100 dark:bg-gray-900 p-5 font-sans min-h-screen">
-      <Notification message={notification.message} type={notification.type} onClose={() => setNotification({ message: '', type: '' })} />
-
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-5 mb-5 shadow-md">
-        <h2 className="text-xl mb-2 text-gray-900 dark:text-gray-100">Choose Your Language</h2>
+    <div
+      className={`p-5 font-sans min-h-screen transition-colors duration-300 ${
+        theme === 'dark' ? 'bg-gray-900 text-gray-100' : 'bg-gray-100 text-gray-900'
+      }`}
+    >
+      <Notification
+        message={notification.message}
+        type={notification.type}
+        onClose={() => setNotification({ message: '', type: '' })}
+      />
+      <div
+        className={`rounded-lg p-5 mb-5 shadow-md ${
+          theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+        }`}
+      >
+        <h2
+          className={`text-xl mb-2 ${
+            theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+          }`}
+        >
+          Choose Your Language
+        </h2>
         <select
           value={language}
           onChange={handleLanguageChange}
-          className="p-2 border rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+          className={`p-2 border rounded text-sm ${
+            theme === 'dark'
+              ? 'border-gray-600 bg-gray-700 text-gray-100'
+              : 'border-gray-300 bg-white text-gray-900'
+          }`}
         >
           <option value="en">English</option>
           <option value="hi">Hindi</option>
         </select>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+        <p
+          className={`text-sm mt-2 ${
+            theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+          }`}
+        >
           After changing the application language, the application will reload
         </p>
       </div>
-
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-5 mb-5 shadow-md">
-        <h2 className="text-xl mb-2 text-gray-900 dark:text-gray-100">Choose Your Theme</h2>
+      <div
+        className={`rounded-lg p-5 mb-5 shadow-md ${
+          theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+        }`}
+      >
+        <h2
+          className={`text-xl mb-2 ${
+            theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+          }`}
+        >
+          Choose Your Theme
+        </h2>
         <div className="flex items-center gap-5">
           <label className="flex flex-col items-center gap-2 cursor-pointer">
             <input
@@ -211,11 +242,19 @@ const Settings = () => {
               className="hidden"
             />
             <div
-              className={`w-48 h-16 border border-gray-300 bg-white rounded ${
-                theme === 'light' ? 'ring-2 ring-blue-500' : ''
-              }`}
+              className={`w-48 h-16 border rounded ${
+                theme === 'dark'
+                  ? 'border-gray-600 bg-white'
+                  : 'border-gray-300 bg-white'
+              } ${theme === 'light' ? 'ring-2 ring-blue-500' : ''}`}
             ></div>
-            <span className="text-gray-900 dark:text-gray-100">Light</span>
+            <span
+              className={`${
+                theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+              }`}
+            >
+              Light
+            </span>
           </label>
           <label className="flex flex-col items-center gap-2 cursor-pointer">
             <input
@@ -227,26 +266,46 @@ const Settings = () => {
               className="hidden"
             />
             <div
-              className={`w-48 h-16 border border-gray-300 bg-gray-800 rounded ${
-                theme === 'dark' ? 'ring-2 ring-blue-500' : ''
-              }`}
+              className={`w-48 h-16 border rounded ${
+                theme === 'dark'
+                  ? 'border-gray-600 bg-gray-800'
+                  : 'border-gray-300 bg-gray-800'
+              } ${theme === 'dark' ? 'ring-2 ring-blue-500' : ''}`}
             ></div>
-            <span className="text-gray-900 dark:text-gray-100">Dark</span>
+            <span
+              className={`${
+                theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+              }`}
+            >
+              Dark
+            </span>
           </label>
         </div>
       </div>
-
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-md">
+      <div
+        className={`rounded-lg p-5 shadow-md ${
+          theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+        }`}
+      >
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl text-gray-900 dark:text-gray-100">Edit Profile</h2>
+          <h2
+            className={`text-xl ${
+              theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+            }`}
+          >
+            Edit Profile
+          </h2>
           <button
             onClick={toggleEditMode}
-            className="bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 px-4 py-2 rounded-md text-sm"
+            className={`px-4 py-2 rounded-md text-sm transition ${
+              theme === 'dark'
+                ? 'bg-gray-600 text-gray-200 hover:bg-gray-700'
+                : 'bg-gray-300 text-gray-800 hover:bg-gray-400'
+            }`}
           >
             {isEditing ? 'Cancel' : 'Edit Profile'}
           </button>
         </div>
-
         {student && (
           <div>
             <div className="flex items-center gap-4 mb-6">
@@ -254,41 +313,93 @@ const Settings = () => {
                 <img
                   src={avatarPreview || 'https://via.placeholder.com/150'}
                   alt="Profile"
-                  className="w-16 h-16 rounded-full border-4 border-white dark:border-gray-800 shadow"
+                  className={`w-16 h-16 rounded-full border-4 ${
+                    theme === 'dark'
+                      ? 'border-gray-800'
+                      : 'border-white'
+                  } shadow`}
                 />
                 {isEditing && (
                   <>
                     <label
                       htmlFor="avatar-upload"
-                      className="absolute bottom-0 right-0 bg-blue-500 dark:bg-blue-600 text-white rounded-full p-2 cursor-pointer hover:bg-blue-600 dark:hover:bg-blue-700"
+                      className={`absolute bottom-0 right-0 rounded-full p-2 cursor-pointer text-white transition ${
+                        theme === 'dark'
+                          ? 'bg-blue-600 hover:bg-blue-700'
+                          : 'bg-blue-500 hover:bg-blue-600'
+                      }`}
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                        />
                       </svg>
                     </label>
-                    <input id="avatar-upload" type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
+                    <input
+                      id="avatar-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarChange}
+                      className="hidden"
+                    />
                   </>
                 )}
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">{student.firstName} {student.lastName}</h2>
-                <p className="text-gray-500 dark:text-gray-400 text-sm">{student.email}</p>
-                <p className="text-gray-400 dark:text-gray-500 text-xs">1 month ago</p>
+                <h2
+                  className={`text-lg font-semibold ${
+                    theme === 'dark' ? 'text-gray-200' : 'text-gray-800'
+                  }`}
+                >
+                  {student.firstName} {student.lastName}
+                </h2>
+                <p
+                  className={`text-sm ${
+                    theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                  }`}
+                >
+                  {student.email}
+                </p>
+                <p
+                  className={`text-xs ${
+                    theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
+                  }`}
+                >
+                  1 month ago
+                </p>
               </div>
             </div>
-
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {['firstName', 'lastName', 'phone', 'role', 'skills', 'email'].map((field) => (
                 <div key={field}>
-                  <label className="block text-gray-600 dark:text-gray-400 mb-1 text-sm capitalize">
-                    {field.replace('email', 'Email Address').replace('firstName', 'First Name').replace('lastName', 'Last Name')}
+                  <label
+                    className={`block text-sm capitalize ${
+                      theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                    } mb-1`}
+                  >
+                    {field
+                      .replace('email', 'Email Address')
+                      .replace('firstName', 'First Name')
+                      .replace('lastName', 'Last Name')}
                   </label>
                   {field === 'role' && isEditing ? (
                     <select
                       name="role"
                       value={formData.role}
                       onChange={handleChange}
-                      className="w-full border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 rounded-md p-2 text-sm text-gray-900 dark:text-gray-100"
+                      className={`w-full border rounded-md p-2 text-sm ${
+                        theme === 'dark'
+                          ? 'border-gray-600 bg-gray-800 text-gray-100'
+                          : 'border-gray-300 bg-white text-gray-900'
+                      }`}
                     >
                       <option value="">Select Role</option>
                       <option value="Student">Student</option>
@@ -301,7 +412,15 @@ const Settings = () => {
                       name={field}
                       value={formData[field]}
                       onChange={handleChange}
-                      className={`w-full border ${isEditing ? 'bg-white dark:bg-gray-800' : 'bg-gray-100 dark:bg-gray-700'} border-gray-300 dark:border-gray-600 rounded-md p-2 text-sm text-gray-900 dark:text-gray-100`}
+                      className={`w-full border rounded-md p-2 text-sm ${
+                        theme === 'dark'
+                          ? isEditing
+                            ? 'border-gray-600 bg-gray-800 text-gray-100'
+                            : 'border-gray-600 bg-gray-700 text-gray-100'
+                          : isEditing
+                          ? 'border-gray-300 bg-white text-gray-900'
+                          : 'border-gray-300 bg-gray-100 text-gray-900'
+                      } ${!isEditing && field === 'email' ? 'cursor-not-allowed' : ''}`}
                       readOnly={!isEditing || field === 'email'}
                       disabled={!isEditing && field === 'email'}
                     />
@@ -309,12 +428,15 @@ const Settings = () => {
                 </div>
               ))}
             </div>
-
             {isEditing && (
               <div className="mt-6 flex justify-end">
                 <button
                   onClick={handleUpdate}
-                  className="bg-blue-500 dark:bg-blue-600 hover:bg-blue-600 dark:hover:bg-blue-700 text-white px-6 py-2 rounded-md text-sm"
+                  className={`px-6 py-2 rounded-md text-sm text-white transition ${
+                    theme === 'dark'
+                      ? 'bg-blue-600 hover:bg-blue-700'
+                      : 'bg-blue-500 hover:bg-blue-600'
+                  } ${saving ? 'opacity-50 cursor-not-allowed' : ''}`}
                   disabled={saving}
                 >
                   {saving ? 'Saving...' : 'Save Changes'}

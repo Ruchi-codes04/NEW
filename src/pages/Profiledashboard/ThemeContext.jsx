@@ -1,16 +1,16 @@
-// src/context/ThemeContext.js
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useContext } from 'react';
 
 export const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {
-  // Initialize theme from localStorage or default to 'light'
-  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
-  // Initialize language from localStorage or default to 'en'
+  const [theme, setTheme] = useState(() => {
+    const savedTheme = localStorage.getItem('theme');
+    return savedTheme === 'light' || savedTheme === 'dark' ? savedTheme : 'light';
+  });
   const [language, setLanguage] = useState(() => localStorage.getItem('language') || 'en');
 
-  // Apply theme to document.documentElement (html) instead of body for better Tailwind compatibility
   useEffect(() => {
+    console.log('Applying theme:', theme); // Debug
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
     } else {
@@ -19,7 +19,6 @@ export const ThemeProvider = ({ children }) => {
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  // Save language to localStorage
   useEffect(() => {
     localStorage.setItem('language', language);
   }, [language]);
@@ -29,4 +28,12 @@ export const ThemeProvider = ({ children }) => {
       {children}
     </ThemeContext.Provider>
   );
+};
+
+export const useTheme = () => {
+  const context = useContext(ThemeContext);
+  if (!context) {
+    throw new Error('useTheme must be used within a ThemeProvider');
+  }
+  return context;
 };

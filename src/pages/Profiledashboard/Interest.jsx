@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { ThemeContext } from '../../contexts/ThemeContext';
 import defaultCourseAvatar from '../../assets/iconsss.png';
 
 const InterestPage = () => {
+  const { theme } = useContext(ThemeContext);
   const [searchTerm, setSearchTerm] = useState('');
   const [myInterests, setMyInterests] = useState(() => {
     const savedInterests = localStorage.getItem('myInterests');
@@ -82,15 +84,45 @@ const InterestPage = () => {
 
   const defaultInstructorAvatar = 'https://via.placeholder.com/30?text=Instructor';
 
-  if (loading) return <p className="text-gray-600 dark:text-gray-400">Loading courses...</p>;
-  if (error) return <p className="text-red-500 dark:text-red-400">{error}</p>;
+  if (loading)
+    return (
+      <p
+        className={`${
+          theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+        }`}
+      >
+        Loading courses...
+      </p>
+    );
+  if (error)
+    return (
+      <p
+        className={`${
+          theme === 'dark' ? 'text-red-400' : 'text-red-500'
+        }`}
+      >
+        {error}
+      </p>
+    );
 
   return (
-    <div className="w-full min-h-screen mx-auto p-6 bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-lg shadow-lg max-w-7xl flex flex-col transition-colors duration-300">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+    <div
+      className={`w-full min-h-screen mx-auto p-6 rounded-lg shadow-lg max-w-7xl flex flex-col transition-colors duration-300 ${
+        theme === 'dark' ? 'bg-gray-900 text-gray-100' : 'bg-gray-100 text-gray-900'
+      }`}
+    >
+      <h1
+        className={`text-2xl font-bold ${
+          theme === 'dark' ? 'text-white' : 'text-gray-900'
+        } mb-4`}
+      >
         What are your interests?
       </h1>
-      <p className="text-gray-600 dark:text-gray-400 mb-4">
+      <p
+        className={`${
+          theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+        } mb-4`}
+      >
         Please let us know topics of interest to you, so we can help identify the content that would be most relevant to you.
       </p>
 
@@ -98,91 +130,164 @@ const InterestPage = () => {
         <input
           type="text"
           placeholder="Search categories"
-          className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+          className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 transition ${
+            theme === 'dark'
+              ? 'border-gray-600 bg-gray-800 text-gray-100 focus:ring-blue-400'
+              : 'border-gray-300 bg-white text-gray-900 focus:ring-blue-500'
+          }`}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
         {searchTerm && uniqueCategories.length === 0 && (
-          <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">
+          <p
+            className={`text-sm ${
+              theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+            } mt-2`}
+          >
             No matching categories found
           </p>
         )}
       </div>
 
       <div className="mb-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+        <h2
+          className={`text-xl font-semibold ${
+            theme === 'dark' ? 'text-white' : 'text-gray-900'
+          } mb-2`}
+        >
           My Interests
         </h2>
         {myInterests.length === 0 ? (
-          <p className="text-gray-600 dark:text-gray-400">No Interests</p>
+          <p
+            className={`${
+              theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+            }`}
+          >
+            No Interests
+          </p>
         ) : (
           <div className="flex flex-col gap-4 mb-4">
             <div className="flex flex-wrap gap-2 mb-2">
               {myInterests.map((interest, index) => (
                 <button
                   key={index}
-                  className="px-4 py-2 bg-blue-500 dark:bg-blue-600 text-white rounded-lg hover:bg-blue-600 dark:hover:bg-blue-500 transition duration-200 flex items-center"
+                  className={`px-4 py-2 text-white rounded-lg transition ${
+                    theme === 'dark'
+                      ? 'bg-blue-600 hover:bg-blue-500'
+                      : 'bg-blue-500 hover:bg-blue-600'
+                  } flex items-center`}
                   onClick={() => handleRemoveInterest(interest)}
                 >
-                  {interest} <span className="ml-2 text-red-500 dark:text-red-400">✕</span>
+                  {interest}{' '}
+                  <span
+                    className={`ml-2 ${
+                      theme === 'dark' ? 'text-red-400' : 'text-red-500'
+                    }`}
+                  >
+                    ✕
+                  </span>
                 </button>
               ))}
             </div>
             {allInterestCourses.length > 0 && (
               <div className="ml-4">
-                <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-2">
+                <h3
+                  className={`text-lg font-medium ${
+                    theme === 'dark' ? 'text-gray-200' : 'text-gray-800'
+                  } mb-2`}
+                >
                   Associated Courses
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {allInterestCourses.map((course, idx) => (
                     <div
                       key={course._id || idx}
-                      className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex flex-col justify-between"
+                      className={`rounded-lg shadow-md p-4 flex flex-col justify-between ${
+                        theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+                      }`}
                     >
                       <div>
                         <img
-                          src={isValidImageUrl(course.thumbnail) ? course.thumbnail : defaultCourseAvatar}
+                          src={
+                            isValidImageUrl(course.thumbnail)
+                              ? course.thumbnail
+                              : defaultCourseAvatar
+                          }
                           alt={course.title || 'Course Image'}
                           className="w-full h-40 object-cover rounded-lg mb-4"
                           onError={(e) => {
-                            console.log(`Image failed to load for course: ${course.title}, URL: ${course.thumbnail}`);
+                            console.log(
+                              `Image failed to load for course: ${course.title}, URL: ${course.thumbnail}`
+                            );
                             e.target.src = defaultCourseAvatar;
                           }}
                         />
-                        <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        <h4
+                          className={`text-lg font-semibold ${
+                            theme === 'dark' ? 'text-white' : 'text-gray-900'
+                          }`}
+                        >
                           {course.title || 'Untitled Course'}
                         </h4>
-                        <p className="text-gray-600 dark:text-gray-400 mt-2">
+                        <p
+                          className={`${
+                            theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                          } mt-2`}
+                        >
                           {course.category || 'No category'}
                         </p>
-                        <p className="text-green-600 dark:text-green-400 font-bold mt-2">
+                        <p
+                          className={`font-bold mt-2 ${
+                            theme === 'dark' ? 'text-green-400' : 'text-green-600'
+                          }`}
+                        >
                           ₹{course.discountPrice || course.price || '0'}
                         </p>
                       </div>
                       <div className="mt-4 flex items-center justify-between">
                         <div className="flex items-center">
                           <img
-                            src={course.instructor?.avatar || defaultInstructorAvatar}
+                            src={
+                              course.instructor?.avatar || defaultInstructorAvatar
+                            }
                             alt="Instructor"
                             className="w-8 h-8 rounded-full mr-2"
                             onError={(e) => (e.target.src = defaultInstructorAvatar)}
                           />
-                          <span className="text-gray-700 dark:text-gray-300">
+                          <span
+                            className={`${
+                              theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                            }`}
+                          >
                             {course.instructor
                               ? `${course.instructor.firstName} ${course.instructor.lastName}`
                               : 'Unknown Instructor'}
                           </span>
                         </div>
                         <div className="flex items-center">
-                          <span className="text-yellow-500 dark:text-yellow-400 mr-1">★</span>
-                          <span className="text-gray-700 dark:text-gray-300">
+                          <span
+                            className={`mr-1 ${
+                              theme === 'dark' ? 'text-yellow-400' : 'text-yellow-500'
+                            }`}
+                          >
+                            ★
+                          </span>
+                          <span
+                            className={`${
+                              theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                            }`}
+                          >
                             {course.rating || '0'}
                           </span>
                         </div>
                       </div>
                       <button
                         onClick={() => handleCourseClick(course)}
-                        className="mt-4 w-full bg-blue-500 dark:bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-600 dark:hover:bg-blue-500 transition duration-200"
+                        className={`mt-4 w-full text-white py-2 rounded-lg transition ${
+                          theme === 'dark'
+                            ? 'bg-blue-600 hover:bg-blue-500'
+                            : 'bg-blue-500 hover:bg-blue-600'
+                        }`}
                       >
                         View Course
                       </button>
@@ -196,10 +301,18 @@ const InterestPage = () => {
       </div>
 
       <div className="flex-1">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+        <h2
+          className={`text-xl font-semibold ${
+            theme === 'dark' ? 'text-white' : 'text-gray-900'
+          } mb-2`}
+        >
           All Categories
         </h2>
-        <p className="text-gray-600 dark:text-gray-400 mb-4">
+        <p
+          className={`${
+            theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+          } mb-4`}
+        >
           Pick categories below you're interested in and help Infosys Springboard to know you better. The platform will use this information to improve your learning recommendations. The more often you use Infosys Springboard, the better the recommendations will be. Take the first step to your personalized learning experience!
         </p>
 
@@ -207,7 +320,11 @@ const InterestPage = () => {
           {uniqueCategories.slice(0, visibleCourses).map((category, index) => (
             <button
               key={index}
-              className="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition duration-200"
+              className={`px-4 py-2 rounded-lg transition ${
+                theme === 'dark'
+                  ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                  : 'bg-gray-300 text-gray-800 hover:bg-gray-400'
+              }`}
               onClick={() => handleAddInterest(category)}
             >
               {category}
@@ -218,7 +335,9 @@ const InterestPage = () => {
         {uniqueCategories.length > initialVisibleCount && (
           <a
             href="#"
-            className="text-blue-500 dark:text-blue-400 hover:underline"
+            className={`${
+              theme === 'dark' ? 'text-blue-400 hover:text-blue-300' : 'text-blue-500 hover:text-blue-600'
+            } hover:underline`}
             onClick={handleToggleView}
           >
             {visibleCourses < uniqueCategories.length

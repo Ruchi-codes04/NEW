@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
+import { ThemeContext } from '../../contexts/ThemeContext';
 
 const Contact = ({ relatedCourseId }) => {
+  const { theme } = useContext(ThemeContext);
   const [form, setForm] = useState({
     name: '',
     subject: '',
@@ -18,8 +20,6 @@ const Contact = ({ relatedCourseId }) => {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem('token');
-
-        // Fetch user profile
         const profileRes = await axios.get(
           'https://lms-backend-flwq.onrender.com/api/v1/students/profile',
           {
@@ -29,7 +29,6 @@ const Contact = ({ relatedCourseId }) => {
         const { firstName, lastName } = profileRes.data.data;
         setForm((prev) => ({ ...prev, name: `${firstName} ${lastName}` }));
 
-        // Fetch enrolled courses
         const coursesRes = await axios.get(
           'https://lms-backend-flwq.onrender.com/api/v1/students/courses',
           {
@@ -70,7 +69,6 @@ const Contact = ({ relatedCourseId }) => {
 
     try {
       const token = localStorage.getItem('token');
-
       const response = await axios.post(
         'https://lms-backend-flwq.onrender.com/api/v1/students/support',
         {
@@ -83,8 +81,6 @@ const Contact = ({ relatedCourseId }) => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-
-      console.log("Response from support API:", response);
 
       if (response.data.success) {
         setSuccessMsg('Support ticket submitted successfully.');
@@ -110,26 +106,46 @@ const Contact = ({ relatedCourseId }) => {
   };
 
   return (
-    <div className="sm:p-0 mt-12 md:mt-0 h-fit px-[10px] lg:py-6 lg:px-6 bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-lg space-y-6 max-w-7xl mx-auto transition-colors duration-300">
+    <div
+      className={`sm:p-0 mt-12 md:mt-0 h-fit px-[10px] lg:py-6 lg:px-6 rounded-lg space-y-6 max-w-7xl mx-auto transition-colors duration-300 ${
+        theme === 'dark' ? 'bg-gray-900 text-gray-100' : 'bg-gray-100 text-gray-900'
+      }`}
+    >
       <div className="w-full max-w-full sm:max-w-[60%] px-4 py-6 mx-0 mt-12 md:mt-6 sm:mx-auto sm:px-6">
-        <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold mb-4 sm:mb-6 text-center text-gray-900 dark:text-white">
+        <h2
+          className={`text-xl sm:text-2xl md:text-3xl font-semibold mb-4 sm:mb-6 text-center ${
+            theme === 'dark' ? 'text-white' : 'text-gray-900'
+          }`}
+        >
           Ticket Support
         </h2>
 
         {successMsg && (
-          <p className="text-green-600 dark:text-green-400 text-sm sm:text-base mb-4 sm:mb-6 text-center">
+          <p
+            className={`text-sm sm:text-base mb-4 sm:mb-6 text-center ${
+              theme === 'dark' ? 'text-green-400' : 'text-green-600'
+            }`}
+          >
             {successMsg}
           </p>
         )}
         {errorMsg && (
-          <p className="text-red-600 dark:text-red-400 text-sm sm:text-base mb-4 sm:mb-6 text-center">
+          <p
+            className={`text-sm sm:text-base mb-4 sm:mb-6 text-center ${
+              theme === 'dark' ? 'text-red-400' : 'text-red-600'
+            }`}
+          >
             {errorMsg}
           </p>
         )}
 
         <div className="space-y-4 sm:space-y-5">
           <div>
-            <label className="block text-gray-700 dark:text-gray-300 mb-1 text-sm sm:text-base font-medium">
+            <label
+              className={`block mb-1 text-sm sm:text-base font-medium ${
+                theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+              }`}
+            >
               Name
             </label>
             <input
@@ -137,18 +153,28 @@ const Contact = ({ relatedCourseId }) => {
               name="name"
               value={form.name}
               disabled
-              className="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-2 sm:p-3 bg-gray-100 dark:bg-gray-800 cursor-not-allowed text-gray-600 dark:text-gray-400 text-sm sm:text-base focus:ring-0"
+              className={`w-full border rounded-lg p-2 sm:p-3 bg-gray-100 cursor-not-allowed text-sm sm:text-base focus:ring-0 ${
+                theme === 'dark' ? 'border-gray-600 bg-gray-800 text-gray-400' : 'border-gray-300 bg-gray-100 text-gray-600'
+              }`}
             />
           </div>
           <div>
-            <label className="block text-gray-700 dark:text-gray-300 mb-1 text-sm sm:text-base font-medium">
+            <label
+              className={`block mb-1 text-sm sm:text-base font-medium ${
+                theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+              }`}
+            >
               Related Course
             </label>
             <select
               name="relatedCourse"
               value={form.relatedCourse}
               onChange={handleChange}
-              className="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-2 sm:p-3 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+              className={`w-full border rounded-lg p-2 sm:p-3 text-sm sm:text-base focus:ring-2 focus:border-blue-500 ${
+                theme === 'dark'
+                  ? 'border-gray-600 bg-gray-800 text-gray-100 focus:ring-blue-400'
+                  : 'border-gray-300 bg-white text-gray-900 focus:ring-blue-500'
+              }`}
             >
               <option value="">Select a course (optional)</option>
               {courses.map((course) => (
@@ -159,7 +185,11 @@ const Contact = ({ relatedCourseId }) => {
             </select>
           </div>
           <div>
-            <label className="block text-gray-700 dark:text-gray-300 mb-1 text-sm sm:text-base font-medium">
+            <label
+              className={`block mb-1 text-sm sm:text-base font-medium ${
+                theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+              }`}
+            >
               Subject
             </label>
             <input
@@ -167,32 +197,52 @@ const Contact = ({ relatedCourseId }) => {
               name="subject"
               value={form.subject}
               onChange={handleChange}
-              className="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-2 sm:p-3 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+              className={`w-full border rounded-lg p-2 sm:p-3 text-sm sm:text-base focus:ring-2 focus:border-blue-500 ${
+                theme === 'dark'
+                  ? 'border-gray-600 bg-gray-800 text-gray-100 focus:ring-blue-400'
+                  : 'border-gray-300 bg-white text-gray-900 focus:ring-blue-500'
+              }`}
               required
             />
           </div>
           <div>
-            <label className="block text-gray-700 dark:text-gray-300 mb-1 text-sm sm:text-base font-medium">
+            <label
+              className={`block mb-1 text-sm sm:text-base font-medium ${
+                theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+              }`}
+            >
               Message
             </label>
             <textarea
               name="message"
               value={form.message}
               onChange={handleChange}
-              className="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-2 sm:p-3 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 resize-y"
+              className={`w-full border rounded-lg p-2 sm:p-3 text-sm sm:text-base focus:ring-2 focus:border-blue-500 resize-y ${
+                theme === 'dark'
+                  ? 'border-gray-600 bg-gray-800 text-gray-100 focus:ring-blue-400'
+                  : 'border-gray-300 bg-white text-gray-900 focus:ring-blue-500'
+              }`}
               rows={4}
               required
             ></textarea>
           </div>
           <div>
-            <label className="block text-gray-700 dark:text-gray-300 mb-1 text-sm sm:text-base font-medium">
+            <label
+              className={`block mb-1 text-sm sm:text-base font-medium ${
+                theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+              }`}
+            >
               Category
             </label>
             <select
               name="category"
               value={form.category}
               onChange={handleChange}
-              className="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-2 sm:p-3 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+              className={`w-full border rounded-lg p-2 sm:p-3 text-sm sm:text-base focus:ring-2 focus:border-blue-500 ${
+                theme === 'dark'
+                  ? 'border-gray-600 bg-gray-800 text-gray-100 focus:ring-blue-400'
+                  : 'border-gray-300 bg-white text-gray-900 focus:ring-blue-500'
+              }`}
               required
             >
               <option value="technical">Technical</option>
@@ -206,7 +256,11 @@ const Contact = ({ relatedCourseId }) => {
             type="button"
             onClick={handleSubmit}
             disabled={loading}
-            className="w-full bg-[#49BBBD] dark:bg-blue-600 text-white py-2 sm:py-3 px-4 rounded-lg hover:bg-[#3A9D9D] dark:hover:bg-blue-500 transition duration-200 text-sm sm:text-base font-medium disabled:bg-blue-300 dark:disabled:bg-blue-400 disabled:cursor-not-allowed"
+            className={`w-full py-2 sm:py-3 px-4 rounded-lg text-sm sm:text-base font-medium text-white transition duration-200 ${
+              theme === 'dark'
+                ? 'bg-blue-600 hover:bg-blue-500 disabled:bg-blue-400'
+                : 'bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300'
+            } disabled:cursor-not-allowed`}
           >
             {loading ? 'Submitting...' : 'Submit Ticket'}
           </button>

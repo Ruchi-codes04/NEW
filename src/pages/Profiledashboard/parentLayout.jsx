@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { ThemeProvider } from '../../contexts/ThemeContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import Sidebar from './sidebar';
 import Dashboard from './Dashboard';
 import MyCourses from './MyCourses';
-import Contact from './Contact';
+import Contact from './contact';
 import AssessmentScores from './assessmentscore';
 import Interest from './Interest';
 import Settings from './Settings';
@@ -12,7 +12,6 @@ import CoursePlayer from '../CoursePlayer';
 import { Navigate, useNavigate } from 'react-router-dom';
 import Navbar from './Navbar';
 
-// Notification Component
 const Notification = ({ message, type, onClose }) => {
   if (!message) return null;
   return (
@@ -30,6 +29,7 @@ const Notification = ({ message, type, onClose }) => {
 };
 
 const ParentLayout = () => {
+  const { theme } = useTheme();
   const [activePage, setActivePage] = useState('dashboard');
   const [courseId, setCourseId] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -49,7 +49,6 @@ const ParentLayout = () => {
     const fetchProfile = async () => {
       try {
         const token = localStorage.getItem('token');
-        console.log('Profile Token:', token);
         if (!token) {
           setNotification({ message: 'Authentication required. Please log in.', type: 'error' });
           setTimeout(() => navigate('/login'), 2000);
@@ -114,52 +113,65 @@ const ParentLayout = () => {
   };
 
   return (
-    <ThemeProvider>
-      <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-700">
-        <Notification
-          message={notification.message}
-          type={notification.type}
-          onClose={() => setNotification({ message: '', type: '' })}
-        />
-        <Navbar
+    <div
+      className={`flex flex-col min-h-screen transition-colors duration-300 ${
+        theme === 'dark' ? 'bg-gray-700' : 'bg-gray-50'
+      }`}
+    >
+      <Notification
+        message={notification.message}
+        type={notification.type}
+        onClose={() => setNotification({ message: '', type: '' })}
+      />
+      <Navbar
+        activePage={activePage}
+        sidebarWidth={sidebarWidth}
+        isSidebarOpen={isSidebarOpen}
+        userName={userName}
+        setActivePage={setActivePage}
+        setCourseId={setCourseId}
+        toggleSidebar={toggleSidebar}
+      />
+      <div
+        className={`fixed left-0 h-screen transition-all duration-300 ease-in-out ${
+          isSidebarOpen ? 'translate-x-0 w-64' : 'md:w-16 w-0 -translate-x-full md:translate-x-0'
+        } z-40 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}
+        onMouseEnter={() => handleSidebarToggle(true)}
+        onMouseLeave={() => handleSidebarToggle(false)}
+      >
+        <Sidebar
           activePage={activePage}
-          sidebarWidth={sidebarWidth}
-          isSidebarOpen={isSidebarOpen}
-          userName={userName}
-          setActivePage={setActivePage}
-          setCourseId={setCourseId}
-          toggleSidebar={toggleSidebar} // Pass toggleSidebar to Navbar
+          setActivePage={(page, courseId) => {
+            setActivePage(page);
+            if (courseId) setCourseId(courseId);
+            setIsSidebarOpen(false);
+          }}
         />
-        <div
-          className={`fixed left-0 h-screen transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? 'translate-x-0 w-64' : 'md:w-16 w-0 -translate-x-full md:translate-x-0'
-          } z-40 bg-white dark:bg-gray-800`}
-          onMouseEnter={() => handleSidebarToggle(true)}
-          onMouseLeave={() => handleSidebarToggle(false)}
-        >
-          <Sidebar
-            activePage={activePage}
-            setActivePage={(page, courseId) => {
-              setActivePage(page);
-              if (courseId) setCourseId(courseId);
-              setIsSidebarOpen(false);
-            }}
-          />
-        </div>
-        {isSidebarOpen && (
-          <div
-            className="md:hidden fixed inset-0 bg-black bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-70 z-30"
-            onClick={toggleSidebar}
-          ></div>
-        )}
-        <div
-          className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-700 px-2 min-h-screen transition-all duration-300"
-          style={{ marginLeft: isSidebarOpen ? '256px' : sidebarWidth }}
-        >
-          {renderPage()}
-        </div>
       </div>
-    </ThemeProvider>
+      {isSidebarOpen && (
+        <div
+          className={`md:hidden fixed inset-0 z-30 ${
+            theme === 'dark' ? 'bg-gray-900 bg-opacity-70' : 'bg-black bg-opacity-50'
+          }`}
+          onClick={toggleSidebar}
+        ></div>
+      )}
+      <div
+        className={`flex-1 overflow-auto px-2 min-h-screen transition-all duration-300 ${
+          theme === 'dark' ? 'bg-gray-700' : 'bg-gray-50'
+        }`}
+        style={{ marginLeft: isSidebarOpen ? '256px' : sidebarWidth }}
+      >
+        {renderPage()}
+      </div>
+      <div
+        className={`fixed bottom-4 right-4 p-2 rounded-lg shadow ${
+          theme === 'dark' ? 'bg-gray-800 text-gray-200' : 'bg-gray-200 text-gray-800'
+        }`}
+      >
+        Current Theme: {theme}
+      </div>
+    </div>
   );
 };
 
