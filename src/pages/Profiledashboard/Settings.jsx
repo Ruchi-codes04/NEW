@@ -34,10 +34,10 @@ const Settings = () => {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
-    gender: '',
-    country: '',
-    language: '',
-    timeZone: '',
+    phone: '',
+    role: '',
+    skills: '',
+   
     email: '',
   });
   const [avatarFile, setAvatarFile] = useState(null);
@@ -73,10 +73,10 @@ const Settings = () => {
         setFormData({
           firstName: data.firstName || '',
           lastName: data.lastName || '',
-          gender: data.gender || '',
-          country: data.country || '',
-          language: data.language || '',
-          timeZone: data.timeZone || '',
+          phone: data.phone || '',
+          role: data.role || '',
+          skills: data.skills || '',
+          interest: data.interest || '',
           email: data.email || '',
         });
         setAvatarPreview(data.avatar || null);
@@ -262,7 +262,7 @@ const Settings = () => {
                       htmlFor="avatar-upload"
                       className="absolute bottom-0 right-0 bg-blue-500 dark:bg-blue-600 text-white rounded-full p-2 cursor-pointer hover:bg-blue-600 dark:hover:bg-blue-700"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 24">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                       </svg>
                     </label>
@@ -278,24 +278,26 @@ const Settings = () => {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {['firstName', 'lastName', 'gender', 'country', 'language', 'timeZone', 'email'].map((field) => (
+              {['firstName', 'lastName', 'phone', 'role', 'skills', 'email'].map((field) => (
                 <div key={field}>
-                  <label className="block text-gray-600 dark:text-gray-400 mb-1 text-sm capitalize">{field.replace('email', 'Email Address')}</label>
-                  {field === 'gender' && isEditing ? (
+                  <label className="block text-gray-600 dark:text-gray-400 mb-1 text-sm capitalize">
+                    {field.replace('email', 'Email Address').replace('firstName', 'First Name').replace('lastName', 'Last Name')}
+                  </label>
+                  {field === 'role' && isEditing ? (
                     <select
-                      name="gender"
-                      value={formData.gender}
+                      name="role"
+                      value={formData.role}
                       onChange={handleChange}
                       className="w-full border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 rounded-md p-2 text-sm text-gray-900 dark:text-gray-100"
                     >
-                      <option value="">Select Gender</option>
-                      <option value="Male">Male</option>
-                      <option value="Female">Female</option>
-                      <option value="Not Prefer to Say">Not Prefer to Say</option>
+                      <option value="">Select Role</option>
+                      <option value="Student">Student</option>
+                      <option value="Teacher">Teacher</option>
+                      <option value="Administrator">Administrator</option>
                     </select>
                   ) : (
                     <input
-                      type={field === 'email' ? 'email' : 'text'}
+                      type={field === 'email' ? 'email' : field === 'phone' ? 'tel' : 'text'}
                       name={field}
                       value={formData[field]}
                       onChange={handleChange}
