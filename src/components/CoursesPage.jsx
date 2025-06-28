@@ -1,9 +1,15 @@
 import React, { useState } from 'react';
 import { FaStar, FaUsers, FaClock, FaPlay, FaFilter, FaSearch } from 'react-icons/fa';
+import { FaBookmark } from 'react-icons/fa';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const CoursesPage = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
+   const [bookmarkedCourses, setBookmarkedCourses] = useState([]);
+  const [notification, setNotification] = useState({ message: '', type: '' });
+  const navigate = useNavigate();
 
   const categories = ['All', 'Web Development', 'Data Science', 'Design', 'Business', 'Marketing'];
 
@@ -116,6 +122,62 @@ const CoursesPage = () => {
     }
   };
 
+   // Add the same handleBookmark function as above
+  const handleBookmark = async (courseId) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setNotification({ message: 'Please login to bookmark courses', type: 'error' });
+        navigate('/login');
+        return;
+      }
+
+      const isBookmarked = bookmarkedCourses.includes(courseId);
+      
+      const response = await axios.patch(
+        `https://lms-backend-flwq.onrender.com/api/v1/students/courses/${courseId}/bookmark`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        setNotification({
+          message: isBookmarked ? 'Removed from bookmarks' : 'Added to bookmarks',
+          type: 'success',
+        });
+        if (isBookmarked) {
+          setBookmarkedCourses(bookmarkedCourses.filter(id => id !== courseId));
+        } else {
+          setBookmarkedCourses([...bookmarkedCourses, courseId]);
+        }
+      }
+    } catch (err) {
+      console.error('Bookmark Error:', err);
+      setNotification({
+        message: err.response?.data?.message || 'Failed to update bookmark',
+        type: 'error',
+      });
+    }
+  };
+
+  // Add notification component
+  {notification.message && (
+    <div className={`fixed top-4 right-4 p-4 rounded-md shadow-lg text-white z-50 ${
+      notification.type === 'error' ? 'bg-red-500' : 'bg-green-500'
+    }`}>
+      <div className="flex items-center justify-between">
+        <span>{notification.message}</span>
+        <button onClick={() => setNotification({ message: '', type: '' })} className="ml-4">
+          ✕
+        </button>
+      </div>
+    </div>
+  )}
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -181,6 +243,21 @@ const CoursesPage = () => {
               key={course.id}
               className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group"
             >
+
+              <button
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          handleBookmark(course.id);
+        }}
+        className={`absolute top-2 right-2 p-2 rounded-full z-10 ${
+          bookmarkedCourses.includes(course.id) 
+            ? 'text-yellow-500 bg-white' 
+            : 'text-gray-400 bg-white hover:text-yellow-500'
+        }`}
+      >
+        <FaBookmark />
+      </button>
               {/* Course Image */}
               <div className="relative overflow-hidden">
                 <img

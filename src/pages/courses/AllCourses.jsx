@@ -6,6 +6,9 @@ import TrendingCourses from '../../components/TrendingCourses';
 import MicrosoftAI from '../../components/MicrosoftAI';
 import FAQ from '../../components/FAQ';
 import SignUpPopup from '../../components/SignUpPopup';
+import { FaBookmark } from 'react-icons/fa';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 // Add CSS for hiding scrollbar
 const scrollbarHideStyles = `
@@ -27,6 +30,9 @@ const AllCourses = () => {
   const coursesPerPage = 9;
   const scrollRef = useRef(null);
   const coursesScrollRef = useRef(null);
+    const [bookmarkedCourses, setBookmarkedCourses] = useState([]);
+  const [notification, setNotification] = useState({ message: '', type: '' });
+  const navigate = useNavigate();
 
   // Filter states
   const [filters, setFilters] = useState({
@@ -86,6 +92,62 @@ const AllCourses = () => {
       }
     });
   };
+
+   // Add the same handleBookmark function
+  const handleBookmark = async (courseId) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setNotification({ message: 'Please login to bookmark courses', type: 'error' });
+        navigate('/login');
+        return;
+      }
+
+      const isBookmarked = bookmarkedCourses.includes(courseId);
+      
+      const response = await axios.patch(
+        `https://lms-backend-flwq.onrender.com/api/v1/students/courses/${courseId}/bookmark`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        setNotification({
+          message: isBookmarked ? 'Removed from bookmarks' : 'Added to bookmarks',
+          type: 'success',
+        });
+        if (isBookmarked) {
+          setBookmarkedCourses(bookmarkedCourses.filter(id => id !== courseId));
+        } else {
+          setBookmarkedCourses([...bookmarkedCourses, courseId]);
+        }
+      }
+    } catch (err) {
+      console.error('Bookmark Error:', err);
+      setNotification({
+        message: err.response?.data?.message || 'Failed to update bookmark',
+        type: 'error',
+      });
+    }
+  };
+
+  // Add notification component
+  {notification.message && (
+    <div className={`fixed top-4 right-4 p-4 rounded-md shadow-lg text-white z-50 ${
+      notification.type === 'error' ? 'bg-red-500' : 'bg-green-500'
+    }`}>
+      <div className="flex items-center justify-between">
+        <span>{notification.message}</span>
+        <button onClick={() => setNotification({ message: '', type: '' })} className="ml-4">
+          ✕
+        </button>
+      </div>
+    </div>
+  )}
 
 
 
@@ -1075,6 +1137,20 @@ const AllCourses = () => {
                       {currentCourses.map(course => (
                         <div key={course.id} className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-200">
                           <div className="relative pb-[56.25%]">
+                            <button
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          handleBookmark(course.id);
+        }}
+        className={`absolute top-2 right-2 p-2 rounded-full z-10 ${
+          bookmarkedCourses.includes(course.id) 
+            ? 'text-yellow-500 bg-white' 
+            : 'text-gray-400 bg-white hover:text-yellow-500'
+        }`}
+      >
+        <FaBookmark />
+      </button>
                             <img
                               src={course.image}
                               alt={course.title}

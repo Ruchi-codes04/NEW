@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import { FaBookmark } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 
 const Courses = () => {
   const [showModal, setShowModal] = useState(false);
@@ -8,6 +10,9 @@ const Courses = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [bookmarkedCourses, setBookmarkedCourses] = useState([]);
+  const [notification, setNotification] = useState({ message: '', type: '' });
+  const navigate = useNavigate();
 
   // Color palette for dynamic assignment
   const colorPalette = [
@@ -43,6 +48,63 @@ const Courses = () => {
     };
     fetchCourses();
   }, []);
+
+   // Add this function to handle bookmarking
+  const handleBookmark = async (courseId) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setNotification({ message: 'Please login to bookmark courses', type: 'error' });
+        navigate('/login');
+        return;
+      }
+
+      const isBookmarked = bookmarkedCourses.includes(courseId);
+      
+      const response = await axios.patch(
+        `https://lms-backend-flwq.onrender.com/api/v1/students/courses/${courseId}/bookmark`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        setNotification({
+          message: isBookmarked ? 'Removed from bookmarks' : 'Added to bookmarks',
+          type: 'success',
+        });
+        // Update bookmarked courses list
+        if (isBookmarked) {
+          setBookmarkedCourses(bookmarkedCourses.filter(id => id !== courseId));
+        } else {
+          setBookmarkedCourses([...bookmarkedCourses, courseId]);
+        }
+      }
+    } catch (err) {
+      console.error('Bookmark Error:', err);
+      setNotification({
+        message: err.response?.data?.message || 'Failed to update bookmark',
+        type: 'error',
+      });
+    }
+  };
+
+  // Add this notification component inside the return statement, before the section element
+  {notification.message && (
+    <div className={`fixed top-4 right-4 p-4 rounded-md shadow-lg text-white z-50 ${
+      notification.type === 'error' ? 'bg-red-500' : 'bg-green-500'
+    }`}>
+      <div className="flex items-center justify-between">
+        <span>{notification.message}</span>
+        <button onClick={() => setNotification({ message: '', type: '' })} className="ml-4">
+          ✕
+        </button>
+      </div>
+    </div>
+  )}
 
   // Handle escape key to close modal
   useEffect(() => {
@@ -247,6 +309,21 @@ const Courses = () => {
                       key={course._id}
                       className="group rounded-2xl p-4 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer border-[0.5px] border-gray-200 bg-white hover:bg-teal-50"
                     >
+
+                       <button
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          handleBookmark(course._id);
+        }}
+        className={`absolute top-2 right-2 p-2 rounded-full ${
+          bookmarkedCourses.includes(course._id) 
+            ? 'text-yellow-500 bg-white' 
+            : 'text-gray-400 bg-white hover:text-yellow-500'
+        }`}
+      >
+        <FaBookmark />
+      </button>
                       <img
                         src={course.thumbnail}
                         alt={course.title}
