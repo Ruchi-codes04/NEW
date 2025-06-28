@@ -55,7 +55,7 @@ const Courses = () => {
       const token = localStorage.getItem('token');
       if (!token) {
         setNotification({ message: 'Please login to bookmark courses', type: 'error' });
-        navigate('/login');
+        navigate('/');
         return;
       }
 

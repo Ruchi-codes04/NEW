@@ -220,7 +220,7 @@ export default function CoursePlayer() {
       const token = localStorage.getItem('token');
       if (!token) {
         setNotificationsError('Authentication failed. Please log in again.');
-        navigate('/login');
+        navigate('/');
         return;
       }
 

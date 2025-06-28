@@ -113,7 +113,7 @@ const CoursesPage = () => {
         if (err.response.status === 401) {
           errorMessage = 'Session expired. Please login again.';
           localStorage.removeItem('token');
-          navigate('/login');
+          navigate('/');
         } else if (err.response.data?.message) {
           errorMessage = err.response.data.message;
         }

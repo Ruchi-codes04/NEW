@@ -50,7 +50,7 @@ const ParentLayout = () => {
         const token = localStorage.getItem('token');
         if (!token) {
           setNotification({ message: 'Authentication required. Please log in.', type: 'error' });
-          setTimeout(() => navigate('/login'), 2000);
+          setTimeout(() => navigate('/'), 2000);
           return;
         }
 
@@ -67,7 +67,7 @@ const ParentLayout = () => {
           setTimeout(() => {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
-            navigate('/login');
+            navigate('/');
           }, 2000);
         } else if (err.response?.data?.message) {
           message = err.response.data.message;
