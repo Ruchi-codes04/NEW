@@ -38,7 +38,7 @@ const Footer = () => {
           <div className="text-center sm:text-left">
             <h4 className="text-base sm:text-lg font-semibold mb-4 sm:mb-6 font-poppins">Useful Links</h4>
             <ul className="space-y-2 sm:space-y-3">
-              <li><a href="#" className="text-gray-400 hover:text-teal-600 transition-colors duration-300 text-sm">About</a></li>
+              <li><Link to="/about/contact" className="text-gray-400 hover:text-teal-600 transition-colors duration-300 text-sm">About</Link></li>
               <li><Link to="/courses/all" className="text-gray-400 hover:text-teal-600 transition-colors duration-300 text-sm">Courses</Link></li>
               <li><a href="#" className="text-gray-400 hover:text-teal-600 transition-colors duration-300 text-sm">Instructor</a></li>
               <li><a href="#" className="text-gray-400 hover:text-teal-600 transition-colors duration-300 text-sm">Events</a></li>

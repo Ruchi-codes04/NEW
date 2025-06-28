@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import {
   FaStar,
   FaRegClock,
@@ -17,244 +17,94 @@ import {
   FaPlayCircle,
   FaQuestionCircle,
   FaCode,
-  FaArrowLeft,
   FaShoppingCart
 } from 'react-icons/fa';
+import axios from 'axios';
 
 const ViewCourse = () => {
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState('overview');
   const [expandedModule, setExpandedModule] = useState(null);
   const [showVideoModal, setShowVideoModal] = useState(false);
+  const [course, setCourse] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch course data from API
+  useEffect(() => {
+    const fetchCourse = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(`https://lms-backend-flwq.onrender.com/api/v1/courses/${id}/content`);
+        if (response.data.success) {
+          const apiCourse = response.data.data;
+          const transformedCourse = {
+            id: apiCourse._id,
+            title: apiCourse.title || 'Untitled Course',
+            description: apiCourse.description || 'No description available.',
+            longDescription: apiCourse.description || 'No detailed description available.', // Fallback if no long description
+            instructor: `${apiCourse.instructor?.firstName || 'Unknown'} ${apiCourse.instructor?.lastName || 'Instructor'}`,
+            instructorBio: apiCourse.instructor?.bio || 'Experienced professional in the field.',
+            instructorImage: apiCourse.instructor?.avatar || 'https://via.placeholder.com/150',
+            rating: apiCourse.rating || 0,
+            reviews: apiCourse.totalRatings || 0,
+            students: apiCourse.totalStudents || 0,
+            duration: apiCourse.duration ? `${apiCourse.duration} hours` : 'Unknown duration',
+            level: apiCourse.level ? apiCourse.level.charAt(0).toUpperCase() + apiCourse.level.slice(1) : 'Unknown',
+            category: apiCourse.category || 'Uncategorized',
+            price: apiCourse.price === 0 ? 'Free' : `₹${apiCourse.price}`,
+            originalPrice: apiCourse.discountPrice ? `₹${apiCourse.discountPrice}` : null,
+            image: apiCourse.thumbnail || 'https://via.placeholder.com/800x400',
+            videoUrl: apiCourse.videoUrl || 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+            language: apiCourse.language || 'English',
+            subtitles: apiCourse.subtitles || ['English'],
+            lastUpdated: apiCourse.updatedAt ? new Date(apiCourse.updatedAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'Unknown',
+            certificate: apiCourse.certificate !== undefined ? apiCourse.certificate : true,
+            downloadable: apiCourse.downloadable !== undefined ? apiCourse.downloadable : true,
+            lifetime: apiCourse.lifetime !== undefined ? apiCourse.lifetime : true,
+            mobileAccess: apiCourse.mobileAccess !== undefined ? apiCourse.mobileAccess : true,
+            modules: apiCourse.curriculum?.length > 0 ? apiCourse.curriculum.map((module, index) => ({
+              id: module._id || index + 1,
+              title: module.title || `Module ${index + 1}`,
+              duration: module.duration ? `${module.duration} hours` : 'Unknown duration',
+              lessons: module.lessons?.length > 0 ? module.lessons.map((lesson, lessonIndex) => ({
+                id: lesson._id || lessonIndex + 1,
+                title: lesson.title || `Lesson ${lessonIndex + 1}`,
+                duration: lesson.duration || 'Unknown',
+                type: lesson.type || 'video',
+                preview: lesson.preview || false,
+                completed: lesson.completed || false
+              })) : []
+            })) : [],
+            learningOutcomes: apiCourse.learningOutcomes?.length > 0 ? apiCourse.learningOutcomes : ['Learn key concepts of the course.'],
+            requirements: apiCourse.prerequisites?.length > 0 ? apiCourse.prerequisites : ['No prior requirements.'],
+            features: [
+              { icon: FaRegClock, text: apiCourse.duration ? `${apiCourse.duration} hours of on-demand video` : 'On-demand video content' },
+              { icon: FaDownload, text: apiCourse.downloadable ? 'Downloadable resources' : 'Resources included' },
+              { icon: FaGlobe, text: 'Access on mobile and desktop' },
+              { icon: FaCertificate, text: apiCourse.certificate ? 'Certificate of completion' : 'Completion certificate not included' },
+              { icon: FaUsers, text: 'Access to student community' }
+            ]
+          };
+          setCourse(transformedCourse);
+        } else {
+          setError('Failed to fetch course data');
+        }
+      } catch (err) {
+        console.error('Fetch Course Error:', err);
+        setError(err.response?.data?.message || 'Error fetching course data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCourse();
+  }, [id]);
 
   // Scroll to top when component mounts or when course ID changes
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [id]);
-
-  // Function to get course data based on ID
-  const getCourseData = (courseId) => {
-    const courses = {
-      1: {
-        id: 1,
-        title: "Complete Web Development Bootcamp",
-        description: "Learn HTML, CSS, JavaScript, React, Node.js, MongoDB and more to become a full-stack web developer.",
-        longDescription: "This comprehensive bootcamp will take you from a complete beginner to a professional web developer. You'll learn the latest technologies and best practices used by top companies worldwide. The course includes hands-on projects, real-world examples, and personalized feedback from experienced instructors.",
-        instructor: "Dr. Sarah Johnson",
-        instructorBio: "Dr. Sarah Johnson is a senior software engineer with 10+ years of experience at Google and Microsoft. She has taught over 100,000 students worldwide and is passionate about making programming accessible to everyone.",
-        instructorImage: "https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
-        rating: 4.8,
-        reviews: 1245,
-        students: 12500,
-        duration: "48 hours",
-        level: "Beginner to Advanced",
-        category: "Web Development",
-        price: "₹12,999",
-        originalPrice: "₹19,999",
-        image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-        videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-        language: "English",
-        subtitles: ["English", "Hindi", "Spanish"],
-        lastUpdated: "December 2024",
-        certificate: true,
-        downloadable: true,
-        lifetime: true,
-        mobileAccess: true,
-        modules: [
-          {
-            id: 1,
-            title: "Introduction to Web Development",
-            duration: "2 hours",
-            lessons: [
-              { id: 1, title: "What is Web Development?", duration: "15 min", type: "video", preview: true, completed: false },
-              { id: 2, title: "Setting up Development Environment", duration: "20 min", type: "video", preview: false, completed: false },
-              { id: 3, title: "Your First HTML Page", duration: "25 min", type: "video", preview: true, completed: false },
-              { id: 4, title: "Quiz: HTML Basics", duration: "10 min", type: "quiz", preview: false, completed: false }
-            ]
-          },
-          {
-            id: 2,
-            title: "HTML Fundamentals",
-            duration: "6 hours",
-            lessons: [
-              { id: 5, title: "HTML Structure and Syntax", duration: "30 min", type: "video", preview: false, completed: false },
-              { id: 6, title: "Working with Text and Links", duration: "25 min", type: "video", preview: false, completed: false },
-              { id: 7, title: "Images and Media", duration: "20 min", type: "video", preview: false, completed: false },
-              { id: 8, title: "Forms and Input Elements", duration: "35 min", type: "video", preview: false, completed: false }
-            ]
-          }
-        ],
-        learningOutcomes: [
-          "Build responsive websites using HTML, CSS, and JavaScript",
-          "Create dynamic web applications with React.js",
-          "Develop backend APIs using Node.js and Express",
-          "Work with databases using MongoDB",
-          "Deploy applications to cloud platforms",
-          "Understand modern development workflows and tools"
-        ],
-        requirements: [
-          "No prior programming experience required",
-          "A computer with internet connection",
-          "Willingness to learn and practice coding",
-          "Basic computer skills (file management, web browsing)"
-        ],
-        features: [
-          { icon: FaRegClock, text: "48 hours of on-demand video" },
-          { icon: FaDownload, text: "Downloadable resources" },
-          { icon: FaGlobe, text: "Access on mobile and desktop" },
-          { icon: FaCertificate, text: "Certificate of completion" },
-          { icon: FaUsers, text: "Access to student community" }
-        ]
-      },
-      2: {
-        id: 2,
-        title: "Python for Data Science Masterclass",
-        description: "Master Python programming and data science with NumPy, Pandas, Matplotlib, and Machine Learning algorithms.",
-        longDescription: "Dive deep into the world of data science with Python. This comprehensive course covers everything from Python basics to advanced machine learning techniques. You'll work with real datasets, build predictive models, and create stunning visualizations. Perfect for aspiring data scientists and analysts.",
-        instructor: "Prof. Michael Chen",
-        instructorBio: "Prof. Michael Chen is a data science expert with PhD in Computer Science from MIT. He has worked at Netflix and Amazon as a senior data scientist and has published numerous research papers in machine learning.",
-        instructorImage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
-        rating: 4.9,
-        reviews: 2156,
-        students: 18750,
-        duration: "65 hours",
-        level: "Intermediate",
-        category: "Data Science",
-        price: "₹15,999",
-        originalPrice: "₹24,999",
-        image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-        videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-        language: "English",
-        subtitles: ["English", "Hindi", "Spanish"],
-        lastUpdated: "November 2024",
-        certificate: true,
-        downloadable: true,
-        lifetime: true,
-        mobileAccess: true,
-        modules: [
-          {
-            id: 1,
-            title: "Python Fundamentals",
-            duration: "8 hours",
-            lessons: [
-              { id: 1, title: "Introduction to Python", duration: "20 min", type: "video", preview: true, completed: false },
-              { id: 2, title: "Variables and Data Types", duration: "30 min", type: "video", preview: false, completed: false },
-              { id: 3, title: "Control Structures", duration: "45 min", type: "video", preview: true, completed: false },
-              { id: 4, title: "Functions and Modules", duration: "40 min", type: "video", preview: false, completed: false }
-            ]
-          },
-          {
-            id: 2,
-            title: "Data Analysis with Pandas",
-            duration: "12 hours",
-            lessons: [
-              { id: 5, title: "Introduction to Pandas", duration: "35 min", type: "video", preview: false, completed: false },
-              { id: 6, title: "Data Cleaning Techniques", duration: "50 min", type: "video", preview: false, completed: false },
-              { id: 7, title: "Data Visualization", duration: "45 min", type: "video", preview: false, completed: false },
-              { id: 8, title: "Statistical Analysis", duration: "60 min", type: "video", preview: false, completed: false }
-            ]
-          }
-        ],
-        learningOutcomes: [
-          "Master Python programming from basics to advanced",
-          "Analyze and visualize data using Pandas and Matplotlib",
-          "Build machine learning models with Scikit-learn",
-          "Work with real-world datasets and case studies",
-          "Create interactive dashboards and reports",
-          "Apply statistical analysis techniques"
-        ],
-        requirements: [
-          "Basic understanding of mathematics and statistics",
-          "Computer with Python installed (guidance provided)",
-          "Willingness to work with data and numbers",
-          "No prior programming experience required"
-        ],
-        features: [
-          { icon: FaRegClock, text: "65 hours of on-demand video" },
-          { icon: FaDownload, text: "Datasets and code files" },
-          { icon: FaGlobe, text: "Access on mobile and desktop" },
-          { icon: FaCertificate, text: "Certificate of completion" },
-          { icon: FaUsers, text: "Data science community access" }
-        ]
-      },
-      3: {
-        id: 3,
-        title: "Digital Marketing Mastery Course",
-        description: "Learn SEO, Social Media Marketing, Google Ads, Content Marketing, and Email Marketing to grow your business online.",
-        longDescription: "Transform your marketing skills with this comprehensive digital marketing course. Learn proven strategies used by top marketers to drive traffic, generate leads, and increase sales. Includes hands-on projects with real campaigns and industry tools.",
-        instructor: "Emma Rodriguez",
-        instructorBio: "Emma Rodriguez is a digital marketing strategist with 8+ years of experience helping businesses grow online. She has managed campaigns for Fortune 500 companies and trained over 50,000 marketers worldwide.",
-        instructorImage: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
-        rating: 4.7,
-        reviews: 987,
-        students: 8900,
-        duration: "35 hours",
-        level: "Beginner to Intermediate",
-        category: "Digital Marketing",
-        price: "₹9,999",
-        originalPrice: "₹14,999",
-        image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-        videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-        language: "English",
-        subtitles: ["English", "Hindi"],
-        lastUpdated: "October 2024",
-        certificate: true,
-        downloadable: true,
-        lifetime: true,
-        mobileAccess: true,
-        modules: [
-          {
-            id: 1,
-            title: "Digital Marketing Fundamentals",
-            duration: "6 hours",
-            lessons: [
-              { id: 1, title: "Introduction to Digital Marketing", duration: "25 min", type: "video", preview: true, completed: false },
-              { id: 2, title: "Understanding Your Target Audience", duration: "30 min", type: "video", preview: false, completed: false },
-              { id: 3, title: "Creating a Marketing Strategy", duration: "35 min", type: "video", preview: true, completed: false },
-              { id: 4, title: "Marketing Funnel Basics", duration: "20 min", type: "video", preview: false, completed: false }
-            ]
-          },
-          {
-            id: 2,
-            title: "Search Engine Optimization (SEO)",
-            duration: "10 hours",
-            lessons: [
-              { id: 5, title: "SEO Fundamentals", duration: "40 min", type: "video", preview: false, completed: false },
-              { id: 6, title: "Keyword Research", duration: "45 min", type: "video", preview: false, completed: false },
-              { id: 7, title: "On-Page SEO", duration: "50 min", type: "video", preview: false, completed: false },
-              { id: 8, title: "Link Building Strategies", duration: "35 min", type: "video", preview: false, completed: false }
-            ]
-          }
-        ],
-        learningOutcomes: [
-          "Create effective digital marketing campaigns",
-          "Master SEO techniques to rank higher on Google",
-          "Run profitable Google Ads and Facebook campaigns",
-          "Build engaging social media strategies",
-          "Create compelling content that converts",
-          "Analyze and optimize marketing performance"
-        ],
-        requirements: [
-          "Basic computer and internet skills",
-          "Access to social media platforms",
-          "Willingness to learn and experiment",
-          "No prior marketing experience required"
-        ],
-        features: [
-          { icon: FaRegClock, text: "35 hours of on-demand video" },
-          { icon: FaDownload, text: "Marketing templates and tools" },
-          { icon: FaGlobe, text: "Access on mobile and desktop" },
-          { icon: FaCertificate, text: "Certificate of completion" },
-          { icon: FaUsers, text: "Marketing community access" }
-        ]
-      }
-    };
-
-    return courses[courseId] || courses[1]; // Default to course 1 if ID not found
-  };
-
-  // Get course data based on the ID from URL
-  const course = getCourseData(parseInt(id));
 
   const toggleModule = (moduleId) => {
     setExpandedModule(expandedModule === moduleId ? null : moduleId);
@@ -263,12 +113,11 @@ const ViewCourse = () => {
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({
-        title: course.title,
-        text: course.description,
+        title: course?.title || 'Course',
+        text: course?.description || 'Check out this course!',
         url: window.location.href,
       });
     } else {
-      // Fallback for browsers that don't support Web Share API
       navigator.clipboard.writeText(window.location.href);
       alert('Course link copied to clipboard!');
     }
@@ -291,16 +140,38 @@ const ViewCourse = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-gray-600 text-lg">Loading course...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-red-500 text-lg">{error}</div>
+      </div>
+    );
+  }
+
+  if (!course) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-gray-600 text-lg">Course not found</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen">
       {/* Course Header */}
-      <section className="py-18">
+      <section className="py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-
             {/* Left Content */}
             <div className="lg:col-span-2 space-y-6 lg:space-y-8">
-
               {/* Course Badge */}
               <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                 <span className="bg-teal-600 text-white px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium">
@@ -317,24 +188,24 @@ const ViewCourse = () => {
               {/* Course Title and Description */}
               <div>
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">{course.title}</h1>
-                <p className="text-lg sm:text-xl text-gray-400 mb-4 sm:mb-6">{course.description}</p>
+                <p className="text-lg sm:text-xl text-gray-600 mb-4 sm:mb-6">{course.description}</p>
                 
                 {/* Course Stats */}
                 <div className="flex flex-wrap items-center gap-6 text-sm">
                   <div className="flex items-center">
                     <FaStar className="text-yellow-400 mr-1" />
-                    <span className="font-semibold mr-1">{course.rating}</span>
-                    <span className="text-black">({course.reviews} reviews)</span>
+                    <span className="font-semibold mr-1">{course.rating.toFixed(1)}</span>
+                    <span className="text-gray-600">({course.reviews} reviews)</span>
                   </div>
-                  <div className="flex items-center text-black">
+                  <div className="flex items-center text-gray-600">
                     <FaUsers className="mr-1" />
                     <span>{course.students.toLocaleString()} students</span>
                   </div>
-                  <div className="flex items-center text-black">
+                  <div className="flex items-center text-gray-600">
                     <FaRegClock className="mr-1" />
                     <span>{course.duration}</span>
                   </div>
-                  <div className="flex items-center text-black">
+                  <div className="flex items-center text-gray-600">
                     <FaUserGraduate className="mr-1" />
                     <span>{course.level}</span>
                   </div>
@@ -348,7 +219,7 @@ const ViewCourse = () => {
                     className="w-12 h-12 rounded-full mr-3"
                   />
                   <div>
-                    <p className="text-sm text-black">Created by</p>
+                    <p className="text-sm text-gray-600">Created by</p>
                     <p className="font-semibold">{course.instructor}</p>
                   </div>
                 </div>
@@ -394,12 +265,16 @@ const ViewCourse = () => {
                   <div className="text-center mb-5">
                     <div className="flex items-center justify-center gap-3 mb-2">
                       <span className="text-2xl font-bold text-gray-900">{course.price}</span>
-                      <span className="text-lg text-gray-500 line-through">{course.originalPrice}</span>
+                      {course.originalPrice && (
+                        <span className="text-lg text-gray-500 line-through">{course.originalPrice}</span>
+                      )}
                     </div>
                     <div className="flex items-center justify-center gap-2 mb-2">
-                      <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">
-                        35% OFF
-                      </span>
+                      {course.originalPrice && (
+                        <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">
+                          {Math.round(((parseInt(course.originalPrice.replace('₹', '')) - parseInt(course.price.replace('₹', ''))) / parseInt(course.originalPrice.replace('₹', ''))) * 100)}% OFF
+                        </span>
+                      )}
                       <span className="text-sm text-gray-600">Limited time offer!</span>
                     </div>
                     <div className="text-xs text-gray-500">
@@ -411,7 +286,6 @@ const ViewCourse = () => {
                     <FaShoppingCart className="inline mr-2" />
                     Enroll Now
                   </button>
-
                 </div>
               </div>
             </div>
@@ -423,7 +297,6 @@ const ViewCourse = () => {
       <section className="py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
             {/* Main Content */}
             <div className="lg:col-span-2">
               {/* Tab Navigation */}
@@ -581,14 +454,14 @@ const ViewCourse = () => {
                       </div>
                       <div className="flex-1">
                         <h4 className="text-2xl font-bold text-gray-900 mb-2">{course.instructor}</h4>
-                        <p className="text-teal-600 font-medium mb-4">Senior Software Engineer & Educator</p>
+                        <p className="text-teal-600 font-medium mb-4">Senior Instructor</p>
                         <p className="text-gray-700 leading-relaxed mb-6">{course.instructorBio}</p>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                           <div className="bg-white rounded-lg p-4 text-center shadow-sm">
                             <div className="flex items-center justify-center mb-2">
                               <FaStar className="text-yellow-400 mr-1" />
-                              <span className="font-bold text-lg">{course.rating}</span>
+                              <span className="font-bold text-lg">{course.rating.toFixed(1)}</span>
                             </div>
                             <p className="text-sm text-gray-600">Instructor Rating</p>
                           </div>
@@ -602,17 +475,17 @@ const ViewCourse = () => {
                           <div className="bg-white rounded-lg p-4 text-center shadow-sm">
                             <div className="flex items-center justify-center mb-2">
                               <FaCertificate className="text-purple-600 mr-1" />
-                              <span className="font-bold text-lg">15+</span>
+                              <span className="font-bold text-lg">5+</span>
                             </div>
                             <p className="text-sm text-gray-600">Courses Created</p>
                           </div>
                         </div>
 
                         <div className="flex flex-wrap gap-2">
-                          <span className="bg-teal-100 text-teal-800 px-3 py-1 rounded-full text-sm">JavaScript Expert</span>
-                          <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">React Specialist</span>
-                          <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">Full-Stack Developer</span>
-                          <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">10+ Years Experience</span>
+                          <span className="bg-teal-100 text-teal-800 px-3 py-1 rounded-full text-sm">Expert Instructor</span>
+                          <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">{course.category} Specialist</span>
+                          <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">Industry Professional</span>
+                          <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">5+ Years Experience</span>
                         </div>
                       </div>
                     </div>
