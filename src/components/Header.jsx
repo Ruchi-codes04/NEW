@@ -121,16 +121,16 @@ const Header = () => {
               onClick={showSignUpPopup}
               className="bg-teal-600 text-white px-3 xl:px-4 py-1.5 rounded text-sm hover:bg-teal-700 transition-colors duration-300 whitespace-nowrap"
             >
-              Sign Up
+              Login
             </button>
        
-  <Link
+  {/* <Link
     to="/Login"
     className="block w-full text-left bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition-colors font-medium"
     onClick={() => setIsMobileMenuOpen(false)}
   >
     Login
-  </Link>
+  </Link> */}
 
           </nav>
 
