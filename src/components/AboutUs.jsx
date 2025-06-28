@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from 'react-router-dom'
 
 const AboutUs = () => {
   const features = [
@@ -192,12 +193,12 @@ const AboutUs = () => {
 
             {/* CTA Button */}
             <div className="pt-1">
-              <button
+              <Link to = "/about/company"
                 className="bg-teal-600 text-white px-6 py-3 rounded-lg font-semibold text-sm transition-all duration-300 ease-in-out
                  hover:bg-teal-600 hover:translate-x-1 hover:shadow-lg hover:shadow-teal-600/40"
               >
                 Explore More →
-              </button>
+              </Link>
             </div>
           </div>
         </div>

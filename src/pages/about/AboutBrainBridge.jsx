@@ -1,6 +1,7 @@
 // import React from 'react';
 // import AboutTemplate from './AboutTemplate';
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom'
 
 const AboutBrainBridge = () => {
   const [showBackToTop, setShowBackToTop] = useState(false);
@@ -59,9 +60,9 @@ const AboutBrainBridge = () => {
                 online learning. Our mission? To redefine professional growth by making
                 quality education accessible to everyone.
               </p>
-              <button className="bg-teal-600 hover:bg-teal-700 text-white font-semibold py-3 sm:py-4 px-6 sm:px-8 rounded-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-600/30">
+              <Link to = "/about/contact" className="bg-teal-600 hover:bg-teal-700 text-white font-semibold py-3 sm:py-4 px-6 sm:px-8 rounded-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-600/30">
                 Talk to a career expert
-              </button>
+              </Link>
             </div>
             <div className="flex justify-center items-center mt-8 lg:mt-0">
               <img
@@ -641,9 +642,9 @@ const AboutBrainBridge = () => {
 
           {/* CTA Button */}
           <div className="text-center mt-8 md:mt-16">
-            <button className="bg-teal-500 hover:bg-teal-600 text-white font-semibold py-3 px-6 md:py-4 md:px-8 rounded-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-lg text-sm md:text-base">
+            <Link to = "/" className="bg-teal-500 hover:bg-teal-600 text-white font-semibold py-3 px-6 md:py-4 md:px-8 rounded-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-lg text-sm md:text-base">
               Begin your journey with us
-            </button>
+            </Link>
           </div>
         </div>
       </section>
@@ -1035,9 +1036,9 @@ const AboutBrainBridge = () => {
               <p className="text-lg lg:text-xl leading-relaxed mb-8 text-gray-600">
                 Our advisors are available around the clock to answer questions and support your educational journey. Connect with us today to explore how Brain Bridge can help you meet your career goals.
               </p>
-              <button className="bg-teal-500 hover:bg-teal-600 text-white font-semibold py-4 px-8 rounded-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-600/30">
+              <Link to = "/about/contact" className="bg-teal-500 hover:bg-teal-600 text-white font-semibold py-4 px-8 rounded-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-600/30">
                 Talk to a counsellor
-              </button>
+              </Link>
             </div>
 
           </div>

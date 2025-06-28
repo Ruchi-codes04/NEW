@@ -142,9 +142,9 @@ const HeroSection = () => {
           </div>
 
           {/* Our Affiliations Button */}
-          <button className="bg-teal-600 text-white px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg hover:bg-teal-700 transition-colors duration-300 text-sm">
+          <Link to = "/about/team" className="bg-teal-600 text-white px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg hover:bg-teal-700 transition-colors duration-300 text-sm">
             Our Affiliations →
-          </button>
+          </Link>
         </div>
 
         
