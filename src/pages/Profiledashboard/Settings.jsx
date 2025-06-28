@@ -8,7 +8,7 @@ const Notification = ({ message, type, onClose }) => {
 
   return (
     <div
-      className={`fixed top-4 right-4 p-4 rounded-md shadow-lg text-white transition-opacity duration-300 z-50 ${
+      className={`fixed top-4 right-2 sm:right-4 p-3 sm:p-4 rounded-md shadow-lg text-white transition-opacity duration-300 z-50 w-11/12 sm:w-auto max-w-xs sm:max-w-md ${
         type === 'error'
           ? theme === 'dark'
             ? 'bg-red-700'
@@ -19,10 +19,10 @@ const Notification = ({ message, type, onClose }) => {
       }`}
     >
       <div className="flex items-center justify-between">
-        <span>{message}</span>
+        <span className="text-sm sm:text-base">{message}</span>
         <button
           onClick={onClose}
-          className={`ml-4 ${
+          className={`ml-2 sm:ml-4 text-sm sm:text-base ${
             theme === 'dark' ? 'hover:text-gray-300' : 'hover:text-gray-200'
           }`}
         >
@@ -168,17 +168,15 @@ const Settings = () => {
   const handleLanguageChange = (e) => {
     setLanguage(e.target.value);
     alert(`Application will reload after switching to ${e.target.value === 'en' ? 'English' : 'Hindi'}`);
-    // Add reload or translation logic here if needed
   };
 
   const handleThemeChange = (e) => {
-    console.log('Changing theme to:', e.target.value);
     setTheme(e.target.value);
   };
 
   return (
     <div
-      className={`p-5 font-sans min-h-screen transition-colors duration-300 ${
+      className={`p-4 sm:p-5 font-sans min-h-screen transition-colors duration-300 ${
         theme === 'dark' ? 'bg-gray-900 text-gray-100' : 'bg-gray-100 text-gray-900'
       }`}
     >
@@ -187,109 +185,15 @@ const Settings = () => {
         type={notification.type}
         onClose={() => setNotification({ message: '', type: '' })}
       />
+      {/* Edit Profile Section */}
       <div
-        className={`rounded-lg p-5 mb-5 shadow-md ${
+        className={`rounded-lg p-4 sm:p-5 shadow-md mb-4 sm:mb-5 ${
           theme === 'dark' ? 'bg-gray-800' : 'bg-white'
         }`}
       >
-        <h2
-          className={`text-xl mb-2 ${
-            theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
-          }`}
-        >
-          Choose Your Language
-        </h2>
-        <select
-          value={language}
-          onChange={handleLanguageChange}
-          className={`p-2 border rounded text-sm ${
-            theme === 'dark'
-              ? 'border-gray-600 bg-gray-700 text-gray-100'
-              : 'border-gray-300 bg-white text-gray-900'
-          }`}
-        >
-          <option value="en">English</option>
-          <option value="hi">Hindi</option>
-        </select>
-        <p
-          className={`text-sm mt-2 ${
-            theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-          }`}
-        >
-          After changing the application language, the application will reload
-        </p>
-      </div>
-      <div
-        className={`rounded-lg p-5 mb-5 shadow-md ${
-          theme === 'dark' ? 'bg-gray-800' : 'bg-white'
-        }`}
-      >
-        <h2
-          className={`text-xl mb-2 ${
-            theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
-          }`}
-        >
-          Choose Your Theme
-        </h2>
-        <div className="flex items-center gap-5">
-          <label className="flex flex-col items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="theme"
-              value="light"
-              checked={theme === 'light'}
-              onChange={handleThemeChange}
-              className="hidden"
-            />
-            <div
-              className={`w-48 h-16 border rounded ${
-                theme === 'dark'
-                  ? 'border-gray-600 bg-white'
-                  : 'border-gray-300 bg-white'
-              } ${theme === 'light' ? 'ring-2 ring-blue-500' : ''}`}
-            ></div>
-            <span
-              className={`${
-                theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
-              }`}
-            >
-              Light
-            </span>
-          </label>
-          <label className="flex flex-col items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="theme"
-              value="dark"
-              checked={theme === 'dark'}
-              onChange={handleThemeChange}
-              className="hidden"
-            />
-            <div
-              className={`w-48 h-16 border rounded ${
-                theme === 'dark'
-                  ? 'border-gray-600 bg-gray-800'
-                  : 'border-gray-300 bg-gray-800'
-              } ${theme === 'dark' ? 'ring-2 ring-blue-500' : ''}`}
-            ></div>
-            <span
-              className={`${
-                theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
-              }`}
-            >
-              Dark
-            </span>
-          </label>
-        </div>
-      </div>
-      <div
-        className={`rounded-lg p-5 shadow-md ${
-          theme === 'dark' ? 'bg-gray-800' : 'bg-white'
-        }`}
-      >
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
           <h2
-            className={`text-xl ${
+            className={`text-lg sm:text-xl ${
               theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
             }`}
           >
@@ -297,7 +201,7 @@ const Settings = () => {
           </h2>
           <button
             onClick={toggleEditMode}
-            className={`px-4 py-2 rounded-md text-sm transition ${
+            className={`mt-2 sm:mt-0 px-4 py-2 rounded-md text-sm transition ${
               theme === 'dark'
                 ? 'bg-gray-600 text-gray-200 hover:bg-gray-700'
                 : 'bg-gray-300 text-gray-800 hover:bg-gray-400'
@@ -308,12 +212,12 @@ const Settings = () => {
         </div>
         {student && (
           <div>
-            <div className="flex items-center gap-4 mb-6">
+            <div className="flex flex-col sm:flex-row items-center gap-4 mb-4 sm:mb-6">
               <div className="relative">
                 <img
                   src={avatarPreview || 'https://via.placeholder.com/150'}
                   alt="Profile"
-                  className={`w-16 h-16 rounded-full border-4 ${
+                  className={`w-12 sm:w-16 h-12 sm:h-16 rounded-full border-2 sm:border-4 ${
                     theme === 'dark'
                       ? 'border-gray-800'
                       : 'border-white'
@@ -323,14 +227,14 @@ const Settings = () => {
                   <>
                     <label
                       htmlFor="avatar-upload"
-                      className={`absolute bottom-0 right-0 rounded-full p-2 cursor-pointer text-white transition ${
+                      className={`absolute bottom-0 right-0 rounded-full p-1 sm:p-2 cursor-pointer text-white transition ${
                         theme === 'dark'
                           ? 'bg-blue-600 hover:bg-blue-700'
                           : 'bg-blue-500 hover:bg-blue-600'
                       }`}
                     >
                       <svg
-                        className="w-4 h-4"
+                        className="w-3 sm:w-4 h-3 sm:h-4"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -355,14 +259,14 @@ const Settings = () => {
               </div>
               <div>
                 <h2
-                  className={`text-lg font-semibold ${
+                  className={`text-base sm:text-lg font-semibold ${
                     theme === 'dark' ? 'text-gray-200' : 'text-gray-800'
                   }`}
                 >
                   {student.firstName} {student.lastName}
                 </h2>
                 <p
-                  className={`text-sm ${
+                  className={`text-xs sm:text-sm ${
                     theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
                   }`}
                 >
@@ -377,11 +281,11 @@ const Settings = () => {
                 </p>
               </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-3 sm:gap-4">
               {['firstName', 'lastName', 'phone', 'role', 'skills', 'email'].map((field) => (
                 <div key={field}>
                   <label
-                    className={`block text-sm capitalize ${
+                    className={`block text-xs sm:text-sm capitalize ${
                       theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
                     } mb-1`}
                   >
@@ -395,7 +299,7 @@ const Settings = () => {
                       name="role"
                       value={formData.role}
                       onChange={handleChange}
-                      className={`w-full border rounded-md p-2 text-sm ${
+                      className={`w-full border rounded-md p-2 text-xs sm:text-sm ${
                         theme === 'dark'
                           ? 'border-gray-600 bg-gray-800 text-gray-100'
                           : 'border-gray-300 bg-white text-gray-900'
@@ -412,7 +316,7 @@ const Settings = () => {
                       name={field}
                       value={formData[field]}
                       onChange={handleChange}
-                      className={`w-full border rounded-md p-2 text-sm ${
+                      className={`w-full border rounded-md p-2 text-xs sm:text-sm ${
                         theme === 'dark'
                           ? isEditing
                             ? 'border-gray-600 bg-gray-800 text-gray-100'
@@ -429,10 +333,10 @@ const Settings = () => {
               ))}
             </div>
             {isEditing && (
-              <div className="mt-6 flex justify-end">
+              <div className="mt-4 sm:mt-6 flex justify-end">
                 <button
                   onClick={handleUpdate}
-                  className={`px-6 py-2 rounded-md text-sm text-white transition ${
+                  className={`px-4 sm:px-6 py-2 rounded-md text-sm text-white transition ${
                     theme === 'dark'
                       ? 'bg-blue-600 hover:bg-blue-700'
                       : 'bg-blue-500 hover:bg-blue-600'
@@ -445,6 +349,103 @@ const Settings = () => {
             )}
           </div>
         )}
+      </div>
+      {/* Choose Your Theme Section */}
+      <div
+        className={`rounded-lg p-4 sm:p-5 mb-4 sm:mb-5 shadow-md ${
+          theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+        }`}
+      >
+        <h2
+          className={`text-lg sm:text-xl mb-2 ${
+            theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+          }`}
+        >
+          Choose Your Theme
+        </h2>
+        <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-5">
+          <label className="flex flex-col items-center gap-2 cursor-pointer w-full sm:w-auto">
+            <input
+              type="radio"
+              name="theme"
+              value="light"
+              checked={theme === 'light'}
+              onChange={handleThemeChange}
+              className="hidden"
+            />
+            <div
+              className={`w-full sm:w-48 h-12 sm:h-16 border rounded ${
+                theme === 'dark'
+                  ? 'border-gray-600 bg-white'
+                  : 'border-gray-300 bg-white'
+              } ${theme === 'light' ? 'ring-2 ring-blue-500' : ''}`}
+            ></div>
+            <span
+              className={`text-sm ${
+                theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+              }`}
+            >
+              Light
+            </span>
+          </label>
+          <label className="flex flex-col items-center gap-2 cursor-pointer w-full sm:w-auto">
+            <input
+              type="radio"
+              name="theme"
+              value="dark"
+              checked={theme === 'dark'}
+              onChange={handleThemeChange}
+              className="hidden"
+            />
+            <div
+              className={`w-full sm:w-48 h-12 sm:h-16 border rounded ${
+                theme === 'dark'
+                  ? 'border-gray-600 bg-gray-800'
+                  : 'border-gray-300 bg-gray-800'
+              } ${theme === 'dark' ? 'ring-2 ring-blue-500' : ''}`}
+            ></div>
+            <span
+              className={`text-sm ${
+                theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+              }`}
+            >
+              Dark
+            </span>
+          </label>
+        </div>
+      </div>
+      {/* Choose Your Language Section */}
+      <div
+        className={`rounded-lg p-4 sm:p-5 mb-4 sm:mb-5 shadow-md ${
+          theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+        }`}
+      >
+        <h2
+          className={`text-lg sm:text-xl mb-2 ${
+            theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+          }`}
+        >
+          Choose Your Language
+        </h2>
+        <select
+          value={language}
+          onChange={handleLanguageChange}
+          className={`w-full sm:w-auto p-2 border rounded text-sm ${
+            theme === 'dark'
+              ? 'border-gray-600 bg-gray-700 text-gray-100'
+              : 'border-gray-300 bg-white text-gray-900'
+          }`}
+        >
+          <option value="en">English</option>
+          <option value="hi">Hindi</option>
+        </select>
+        <p
+          className={`text-xs sm:text-sm mt-2 ${
+            theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+          }`}
+        >
+          After changing the application language, the application will reload
+        </p>
       </div>
     </div>
   );

@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useTheme } from '../../contexts/ThemeContext';
-import Sidebar from './sidebar';
-import Dashboard from './Dashboard';
+import { useNavigate } from 'react-router-dom';
+import Navigation from './sidebar';
+import Dashboard from './dashboard';
 import MyCourses from './MyCourses';
 import Contact from './contact';
 import AssessmentScores from './assessmentscore';
 import Interest from './Interest';
 import Settings from './Settings';
 import CoursePlayer from '../CoursePlayer';
-import { Navigate, useNavigate } from 'react-router-dom';
-import Navbar from './Navbar';
 
 const Notification = ({ message, type, onClose }) => {
   if (!message) return null;
@@ -22,7 +21,7 @@ const Notification = ({ message, type, onClose }) => {
     >
       <div className="flex items-center justify-between">
         <span>{message}</span>
-        <button onClick={onClose} className="ml-4 hover:text-gray-200">✕</button>
+        <button onClick={onClose} className="ml-4 p-2 hover:text-gray-200">✕</button>
       </div>
     </div>
   );
@@ -65,7 +64,6 @@ const ParentLayout = () => {
         let message = 'Unable to retrieve profile data. Please try again later.';
         if (err.response?.status === 401) {
           message = 'Session expired or invalid token. Please log in again.';
-          setNotification({ message, type: 'error' });
           setTimeout(() => {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
@@ -81,12 +79,12 @@ const ParentLayout = () => {
     fetchProfile();
   }, [navigate]);
 
+  useEffect(() => {
+    setSidebarWidth(isSidebarOpen ? '200px' : '64px');
+  }, [isSidebarOpen]);
+
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
-  };
-
-  const handleSidebarToggle = (isExpanded) => {
-    setSidebarWidth(isExpanded ? '256px' : '64px');
   };
 
   const renderPage = () => {
@@ -123,31 +121,25 @@ const ParentLayout = () => {
         type={notification.type}
         onClose={() => setNotification({ message: '', type: '' })}
       />
-      <Navbar
-        activePage={activePage}
-        sidebarWidth={sidebarWidth}
-        isSidebarOpen={isSidebarOpen}
-        userName={userName}
-        setActivePage={setActivePage}
-        setCourseId={setCourseId}
-        toggleSidebar={toggleSidebar}
-      />
-      <div
-        className={`fixed left-0 h-screen transition-all duration-300 ease-in-out ${
-          isSidebarOpen ? 'translate-x-0 w-64' : 'md:w-16 w-0 -translate-x-full md:translate-x-0'
-        } z-40 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}
-        onMouseEnter={() => handleSidebarToggle(true)}
-        onMouseLeave={() => handleSidebarToggle(false)}
+      <button
+        className="md:hidden p-4 fixed top-0 left-0 z-40"
+        onClick={toggleSidebar}
+        aria-label="Toggle Sidebar"
       >
-        <Sidebar
-          activePage={activePage}
-          setActivePage={(page, courseId) => {
-            setActivePage(page);
-            if (courseId) setCourseId(courseId);
-            setIsSidebarOpen(false);
-          }}
-        />
-      </div>
+        ☰
+      </button>
+      <Navigation
+        activePage={activePage}
+        setActivePage={(page, courseId) => {
+          setActivePage(page);
+          if (courseId) setCourseId(courseId);
+          setIsSidebarOpen(false); // Close sidebar on item selection
+        }}
+        userName={userName}
+        isSidebarOpen={isSidebarOpen}
+        toggleSidebar={toggleSidebar}
+        setSidebarWidth={setSidebarWidth}
+      />
       {isSidebarOpen && (
         <div
           className={`md:hidden fixed inset-0 z-30 ${
@@ -160,11 +152,10 @@ const ParentLayout = () => {
         className={`flex-1 overflow-auto px-2 min-h-screen transition-all duration-300 ${
           theme === 'dark' ? 'bg-gray-700' : 'bg-gray-50'
         }`}
-        style={{ marginLeft: isSidebarOpen ? '256px' : sidebarWidth }}
+        style={{ marginLeft: sidebarWidth }}
       >
         {renderPage()}
       </div>
-    
     </div>
   );
 };
