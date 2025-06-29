@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { ThemeContext } from '../../Pages/Profiledashboard/ThemeContext'; // Adjust path
+import { ThemeContext } from '../../pages/Profiledashboard/ThemeContext'; // Adjust path
 
 const Assignments = () => {
   const { theme } = useContext(ThemeContext);

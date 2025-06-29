@@ -55,7 +55,7 @@ export default function CoursePlayer() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('Token');
         if (!token) {
           throw new Error('No authentication token found');
         }
@@ -217,7 +217,7 @@ export default function CoursePlayer() {
 
   const markAllNotificationsAsRead = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('Token');
       if (!token) {
         setNotificationsError('Authentication failed. Please log in again.');
         navigate('/');
@@ -278,7 +278,7 @@ export default function CoursePlayer() {
     setFeedbackError('');
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('Token');
       if (!token) {
         throw new Error('No authentication token found');
       }
@@ -317,7 +317,7 @@ export default function CoursePlayer() {
     setErrorMsg('');
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('Token');
       const response = await axios.post(
         'https://lms-backend-flwq.onrender.com/api/v1/students/support',
         {

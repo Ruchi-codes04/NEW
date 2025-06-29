@@ -17,7 +17,7 @@ export default function StudentAssessment() {
   useEffect(() => {
     const fetchAssessment = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('Token');
         const response = await axios.get(
           `https://lms-backend-flwq.onrender.com/api/v1/students/courses/${courseId}/assessments/${assessmentId}`,
           {
@@ -69,7 +69,7 @@ export default function StudentAssessment() {
     setSubmissionResult('');
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('Token');
       await axios.post(
         `https://lms-backend-flwq.onrender.com/api/v1/students/courses/${courseId}/assessments/${assessmentId}/submit`,
         { answers },

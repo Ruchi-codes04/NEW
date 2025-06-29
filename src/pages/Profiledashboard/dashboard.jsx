@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import dashboardImage from '../../assets/dashboard.png';
 import { FaPlay } from 'react-icons/fa';
 import { ThemeContext } from '../../contexts/ThemeContext';
-import CourseCards from '../Profiledashboard/Coursecard';
+import CourseCards from './Coursecard';
 
 const Notification = ({ message, type, onClose }) => {
   if (!message) return null;
@@ -43,7 +43,7 @@ const MyCourses = () => {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('Token');
         if (!token) {
           setNotification({ message: 'No authentication token found. Please log in.', type: 'error' });
           setTimeout(() => navigate('/'), 2000);
@@ -443,18 +443,16 @@ const Dashboard = () => {
     const fetchProfile = async () => {
       try {
         const token = localStorage.getItem('token');
-        if (!token) {
-          setTimeout(() => navigate('/'), 2000);
-          setNotification({ message: 'Authentication required. Please log in.', type: 'error' });
-          return;
-        }
 
         const res = await axios.get('https://lms-backend-flwq.onrender.com/api/v1/students/profile', {
           headers: { Authorization: `Bearer ${token}` },
         });
+
         setStudent(res.data.data);
       } catch (err) {
         console.error('Error fetching profile:', err);
+        console.log("response",res.response);
+
         let message = 'Unable to retrieve profile data. Please try again later.';
         if (err.response?.status === 401) {
           message = 'Session expired or invalid token. Please log in again.';
@@ -518,3 +516,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+

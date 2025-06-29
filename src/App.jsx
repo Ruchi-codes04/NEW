@@ -15,7 +15,6 @@ import Reviews from './components/Reviews';
 import Footer from './components/Footer';
 import SignUpPopup from './components/SignUpPopup';
 import NotFound from './pages/NotFound';
-import Login from './pages/Profiledashboard/Login';
 import ProfileDashboard from './pages/Profiledashboard/parentLayout';
 import CoursePlayer from './pages/CoursePlayer';
 import {
@@ -78,7 +77,6 @@ const AppLayout = () => {
       <SignUpPopup />
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/Login" element={<Login />} />
         <Route path="/profile-dashboard" element={<ProfileDashboard />} />
         <Route path="/course-player/:courseId" element={<CoursePlayer />} />
         <Route path="/reviews/participant" element={<ParticipantReviews />} />

@@ -39,7 +39,7 @@ const CoursesPage = () => {
 
   const fetchBookmarkedCourses = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('Token');
       if (!token) {
         throw new Error('No authentication token found');
       }
@@ -79,7 +79,7 @@ const CoursesPage = () => {
 
   const handleBookmark = async (courseId) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('Token');
       if (!token) {
         setNotification({ message: 'Please login to manage bookmarks', type: 'error' });
         return;
@@ -88,7 +88,7 @@ const CoursesPage = () => {
       const isBookmarked = bookmarkedCourses.some(c => c._id === courseId);
       
       const config = {
-        method: isBookmarked ? 'delete' : 'post',
+        method: isBookmarked ? 'delete' : 'patch',
         url: `${API_BASE_URL}/courses/${courseId}/bookmark`,
         headers: {
           Authorization: `Bearer ${token}`,
@@ -112,7 +112,7 @@ const CoursesPage = () => {
       if (err.response) {
         if (err.response.status === 401) {
           errorMessage = 'Session expired. Please login again.';
-          localStorage.removeItem('token');
+          // localStorage.removeItem('token');
           navigate('/');
         } else if (err.response.data?.message) {
           errorMessage = err.response.data.message;

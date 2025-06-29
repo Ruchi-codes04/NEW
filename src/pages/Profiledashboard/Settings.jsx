@@ -59,7 +59,7 @@ const Settings = () => {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('Token');
       if (!token) {
         setNotification({ message: 'Authentication required. Please log in to access your profile.', type: 'error' });
         return;
@@ -122,7 +122,7 @@ const Settings = () => {
   const handleUpdate = async () => {
     setSaving(true);
     setNotification({ message: '', type: '' });
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('Token');
     if (!token) {
       setNotification({ message: 'Authentication required. Please log in.', type: 'error' });
       setSaving(false);

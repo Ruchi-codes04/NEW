@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaSearch, FaFilter, FaStar, FaRegClock, FaUserGraduate, FaChevronDown, FaBookmark } from 'react-icons/fa';
 import Instructors from '../../components/Instructors';
 import TrendingCourses from '../../components/TrendingCourses';
 import MicrosoftAI from '../../components/MicrosoftAI';
@@ -17,7 +16,8 @@ import Notification from './AllCoursesComponents/Notification';
 import Pagination from './AllCoursesComponents/Pagination';
 import StatsSection from './AllCoursesComponents/StatsSection';
 
-// Add CSS for hiding scrollbar
+const API_BASE_URL = 'https://lms-backend-flwq.onrender.com';
+
 const scrollbarHideStyles = `
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
@@ -28,7 +28,6 @@ const scrollbarHideStyles = `
   }
 `;
 
-// Main AllCourses Component
 const AllCourses = () => {
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -38,26 +37,27 @@ const AllCourses = () => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [bookmarkedCourses, setBookmarkedCourses] = useState([]);
+  const [notification, setNotification] = useState({ message: '', type: '' });
+  const [isBookmarking, setIsBookmarking] = useState(false); // New loading state
   const coursesPerPage = 9;
   const scrollRef = useRef(null);
   const coursesScrollRef = useRef(null);
-  const [bookmarkedCourses, setBookmarkedCourses] = useState([]);
-  const [notification, setNotification] = useState({ message: '', type: '' });
   const navigate = useNavigate();
 
   const [filters, setFilters] = useState({
     price: { free: false, paid: false },
     level: { beginner: false, intermediate: false, advanced: false },
     duration: { short: false, medium: false, long: false },
-    rating: { high: false, good: false, average: false }
+    rating: { high: false, good: false, average: false },
   });
 
-  // Fetch courses from API and transform data
+  // Fetch courses from API
   useEffect(() => {
     const fetchCourses = async () => {
       try {
         setLoading(true);
-        const response = await axios.get('https://lms-backend-flwq.onrender.com/api/v1/courses');
+        const response = await axios.get(`${API_BASE_URL}/api/v1/courses`);
         if (response.data.success) {
           const transformedCourses = response.data.data.map(course => ({
             id: course._id,
@@ -68,16 +68,15 @@ const AllCourses = () => {
             reviews: course.totalRatings,
             students: course.totalStudents,
             duration: `${course.duration} hours`,
-            level: course.level.charAt(0).toUpperCase() + course.level.slice(1), // Capitalize first letter
-            category: course.category.toLowerCase(), // Normalize for filtering
+            level: course.level.charAt(0).toUpperCase() + course.level.slice(1),
+            category: course.category.toLowerCase(),
             price: course.price === 0 ? 'Free' : `₹${course.price}`,
             originalPrice: course.discountPrice ? `₹${course.discountPrice}` : null,
-            image: course.thumbnail
+            image: course.thumbnail,
           }));
           setCourses(transformedCourses);
         } else {
-          setError('Failed to fetch courses');
-          setNotification({ message: 'Failed to fetch courses', type: 'error' });
+          throw new Error('Failed to fetch courses');
         }
       } catch (err) {
         console.error('Fetch Courses Error:', err);
@@ -91,13 +90,107 @@ const AllCourses = () => {
     fetchCourses();
   }, []);
 
+  // Fetch bookmarked courses
+  useEffect(() => {
+    const fetchBookmarkedCourses = async () => {
+      try {
+        const token = localStorage.getItem('Token');
+        if (!token) return;
+
+        const response = await axios.get(
+          'https://new-lms-backend-vmgr.onrender.com/api/v1/students/courses/bookmarked',
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.data.success) {
+          setBookmarkedCourses(response.data.data.map(course => course._id));
+        }
+      } catch (err) {
+        console.error('Error fetching bookmarked courses:', err);
+      }
+    };
+
+    fetchBookmarkedCourses();
+  }, []);
+
+  const handleBookmark = async (courseId, e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    setIsBookmarking(true);
+    try {
+      const token = localStorage.getItem('Token');
+      if (!token) {
+        setNotification({ message: 'Please log in to manage bookmarks', type: 'error' });
+        setTimeout(() => navigate('/'), 2000);
+        return;
+      }
+
+      console.log('bookmarkedCourses:', bookmarkedCourses);
+      console.log('courseId:', courseId);
+      const isBookmarked = bookmarkedCourses.includes(courseId);
+
+      const response = await axios({
+        method: isBookmarked ? 'delete' : 'patch',
+        url: `https://new-lms-backend-vmgr.onrender.com/api/v1/students/courses/${courseId}/bookmark`,
+        data: isBookmarked ? {} : { bookmarked: true }, // Adjust payload as needed
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      console.log('Bookmark response:', response.data);
+
+      const success = response.data.success || response.data.data?.success || response.data.status === 'success';
+      if (!success) {
+        throw new Error('Bookmark update failed. Unexpected response structure.');
+      }
+
+      setNotification({
+        message: isBookmarked ? 'Removed from bookmarks' : 'Added to bookmarks',
+        type: 'success',
+      });
+      setTimeout(() => setNotification({ message: '', type: '' }), 3000);
+
+      // Update bookmarkedCourses
+      if (isBookmarked) {
+        setBookmarkedCourses(bookmarkedCourses.filter(id => id !== courseId));
+      } else {
+        setBookmarkedCourses([...bookmarkedCourses, courseId]);
+      }
+    } catch (err) {
+      console.error('Bookmark Error:', err);
+      let errorMessage = 'Failed to update bookmark';
+      if (err.response) {
+        if (err.response.status === 401) {
+          errorMessage = 'Session expired. Please log in again.';
+          // localStorage.removeItem('Token');
+          // localStorage.removeItem('user');
+          setTimeout(() => navigate('/'), 2000);
+        } else if (err.response.data?.message) {
+          errorMessage = err.response.data.message;
+        }
+      }
+      setNotification({ message: errorMessage, type: 'error' });
+      setTimeout(() => setNotification({ message: '', type: '' }), 1000);
+    } finally {
+      setIsBookmarking(false);
+    }
+  };
+
   const handleFilterChange = (category, filterKey) => {
     setFilters(prev => ({
       ...prev,
       [category]: {
         ...prev[category],
-        [filterKey]: !prev[category][filterKey]
-      }
+        [filterKey]: !prev[category][filterKey],
+      },
     }));
   };
 
@@ -106,45 +199,11 @@ const AllCourses = () => {
       price: { free: false, paid: false },
       level: { beginner: false, intermediate: false, advanced: false },
       duration: { short: false, medium: false, long: false },
-      rating: { high: false, good: false, average: false }
+      rating: { high: false, good: false, average: false },
     });
   };
 
-  const handleBookmark = async (courseId) => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        navigate('/');
-        setNotification({ message: 'Please login to bookmark courses', type: 'error' });
-        return;
-      }
-      const isBookmarked = bookmarkedCourses.includes(courseId);
-      const response = await axios.patch(
-        `https://lms-backend-flwq.onrender.com/api/v1/students/courses/${courseId}/ bookmark`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      if (response.data.success) {
-        setNotification({
-          message: isBookmarked ? 'Removed from bookmarks' : 'Added to bookmarks',
-          type: 'success'
-        });
-        if (isBookmarked) {
-          setBookmarkedCourses(bookmarkedCourses.filter(id => id !== courseId));
-        } else {
-          setBookmarkedCourses([...bookmarkedCourses, courseId]);
-        }
-      }
-    } catch (err) {
-      console.error('Bookmark Error:', err);
-      setNotification({
-        message: err.response?.data?.message || 'Failed to update bookmark',
-        type: 'error'
-      });
-    }
-  };
-
-  const matchesPriceFilter = (course) => {
+  const matchesPriceFilter = course => {
     const { free, paid } = filters.price;
     if (!free && !paid) return true;
     const isFree = course.price === 'Free' || course.price === '₹0';
@@ -152,7 +211,7 @@ const AllCourses = () => {
     return (free && isFree) || (paid && isPaid);
   };
 
-  const matchesLevelFilter = (course) => {
+  const matchesLevelFilter = course => {
     const { beginner, intermediate, advanced } = filters.level;
     if (!beginner && !intermediate && !advanced) return true;
     const level = course.level.toLowerCase();
@@ -163,7 +222,7 @@ const AllCourses = () => {
     );
   };
 
-  const matchesDurationFilter = (course) => {
+  const matchesDurationFilter = course => {
     const { short, medium, long } = filters.duration;
     if (!short && !medium && !long) return true;
     const duration = parseInt(course.duration);
@@ -174,7 +233,7 @@ const AllCourses = () => {
     );
   };
 
-  const matchesRatingFilter = (course) => {
+  const matchesRatingFilter = course => {
     const { high, good, average } = filters.rating;
     if (!high && !good && !average) return true;
     const rating = course.rating;
@@ -185,16 +244,15 @@ const AllCourses = () => {
     );
   };
 
-  // Dynamically generate categories based on API data, ensuring unique categories
   const categories = [
     { id: 'all', name: 'All Courses' },
     ...[...new Set(courses.map(course => course.category))].map(cat => ({
       id: cat,
-      name: cat.charAt(0).toUpperCase() + cat.slice(1)
-    }))
+      name: cat.charAt(0).toUpperCase() + cat.slice(1),
+    })),
   ];
 
-  const matchesSearch = (course) => {
+  const matchesSearch = course => {
     if (!searchQuery.trim()) return true;
     const query = searchQuery.toLowerCase().trim();
     const searchFields = [
@@ -202,7 +260,7 @@ const AllCourses = () => {
       course.description,
       course.instructor,
       course.level,
-      course.category
+      course.category,
     ];
     return searchFields.some(field => field && field.toLowerCase().includes(query));
   };
@@ -222,7 +280,7 @@ const AllCourses = () => {
   const endIndex = startIndex + coursesPerPage;
   const currentCourses = filteredCourses.slice(startIndex, endIndex);
 
-  const handlePageChange = (page) => {
+  const handlePageChange = page => {
     setCurrentPage(page);
     setTimeout(() => {
       if (coursesScrollRef.current) {
@@ -276,7 +334,7 @@ const AllCourses = () => {
   }, []);
 
   useEffect(() => {
-    const handleWheelOnCoursesArea = (e) => {
+    const handleWheelOnCoursesArea = e => {
       if (!e.target.closest('.courses-scrollable-container')) {
         e.preventDefault();
         if (coursesScrollRef.current) {
@@ -336,7 +394,7 @@ const AllCourses = () => {
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
                 filteredCourses={filteredCourses}
-                currentPage={currentPage} // Fixed typo: Changed 'CurrentPage' to 'currentPage'
+                currentPage={currentPage}
                 totalPages={totalPages}
               />
               <CourseGrid
@@ -346,6 +404,7 @@ const AllCourses = () => {
                 setSearchQuery={setSearchQuery}
                 bookmarkedCourses={bookmarkedCourses}
                 handleBookmark={handleBookmark}
+                isBookmarking={isBookmarking} // Pass loading state
               />
               <Pagination
                 currentPage={currentPage}
@@ -365,31 +424,31 @@ const AllCourses = () => {
         subtitle="Find answers to common questions about our courses and learning platform"
         faqs={[
           {
-            question: "How do I enroll in a course?",
-            answer: "Simply click on the 'Enroll Now' button on any course page. You'll be guided through the enrollment process, which includes creating an account if you don't have one and completing the payment for paid courses."
+            question: 'How do I enroll in a course?',
+            answer:
+              "Simply click on the 'Enroll Now' button on any course page. You'll be guided through the enrollment process, which includes creating an account if you don't have one and completing the payment for paid courses.",
           },
           {
-            question: "Are there any free courses available?",
-            answer: "Yes! We offer over 100 free courses across various categories. Look for courses marked with 'Free' or use the price filter to find all free courses."
+            question: 'Are there any free courses available?',
+            answer: 'Yes! We offer over 100 free courses across various categories. Look for courses marked with "Free" or use the price filter to find all free courses.',
           },
           {
-            question: "Can I get a certificate after completing a course?",
-            answer: "Yes, you'll receive a certificate of completion for most courses. Premium courses also offer industry-recognized certifications that you can add to your LinkedIn profile."
+            question: 'Can I get a certificate after completing a course?',
+            answer:
+              'Yes, you’ll receive a certificate of completion for most courses. Premium courses also offer industry-recognized certifications that you can add to your LinkedIn profile.',
           },
           {
-            question: "What if I'm not satisfied with a course?",
-            answer: "We offer a 30-day money-back guarantee for all paid courses. If you're not satisfied, contact our support team for a full refund."
+            question: 'What if I’m not satisfied with a course?',
+            answer: 'We offer a 30-day money-back guarantee for all paid courses. If you’re not satisfied, contact our support team for a full refund.',
           },
           {
-            question: "How long do I have access to course materials?",
-            answer: "Once enrolled, you have lifetime access to course materials, including any future updates. You can learn at your own pace and revisit content anytime."
-          }
+            question: 'How long do I have access to course materials?',
+            answer:
+              'Once enrolled, you have lifetime access to course materials, including any future updates. You can learn at your own pace and revisit content anytime.',
+          },
         ]}
       />
-      <SignUpPopup
-        isOpen={showSignupPopup}
-        onClose={() => setShowSignupPopup(false)}
-      />
+      <SignUpPopup isOpen={showSignupPopup} onClose={() => setShowSignupPopup(false)} />
     </div>
   );
 };

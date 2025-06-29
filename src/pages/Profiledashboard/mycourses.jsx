@@ -18,14 +18,14 @@ const Dashboard = () => {
   // Fetch student data on component mount
   useEffect(() => {
     const fetchProfile = async () => {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('Token');
       if (!token) {
         console.log('Authentication required. Please log in.');
         return;
       }
 
       try {
-        const res = await axios.get('https://lms-backend-flwq.onrender.com/api/v1/students/profile', {
+        const res = await axios.get('https://new-lms-backend-vmgr.onrender.com/api/v1/students/profile', {
           headers: { Authorization: `Bearer ${token}` },
         });
         setStudent(res.data.data);

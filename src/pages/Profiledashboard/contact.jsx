@@ -19,7 +19,7 @@ const Contact = ({ relatedCourseId }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('Token');
         const profileRes = await axios.get(
           'https://lms-backend-flwq.onrender.com/api/v1/students/profile',
           {
@@ -68,7 +68,7 @@ const Contact = ({ relatedCourseId }) => {
     }
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('Token');
       const response = await axios.post(
         'https://lms-backend-flwq.onrender.com/api/v1/students/support',
         {

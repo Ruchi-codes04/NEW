@@ -35,11 +35,11 @@ const TrendingCourses = () => {
   useEffect(() => {
     const fetchBookmarkedCourses = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('Token');
         if (!token) return;
 
         const response = await axios.get(
-          'https://lms-backend-flwq.onrender.com/api/v1/students/courses/bookmarked',
+          'https://new-lms-backend-vmgr.onrender.com/api/v1/students/courses/bookmarked',
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -63,49 +63,55 @@ const TrendingCourses = () => {
   };
 
   const handleBookmark = async (courseId, e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setNotification({ message: 'Please login to bookmark courses', type: 'error' });
-        navigate('/');
-        return;
-      }
+  e.preventDefault();
+  e.stopPropagation();
 
-      const isBookmarked = bookmarkedCourses.includes(courseId);
-      
-      const response = await axios.patch(
-        `https://lms-backend-flwq.onrender.com/api/v1/students/courses/${courseId}/bookmark`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.data.success) {
-        setNotification({
-          message: isBookmarked ? 'Removed from bookmarks' : 'Added to bookmarks',
-          type: 'success',
-        });
-        
-        if (isBookmarked) {
-          setBookmarkedCourses(bookmarkedCourses.filter(id => id !== courseId));
-        } else {
-          setBookmarkedCourses([...bookmarkedCourses, courseId]);
-        }
-      }
-    } catch (err) {
-      console.error('Bookmark Error:', err);
-      setNotification({
-        message: err.response?.data?.message || 'Failed to update bookmark',
-        type: 'error',
-      });
+  try {
+    const token = localStorage.getItem('Token');
+    if (!token) {
+      setNotification({ message: 'Please log in to bookmark courses', type: 'error' });
+      setTimeout(() => navigate('/'), 2000); // Delay navigation to show notification
+      return;
     }
-  };
+
+    console.log('bookmarkedCourses:', bookmarkedCourses); // Debug state
+    const isBookmarked = bookmarkedCourses.includes(courseId);
+
+    const response = await axios.patch(
+      `https://new-lms-backend-vmgr.onrender.com/api/v1/students/courses/${courseId}/bookmark`,
+      { bookmarked: !isBookmarked }, // Include payload if required by backend
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    console.log('Bookmark response:', response.data); // Debug response
+
+    // Handle different response structures
+    const success = response.data.success || response.data.data?.success || response.data.status === 'success';
+    if (!success) {
+      throw new Error('Bookmark update failed. Unexpected response structure.');
+    }
+
+    setNotification({
+      message: isBookmarked ? 'Removed from bookmarks' : 'Added to bookmarks',
+      type: 'success',
+    });
+
+    if (isBookmarked) {
+      setBookmarkedCourses(bookmarkedCourses.filter(id => id !== courseId));
+    } else {
+      setBookmarkedCourses([...bookmarkedCourses, courseId]);
+    }
+  } catch (err) {
+    console.error('Bookmark Error:', err);
+    const errorMsg = err.response?.data?.message || 'Failed to update bookmark. Please try again.';
+    setNotification({ message: errorMsg, type: 'error' });
+  }
+};
 
   // Close modal on Escape key
   useEffect(() => {

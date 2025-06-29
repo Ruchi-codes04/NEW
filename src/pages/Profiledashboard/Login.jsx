@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaGraduationCap } from "react-icons/fa";
-import { useSignUp } from "../../contexts/SignUpContext";
+// import { useSignUp } from "../../contexts/SignUpContext";
 
 const Login = () => {
   const [email, setEmail] = useState("");

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ThemeContext } from '../../contexts/ThemeContext';
-import { Bell, FileText, Grid, Heart, Home, MessageSquare, Settings, Star } from 'lucide-react';
+import { Bell, Grid, Heart, Home, MessageSquare, Settings, Star } from 'lucide-react';
 import { RiMedalLine } from 'react-icons/ri';
 import { FaSignOutAlt } from 'react-icons/fa';
 
@@ -14,11 +14,11 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, toggle
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [error, setError] = useState(null);
 
-  const sidebarWidth = isExpanded || isSidebarOpen ? '256px' : '64px';
+  // Sidebar width logic for desktop and mobile
+  const sidebarWidth = isSidebarOpen ? '70vw' : isExpanded ? '256px' : '64px';
 
-  // Update parent sidebarWidth whenever it changes
   useEffect(() => {
-    setSidebarWidth(sidebarWidth);
+    setSidebarWidth(window.innerWidth >= 768 ? sidebarWidth : isSidebarOpen ? '70vw' : '0px');
   }, [isExpanded, isSidebarOpen, setSidebarWidth]);
 
   const pageName = activePage.charAt(0).toUpperCase() + activePage.slice(1);
@@ -36,7 +36,7 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, toggle
   ];
 
   const fetchNotifications = async () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('Token');
     if (!token) {
       setError('Authentication failed. Please log in again.');
       setNotifications([]);
@@ -45,7 +45,7 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, toggle
     }
 
     try {
-      const response = await fetch('https://new-lms-backend-vmgr.onrender.com/api/v1/notifications?page=1&limit=5&isRead=false', {
+      const response = await fetch('https://new-lms-backend-vmgr.onrender.com/api/v1/notifications', {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
@@ -53,9 +53,8 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, toggle
       });
       if (!response.ok) {
         if (response.status === 401 || response.status === 403) {
-          localStorage.removeItem('token');
           setError('Authentication failed. Please log in again.');
-          navigate('/login');
+          navigate('/');
           return;
         }
         throw new Error('Failed to fetch notifications. Please check your connection.');
@@ -77,9 +76,9 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, toggle
   };
 
   const markAsRead = async (notificationId) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('Token');
     if (!token) {
-      navigate('/login');
+      navigate('/');
       return;
     }
     try {
@@ -89,7 +88,7 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, toggle
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ isRead: true }),
+        body創業: JSON.stringify({ isRead: true }),
       });
       setNotifications((prev) => prev.filter((n) => n._id !== notificationId));
       setNotificationCount((prev) => prev - 1);
@@ -99,9 +98,9 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, toggle
   };
 
   const markAllAsRead = async () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('Token');
     if (!token) {
-      navigate('/login');
+      navigate('/');
       return;
     }
     try {
@@ -143,9 +142,9 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, toggle
   };
 
   const handleRetry = () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('Token');
     if (!token) {
-      navigate('/login');
+      navigate('/');
       return;
     }
     setError(null);
@@ -153,18 +152,18 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, toggle
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem('Token');
     navigate('/');
   };
 
   return (
     <>
       <div
-        className={`shadow-md flex flex-col items-center py-6 space-y-1 fixed left-0 h-screen transition-all duration-300 ${
-          isExpanded || isSidebarOpen ? 'w-64' : 'w-16'
-        } ${theme === 'dark' ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-600'}`}
-        onMouseEnter={() => setIsExpanded(true)}
-        onMouseLeave={() => setIsExpanded(false)}
+        className={`shadow-md flex flex-col items-center py-6 space-y-1 fixed top-0 h-screen transition-all duration-300 z-[1000] ${
+          theme === 'dark' ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-600'
+        } ${isSidebarOpen ? 'w-[70vw] left-0' : 'w-0 left-[-100%] md:w-16 md:left-0 md:hover:w-64'}`}
+        onMouseEnter={() => window.innerWidth >= 768 && setIsExpanded(true)}
+        onMouseLeave={() => window.innerWidth >= 768 && setIsExpanded(false)}
       >
         {menu.map((item) => (
           <div
@@ -205,11 +204,18 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, toggle
         </div>
       </div>
 
+      {/* Overlay for mobile when sidebar is open */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+          onClick={toggleSidebar}
+        ></div>
+      )}
+
       <nav
         className={`p-4 shadow-md flex items-center justify-between transition-colors duration-300 ${
           theme === 'dark' ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-800'
         }`}
-        style={{ marginLeft: sidebarWidth }}
       >
         <div className="flex items-center space-x-4">
           <button

@@ -12,6 +12,9 @@ export const useSignUp = () => {
 
 export const SignUpProvider = ({ children }) => {
   const [isPopupVisible, setIsPopupVisible] = useState(false);
+  const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLogin, setIsLogin] = useState(true);
 
   const showSignUpPopup = () => {
     setIsPopupVisible(true);
@@ -24,7 +27,13 @@ export const SignUpProvider = ({ children }) => {
   const value = {
     isPopupVisible,
     showSignUpPopup,
-    hideSignUpPopup
+    hideSignUpPopup,
+    user,
+    setUser,
+    isLoading,
+    setIsLoading,
+    isLogin,
+    setIsLogin,
   };
 
   return (

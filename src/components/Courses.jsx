@@ -52,7 +52,7 @@ const Courses = () => {
    // Add this function to handle bookmarking
   const handleBookmark = async (courseId) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('Token');
       if (!token) {
         setNotification({ message: 'Please login to bookmark courses', type: 'error' });
         navigate('/');

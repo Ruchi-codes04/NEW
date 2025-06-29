@@ -1,10 +1,12 @@
+
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { FaTimes, FaRocket, FaStar, FaGraduationCap } from 'react-icons/fa';
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
 import { useSignUp } from '../contexts/SignUpContext';
 
 const SignUpPopup = () => {
-  const { isPopupVisible, hideSignUpPopup, showSignUpPopup } = useSignUp();
+  const { isPopupVisible, hideSignUpPopup, showSignUpPopup, } = useSignUp();
   const [isLogin, setIsLogin] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
@@ -21,13 +23,10 @@ const SignUpPopup = () => {
     firstName: '',
     lastName: '',
     email: '',
-    phoneNumber: '',
-    dateOfBirth: '',
-    gender: '',
-    course: '',
-    experience: '',
+    phone: '',
     password: '',
     confirmPassword: '',
+    role: 'student',
   });
 
   useEffect(() => {
@@ -89,46 +88,35 @@ const SignUpPopup = () => {
     }
 
     try {
-      const response = await fetch('https://lms-backend-flwq.onrender.com/api/v1/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const response = await axios.post(
+        'https://lms-backend-flwq.onrender.com/api/v1/auth/register',
+        {
           firstName: registerData.firstName,
           lastName: registerData.lastName,
           email: registerData.email,
-          phoneNumber: registerData.phoneNumber,
-          dateOfBirth: registerData.dateOfBirth,
-          gender: registerData.gender,
-          course: registerData.course,
-          experience: registerData.experience,
+          phone: registerData.phone,
           password: registerData.password,
-        }),
-      });
-
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        throw new Error('Server returned non-JSON response. Please check the API endpoint or server status.');
-      }
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || `Registration failed with status ${response.status}`);
-      }
+          role: registerData.role,
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       setShowOtpPopup(true);
+      setSuccessMessage('Registration successful! Please verify OTP sent to your email.');
     } catch (error) {
       console.error('Registration error:', error);
-      setErrorMessage(error.message || 'An error occurred during registration. Please try again.');
+      setErrorMessage(error.response?.data?.message || 'An error occurred during registration. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleOtpSubmit = async (e) => {
-    e.preventDefault();
+  const handleOtpSubmit = async (e)=>{
+     e.preventDefault();
     setIsLoading(true);
     setErrorMessage('');
     setSuccessMessage('');
@@ -140,27 +128,18 @@ const SignUpPopup = () => {
     }
 
     try {
-      const response = await fetch('https://lms-backend-flwq.onrender.com/api/v1/auth/verify-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const response = await axios.post(
+        'https://lms-backend-flwq.onrender.com/api/v1/auth/verify-email',
+        {
           email: registerData.email,
           otp: otp,
-        }),
-      });
-
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        throw new Error('Server returned non-JSON response for OTP verification. Please check the API endpoint.');
-      }
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'OTP verification failed');
-      }
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       setSuccessMessage('Thank you for signing up! Welcome to our learning platform!');
       setShowOtpPopup(false);
@@ -169,17 +148,15 @@ const SignUpPopup = () => {
         firstName: '',
         lastName: '',
         email: '',
-        phoneNumber: '',
-        dateOfBirth: '',
-        gender: '',
-        course: '',
-        experience: '',
+        phone: '',
         password: '',
         confirmPassword: '',
+        role: 'student',
       });
+      await fetchUserProfile();
     } catch (error) {
       console.error('OTP verification error:', error);
-      setErrorMessage(error.message || 'Invalid OTP. Please try again.');
+      setErrorMessage(error.response?.data?.message || 'Invalid OTP. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -191,7 +168,6 @@ const SignUpPopup = () => {
     setErrorMessage('');
     setSuccessMessage('');
 
-    // Basic validation
     if (!loginData.email || !loginData.password) {
       setErrorMessage('Please enter both email and password.');
       setIsLoading(false);
@@ -199,36 +175,34 @@ const SignUpPopup = () => {
     }
 
     try {
-      const response = await fetch('https://lms-backend-flwq.onrender.com/api/v1/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const response = await axios.post(
+        'https://new-lms-backend-vmgr.onrender.com/api/v1/auth/login',
+        {
           email: loginData.email,
           password: loginData.password,
-        }),
-      });
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        throw new Error('Server returned non-JSON response. Please check the API endpoint or server status.');
+      const { success, message, data } = response.data;
+      if (!success) {
+        throw new Error(message || 'Login failed');
       }
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Login failed');
-      }
-
+      localStorage.setItem('Token', data.token);
       setSuccessMessage('Login successful! Welcome back!');
       setLoginData({ email: '', password: '' });
+      // await fetchUserProfile(); // Fetch profile after login
       setTimeout(() => {
         handleClose();
       }, 2000);
     } catch (error) {
       console.error('Login error:', error);
-      setErrorMessage(error.message || 'Invalid email or password. Please try again.');
+      setErrorMessage(error.response?.data?.message || 'Invalid email or password. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -276,7 +250,7 @@ const SignUpPopup = () => {
                     type="text"
                     value={otp}
                     onChange={(e) => setOtp(e.target.value)}
-                    className="w-full p-2 sm:p-3 border border-teal-500 rounded-md text-sm sm:text-base"
+                    className="w-full p-2 sm:p-3 border border-teal-500 benne rounded-md text-sm sm:text-base"
                     required
                     maxLength="6"
                     placeholder="Enter 6-digit OTP"
@@ -356,7 +330,7 @@ const SignUpPopup = () => {
                 </div>
               )}
 
-              <div className="flex mb-4 sm:mb6 justify-center">
+              <div className="flex mb-4 sm:mb-6 justify-center">
                 <button
                   className={`px-4 py-2 sm:px-6 sm:py-2 text-white rounded-l-md ${isLogin ? 'bg-teal-500' : 'bg-teal-300'} text-sm sm:text-base`}
                   onClick={() => setIsLogin(true)}
@@ -474,76 +448,13 @@ const SignUpPopup = () => {
                         </div>
                         <input
                           type="tel"
-                          name="phoneNumber"
-                          value={registerData.phoneNumber}
+                          name="phone"
+                          value={registerData.phone}
                           onChange={handleRegisterChange}
                           className="flex-1 p-2 sm:p-3 border border-l-0 border-teal-500 rounded-r-md text-sm sm:text-base"
                           required
                         />
                       </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-gray-700 mb-1 sm:mb-2 text-sm sm:text-base">Date of Birth</label>
-                        <input
-                          type="date"
-                          name="dateOfBirth"
-                          value={registerData.dateOfBirth}
-                          onChange={handleRegisterChange}
-                          className="w-full p-2 sm:p-3 border border-teal-500 rounded-md text-sm sm:text-base"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-gray-700 mb-1 sm:mb-2 text-sm sm:text-base">Gender</label>
-                        <select
-                          name="gender"
-                          value={registerData.gender}
-                          onChange={handleRegisterChange}
-                          className="w-full p-2 sm:p-3 border border-teal-500 rounded-md text-sm sm:text-base"
-                          required
-                        >
-                          <option value="">Select Gender</option>
-                          <option value="male">Male</option>
-                          <option value="female">Female</option>
-                          <option value="other">Other</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-gray-700 mb-1 sm:mb-2 text-sm sm:text-base">Course Interest</label>
-                      <select
-                        name="course"
-                        value={registerData.course}
-                        onChange={handleRegisterChange}
-                        className="w-full p-2 sm:p-3 border border-teal-500 rounded-md text-sm sm:text-base"
-                        required
-                      >
-                        <option value="">Select Course Interest</option>
-                        <option value="web-development">Web Development</option>
-                        <option value="data-science">Data Science</option>
-                        <option value="mobile-development">Mobile Development</option>
-                        <option value="ai-ml">AI & Machine Learning</option>
-                        <option value="cybersecurity">Cybersecurity</option>
-                        <option value="cloud-computing">Cloud Computing</option>
-                        <option value="digital-marketing">Digital Marketing</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-gray-700 mb-1 sm:mb-2 text-sm sm:text-base">Experience Level</label>
-                      <select
-                        name="experience"
-                        value={registerData.experience}
-                        onChange={handleRegisterChange}
-                        className="w-full p-2 sm:p-3 border border-teal-500 rounded-md text-sm sm:text-base"
-                        required
-                      >
-                        <option value="">Experience Level</option>
-                        <option value="beginner">Beginner (0-1 years)</option>
-                        <option value="intermediate">Intermediate (1-3 years)</option>
-                        <option value="advanced">Advanced (3-5 years)</option>
-                        <option value="expert">Expert (5+ years)</option>
-                      </select>
                     </div>
                     <div className="relative">
                       <label className="block text-gray-700 mb-1 sm:mb-2 text-sm sm:text-base">Password</label>
@@ -594,7 +505,9 @@ const SignUpPopup = () => {
                     <button
                       type="submit"
                       disabled={isLoading}
-                      className={`w-full py-2 px-4 sm:py-3 sm:px-6 bg-teal-500 text-white rounded-md hover:bg-teal-600 text-sm sm:text-base ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      className={`w-full py-2 px-4 sm:py-3 sm:px-6 bg-teal-500 text-white
+
+ rounded-md hover:bg-teal-600 text-sm sm:text-base ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                       {isLoading ? 'Registering...' : 'Create Account'}
                     </button>

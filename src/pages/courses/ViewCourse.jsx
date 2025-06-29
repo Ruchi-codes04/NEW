@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import {
   FaStar,
   FaRegClock,
@@ -17,94 +18,109 @@ import {
   FaPlayCircle,
   FaQuestionCircle,
   FaCode,
+  FaArrowLeft,
   FaShoppingCart
 } from 'react-icons/fa';
-import axios from 'axios';
+import Notification from './AllCoursesComponents/Notification'; // Assumed to be available from AllCourses
+
+const API_BASE_URL = 'https://lms-backend-flwq.onrender.com';
 
 const ViewCourse = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const [expandedModule, setExpandedModule] = useState(null);
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [notification, setNotification] = useState({ message: '', type: '' });
+
+  // Scroll to top when component mounts or when course ID changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [id]);
 
   // Fetch course data from API
   useEffect(() => {
     const fetchCourse = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`https://lms-backend-flwq.onrender.com/api/v1/courses/${id}/content`);
+        const token = localStorage.getItem('Token');
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const response = await axios.get(`${API_BASE_URL}/api/v1/courses/${id}`, { headers });
+        console.log('Course details response:', response.data);
+
         if (response.data.success) {
-          const apiCourse = response.data.data;
+          const courseData = response.data.data;
+          // Transform API data to match expected structure
           const transformedCourse = {
-            id: apiCourse._id,
-            title: apiCourse.title || 'Untitled Course',
-            description: apiCourse.description || 'No description available.',
-            longDescription: apiCourse.description || 'No detailed description available.', // Fallback if no long description
-            instructor: `${apiCourse.instructor?.firstName || 'Unknown'} ${apiCourse.instructor?.lastName || 'Instructor'}`,
-            instructorBio: apiCourse.instructor?.bio || 'Experienced professional in the field.',
-            instructorImage: apiCourse.instructor?.avatar || 'https://via.placeholder.com/150',
-            rating: apiCourse.rating || 0,
-            reviews: apiCourse.totalRatings || 0,
-            students: apiCourse.totalStudents || 0,
-            duration: apiCourse.duration ? `${apiCourse.duration} hours` : 'Unknown duration',
-            level: apiCourse.level ? apiCourse.level.charAt(0).toUpperCase() + apiCourse.level.slice(1) : 'Unknown',
-            category: apiCourse.category || 'Uncategorized',
-            price: apiCourse.price === 0 ? 'Free' : `₹${apiCourse.price}`,
-            originalPrice: apiCourse.discountPrice ? `₹${apiCourse.discountPrice}` : null,
-            image: apiCourse.thumbnail || 'https://via.placeholder.com/800x400',
-            videoUrl: apiCourse.videoUrl || 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-            language: apiCourse.language || 'English',
-            subtitles: apiCourse.subtitles || ['English'],
-            lastUpdated: apiCourse.updatedAt ? new Date(apiCourse.updatedAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'Unknown',
-            certificate: apiCourse.certificate !== undefined ? apiCourse.certificate : true,
-            downloadable: apiCourse.downloadable !== undefined ? apiCourse.downloadable : true,
-            lifetime: apiCourse.lifetime !== undefined ? apiCourse.lifetime : true,
-            mobileAccess: apiCourse.mobileAccess !== undefined ? apiCourse.mobileAccess : true,
-            modules: apiCourse.curriculum?.length > 0 ? apiCourse.curriculum.map((module, index) => ({
-              id: module._id || index + 1,
-              title: module.title || `Module ${index + 1}`,
-              duration: module.duration ? `${module.duration} hours` : 'Unknown duration',
-              lessons: module.lessons?.length > 0 ? module.lessons.map((lesson, lessonIndex) => ({
-                id: lesson._id || lessonIndex + 1,
-                title: lesson.title || `Lesson ${lessonIndex + 1}`,
-                duration: lesson.duration || 'Unknown',
-                type: lesson.type || 'video',
-                preview: lesson.preview || false,
-                completed: lesson.completed || false
-              })) : []
-            })) : [],
-            learningOutcomes: apiCourse.learningOutcomes?.length > 0 ? apiCourse.learningOutcomes : ['Learn key concepts of the course.'],
-            requirements: apiCourse.prerequisites?.length > 0 ? apiCourse.prerequisites : ['No prior requirements.'],
-            features: [
-              { icon: FaRegClock, text: apiCourse.duration ? `${apiCourse.duration} hours of on-demand video` : 'On-demand video content' },
-              { icon: FaDownload, text: apiCourse.downloadable ? 'Downloadable resources' : 'Resources included' },
+            id: courseData._id,
+            title: courseData.title,
+            description: courseData.description,
+            longDescription: courseData.longDescription || courseData.description, // Fallback to description
+            instructor: `${courseData.instructor.firstName} ${courseData.instructor.lastName}`,
+            instructorBio: courseData.instructorBio || 'Experienced instructor with expertise in the field.', // Default
+            instructorImage: courseData.instructorImage || 'https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80', // Default
+            rating: courseData.rating,
+            reviews: courseData.totalRatings,
+            students: courseData.totalStudents,
+            duration: `${courseData.duration} hours`,
+            level: courseData.level.charAt(0).toUpperCase() + courseData.level.slice(1),
+            category: courseData.category.toLowerCase(),
+            price: courseData.price === 0 ? 'Free' : `₹${courseData.price}`,
+            originalPrice: courseData.discountPrice ? `₹${courseData.discountPrice}` : null,
+            image: courseData.thumbnail,
+            videoUrl: courseData.videoUrl || 'https://www.youtube.com/embed/dQw4w9WgXcQ', // Default
+            language: courseData.language || 'English', // Default
+            subtitles: courseData.subtitles || ['English', 'Hindi'], // Default
+            lastUpdated: courseData.lastUpdated || 'December 2024', // Default
+            certificate: courseData.certificate !== undefined ? courseData.certificate : true, // Default
+            downloadable: courseData.downloadable !== undefined ? courseData.downloadable : true, // Default
+            lifetime: courseData.lifetime !== undefined ? courseData.lifetime : true, // Default
+            mobileAccess: courseData.mobileAccess !== undefined ? courseData.mobileAccess : true, // Default
+            modules: courseData.modules || [], // Ensure modules is an array
+            learningOutcomes: courseData.learningOutcomes || [
+              'Master key concepts and skills',
+              'Apply knowledge to real-world projects',
+              'Gain industry-relevant expertise'
+            ], // Default
+            requirements: courseData.requirements || [
+              'Basic computer skills',
+              'Internet access',
+              'Willingness to learn'
+            ], // Default
+            features: courseData.features || [
+              { icon: FaRegClock, text: `${courseData.duration} hours of on-demand video` },
+              { icon: FaDownload, text: 'Downloadable resources' },
               { icon: FaGlobe, text: 'Access on mobile and desktop' },
-              { icon: FaCertificate, text: apiCourse.certificate ? 'Certificate of completion' : 'Completion certificate not included' },
+              { icon: FaCertificate, text: 'Certificate of completion' },
               { icon: FaUsers, text: 'Access to student community' }
-            ]
+            ] // Default
           };
           setCourse(transformedCourse);
         } else {
-          setError('Failed to fetch course data');
+          throw new Error('Failed to fetch course details');
         }
       } catch (err) {
         console.error('Fetch Course Error:', err);
-        setError(err.response?.data?.message || 'Error fetching course data');
+        let errorMessage = err.response?.data?.message || 'Error fetching course details';
+        if (err.response?.status === 401) {
+          errorMessage = 'Session expired. Please log in again.';
+          localStorage.removeItem('Token');
+          localStorage.removeItem('user');
+          setTimeout(() => navigate('/'), 2000);
+        }
+        setError(errorMessage);
+        setNotification({ message: errorMessage, type: 'error' });
+        setTimeout(() => setNotification({ message: '', type: '' }), 3000);
       } finally {
         setLoading(false);
       }
     };
 
     fetchCourse();
-  }, [id]);
-
-  // Scroll to top when component mounts or when course ID changes
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [id]);
+  }, [id, navigate]);
 
   const toggleModule = (moduleId) => {
     setExpandedModule(expandedModule === moduleId ? null : moduleId);
@@ -119,7 +135,8 @@ const ViewCourse = () => {
       });
     } else {
       navigator.clipboard.writeText(window.location.href);
-      alert('Course link copied to clipboard!');
+      setNotification({ message: 'Course link copied to clipboard!', type: 'success' });
+      setTimeout(() => setNotification({ message: '', type: '' }), 3000);
     }
   };
 
@@ -141,34 +158,29 @@ const ViewCourse = () => {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-600 text-lg">Loading course...</div>
-      </div>
-    );
+    return <div className="min-h-screen flex items-center justify-center">Loading course...</div>;
   }
 
-  if (error) {
+  if (error || !course) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-red-500 text-lg">{error}</div>
-      </div>
-    );
-  }
-
-  if (!course) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-600 text-lg">Course not found</div>
+      <div className="min-h-screen flex items-center justify-center text-red-500">
+        {error || 'Course not found'}
       </div>
     );
   }
 
   return (
     <div className="min-h-screen">
+      <Notification notification={notification} setNotification={setNotification} />
       {/* Course Header */}
-      <section className="py-12">
+      <section className="py-18">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mb-6">
+            <Link to="/courses/all" className="flex items-center text-teal-600 hover:text-teal-700">
+              <FaArrowLeft className="mr-2" />
+              Back to All Courses
+            </Link>
+          </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
             {/* Left Content */}
             <div className="lg:col-span-2 space-y-6 lg:space-y-8">
@@ -188,24 +200,24 @@ const ViewCourse = () => {
               {/* Course Title and Description */}
               <div>
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">{course.title}</h1>
-                <p className="text-lg sm:text-xl text-gray-600 mb-4 sm:mb-6">{course.description}</p>
+                <p className="text-lg sm:text-xl text-gray-400 mb-4 sm:mb-6">{course.description}</p>
                 
                 {/* Course Stats */}
                 <div className="flex flex-wrap items-center gap-6 text-sm">
                   <div className="flex items-center">
                     <FaStar className="text-yellow-400 mr-1" />
-                    <span className="font-semibold mr-1">{course.rating.toFixed(1)}</span>
-                    <span className="text-gray-600">({course.reviews} reviews)</span>
+                    <span className="font-semibold mr-1">{course.rating}</span>
+                    <span className="text-black">({course.reviews} reviews)</span>
                   </div>
-                  <div className="flex items-center text-gray-600">
+                  <div className="flex items-center text-black">
                     <FaUsers className="mr-1" />
                     <span>{course.students.toLocaleString()} students</span>
                   </div>
-                  <div className="flex items-center text-gray-600">
+                  <div className="flex items-center text-black">
                     <FaRegClock className="mr-1" />
                     <span>{course.duration}</span>
                   </div>
-                  <div className="flex items-center text-gray-600">
+                  <div className="flex items-center text-black">
                     <FaUserGraduate className="mr-1" />
                     <span>{course.level}</span>
                   </div>
@@ -219,7 +231,7 @@ const ViewCourse = () => {
                     className="w-12 h-12 rounded-full mr-3"
                   />
                   <div>
-                    <p className="text-sm text-gray-600">Created by</p>
+                    <p className="text-sm text-black">Created by</p>
                     <p className="font-semibold">{course.instructor}</p>
                   </div>
                 </div>
@@ -269,14 +281,14 @@ const ViewCourse = () => {
                         <span className="text-lg text-gray-500 line-through">{course.originalPrice}</span>
                       )}
                     </div>
-                    <div className="flex items-center justify-center gap-2 mb-2">
-                      {course.originalPrice && (
+                    {course.originalPrice && (
+                      <div className="flex items-center justify-center gap-2 mb-2">
                         <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">
-                          {Math.round(((parseInt(course.originalPrice.replace('₹', '')) - parseInt(course.price.replace('₹', ''))) / parseInt(course.originalPrice.replace('₹', ''))) * 100)}% OFF
+                          {Math.round(((parseFloat(course.originalPrice.replace('₹', '')) - parseFloat(course.price.replace('₹', ''))) / parseFloat(course.originalPrice.replace('₹', ''))) * 100)}% OFF
                         </span>
-                      )}
-                      <span className="text-sm text-gray-600">Limited time offer!</span>
-                    </div>
+                        <span className="text-sm text-gray-600">Limited time offer!</span>
+                      </div>
+                    )}
                     <div className="text-xs text-gray-500">
                       ⏰ Offer ends in 2 days
                     </div>
@@ -461,7 +473,7 @@ const ViewCourse = () => {
                           <div className="bg-white rounded-lg p-4 text-center shadow-sm">
                             <div className="flex items-center justify-center mb-2">
                               <FaStar className="text-yellow-400 mr-1" />
-                              <span className="font-bold text-lg">{course.rating.toFixed(1)}</span>
+                              <span className="font-bold text-lg">{course.rating}</span>
                             </div>
                             <p className="text-sm text-gray-600">Instructor Rating</p>
                           </div>
@@ -475,7 +487,7 @@ const ViewCourse = () => {
                           <div className="bg-white rounded-lg p-4 text-center shadow-sm">
                             <div className="flex items-center justify-center mb-2">
                               <FaCertificate className="text-purple-600 mr-1" />
-                              <span className="font-bold text-lg">5+</span>
+                              <span className="font-bold text-lg">15+</span>
                             </div>
                             <p className="text-sm text-gray-600">Courses Created</p>
                           </div>
@@ -484,8 +496,7 @@ const ViewCourse = () => {
                         <div className="flex flex-wrap gap-2">
                           <span className="bg-teal-100 text-teal-800 px-3 py-1 rounded-full text-sm">Expert Instructor</span>
                           <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">{course.category} Specialist</span>
-                          <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">Industry Professional</span>
-                          <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">5+ Years Experience</span>
+                          <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">Industry Leader</span>
                         </div>
                       </div>
                     </div>

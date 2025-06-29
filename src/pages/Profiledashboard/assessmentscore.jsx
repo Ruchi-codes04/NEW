@@ -26,7 +26,7 @@ const AssessmentScore = () => {
     const fetchCourses = async () => {
       setLoading(true);
       try {
-        const token = localStorage.getItem("token");
+        const token = localStorage.getItem("Token");
         if (!token) {
           showNotification("Please log in to view courses.");
           setLoading(false);
@@ -72,7 +72,7 @@ const AssessmentScore = () => {
     const fetchAssessments = async () => {
       setLoading(true);
       try {
-        const token = localStorage.getItem("token");
+        const token = localStorage.getItem("Token");
         if (!token) {
           showNotification("Please log in to view assessments.");
           setLoading(false);
@@ -121,7 +121,7 @@ const AssessmentScore = () => {
     const fetchAssessmentResult = async () => {
       setLoading(true);
       try {
-        const token = localStorage.getItem("token");
+        const token = localStorage.getItem("Token");
         if (!token) {
           showNotification("Please log in to view assessment results.");
           setLoading(false);
