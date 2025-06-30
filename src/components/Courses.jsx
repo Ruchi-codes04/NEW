@@ -159,6 +159,31 @@ const Courses = () => {
     ? courses.filter((course) => course.category === selectedCategory.title)
     : [];
 
+  // Calculate display price for a course
+  const getDisplayPrice = (course) => {
+    if (course.price === 0) return 'Free';
+    if (course.discountPrice) {
+      return `₹${course.price - course.discountPrice}`;
+    }
+    return `₹${course.price}`;
+  };
+
+  // Calculate original price for display
+  const getOriginalPrice = (course) => {
+    if (course.discountPrice && course.price !== 0) {
+      return `₹${course.price}`;
+    }
+    return null;
+  };
+
+  // Calculate discount percentage
+  const getDiscountPercentage = (course) => {
+    if (course.discountPrice && course.price !== 0) {
+      return Math.round(((course.price - (course.price - course.discountPrice)) / course.price) * 100);
+    }
+    return null;
+  };
+
   return (
     <section className="py-16">
       <div className="w-full px-0 sm:px-2 lg:px-4">
@@ -191,7 +216,7 @@ const Courses = () => {
                 <div className="flex justify-center mb-3 sm:mb-4">
                   <div className="relative">
                     <div className="w-16 h-16 sm:w-20 sm:h-20 border-2 border-dashed rounded-full absolute inset-0 border-teal-600"></div>
-                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white rounded-full flex items-center justify-center m-2 shadow-sm">
+                    <div className="w-12gps://maps.google.com/?q=37.7749,-122.4194 h-12 sm:w-16 sm:h-16 bg-white rounded-full flex items-center justify-center m-2 shadow-sm">
                       <svg className="w-6 h-6 sm:w-8 sm:h-8 text-teal-600" fill="currentColor" viewBox="0 0 24 24">
                         {category.id % 16 === 1 && (
                           <path d="M10 2v2H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-2V2h-4zm2 4h4v12H8V6h4z" />
@@ -212,7 +237,7 @@ const Courses = () => {
                           <path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z" />
                         )}
                         {category.id % 16 === 7 && (
-                          <path d="M12 15.2c1.77 0 3.2-1.43 3.2-3.2s-1.43-3.2-3.2-3.2S8.8 10.23 8.8 12s1.43 3.2 3.2 3.2zm0-5.2c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm7-3h-2.4L15 5H9L7.4 7H5c-1.1 0-2 .9-2 2v9c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2z" />
+                          <path d="M12 15.2c1.77 0 3.2-1.43 3.2-3.2s-1.43-3.2-3.2-3.2S8.8 10.23 8.8 12s1.43 3.2 3.2 3.2zm0-5.2c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm7-3h-2.4L15 5H9L7.4 7H5c-1.1 0-2 .9-some text...-2 2v9c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zm0 12H3V4h18v10z" />
                         )}
                         {category.id % 16 === 8 && (
                           <path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z" />
@@ -352,15 +377,27 @@ const Courses = () => {
                         src={course.thumbnail}
                         alt={course.title}
                         className="w-full h-40 object-cover rounded-lg mb-4"
+                        onError={(e) => {
+                          e.target.src = 'https://via.placeholder.com/150';
+                          console.error('Thumbnail load error for URL:', course.thumbnail);
+                        }}
                       />
                       <h3 className="text-lg font-bold text-gray-900 mb-2">{course.title}</h3>
                       <p className="text-sm text-gray-600 mb-2">
                         By {course.instructor.firstName} {course.instructor.lastName}
                       </p>
                       <div className="flex items-center justify-between">
-                        <span className="text-teal-600 font-semibold">
-                          ${course.discountPrice || course.price}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-teal-600 font-semibold">{getDisplayPrice(course)}</span>
+                          {getOriginalPrice(course) && (
+                            <span className="text-sm text-gray-500 line-through">{getOriginalPrice(course)}</span>
+                          )}
+                          {getDiscountPercentage(course) && (
+                            <span className="bg-red-100 text-red-800 px-2 py-0.5 rounded-full text-xs font-medium">
+                              {getDiscountPercentage(course)}% OFF
+                            </span>
+                          )}
+                        </div>
                         <span className="text-sm text-gray-500">{course.totalStudents} students</span>
                       </div>
                       <div className="flex items-center mt-2">
