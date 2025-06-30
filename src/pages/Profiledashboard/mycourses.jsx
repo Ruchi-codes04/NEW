@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { ThemeContext } from '../../contexts/ThemeContext';
-import Certificates from './Certificates'; // Adjust path to where Certificates.jsx is located
+import Certificates from './Certificates'; 
 
 const Dashboard = () => {
   const { theme } = useContext(ThemeContext);

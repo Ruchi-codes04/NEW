@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { ThemeContext } from "../../contexts/ThemeContext";
-import Notification from "./Notification"; // Removed lazy loading for simplicity
+import Notification from "./Notification"; 
 
 const AssessmentScore = () => {
   const { theme } = useContext(ThemeContext);

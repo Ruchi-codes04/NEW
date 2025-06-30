@@ -21,6 +21,10 @@ import {
   FaArrowLeft,
   FaShoppingCart
 } from 'react-icons/fa';
+<<<<<<< HEAD
+=======
+import Notification from './AllCoursesComponents/Notification'; 
+>>>>>>> ef14fc06814d7a2bdfd0503ba4f7ddacc10d526c
 
 // Modal Component for Success/Error Feedback
 const Modal = ({ isOpen, message, type, onClose }) => {
@@ -132,17 +136,18 @@ const ViewCourse = () => {
             duration: `${courseData.duration} hours`,
             level: courseData.level.charAt(0).toUpperCase() + courseData.level.slice(1),
             category: courseData.category.toLowerCase(),
-            price: courseData.discountPrice === 0 ? 'Free' : `₹${courseData.discountPrice || courseData.price}`,
-            originalPrice: courseData.discountPrice ? `₹${courseData.price}` : null,
-            thumbnail: courseData.thumbnail || 'https://via.placeholder.com/600x400?text=Course+Thumbnail',
-            language: courseData.language || 'English',
-            subtitles: courseData.subtitles || ['English', 'Hindi'],
-            lastUpdated: courseData.lastUpdated || 'December 2024',
-            certificate: courseData.certificate !== undefined ? courseData.certificate : true,
-            downloadable: courseData.downloadable !== undefined ? courseData.downloadable : true,
-            lifetime: courseData.lifetime !== undefined ? courseData.lifetime : true,
-            mobileAccess: courseData.mobileAccess !== undefined ? courseData.mobileAccess : true,
-            modules: courseData.modules || [],
+            price: courseData.price === 0 ? 'Free' : `₹${courseData.price}`,
+            originalPrice: courseData.discountPrice ? `₹${courseData.discountPrice}` : null,
+            image: courseData.thumbnail,
+            videoUrl: courseData.videoUrl || 'https://www.youtube.com/embed/dQw4w9WgXcQ', // Default
+            language: courseData.language || 'English', // Default
+            subtitles: courseData.subtitles || ['English', 'Hindi'], // Default
+            lastUpdated: courseData.lastUpdated || 'December 2024', // Default
+            certificate: courseData.certificate !== undefined ? courseData.certificate : true, // Default
+            downloadable: courseData.downloadable !== undefined ? courseData.downloadable : true, // Default
+            lifetime: courseData.lifetime !== undefined ? courseData.lifetime : true, // Default
+            mobileAccess: courseData.mobileAccess !== undefined ? courseData.mobileAccess : true, // Default
+            modules: courseData.modules || [], 
             learningOutcomes: courseData.learningOutcomes || [
               'Master key concepts and skills',
               'Apply knowledge to real-world projects',
@@ -312,7 +317,7 @@ const ViewCourse = () => {
 
             if (enrollResponse.data.success) {
               setEnrollSuccess('You have been enrolled successfully!');
-              setTimeout(() => navigate('/my-courses'), 2000);
+              setTimeout(() => navigate('/profile-dashboard'), 2000);
             } else {
               setEnrollError(enrollResponse.data.message || 'Enrollment failed');
             }
@@ -468,11 +473,11 @@ const ViewCourse = () => {
 
                 {/* Instructor Info */}
                 <div className="flex items-center mt-6">
-                  <img
+                  {/* <img
                     src={course.instructorImage}
                     alt={course.instructor}
                     className="w-12 h-12 rounded-full mr-3"
-                  />
+                  />  */}
                   <div>
                     <p className="text-sm text-black">Created by</p>
                     <p className="font-semibold">{course.instructor}</p>

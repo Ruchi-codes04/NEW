@@ -122,7 +122,7 @@ const CoursesPage = () => {
     }
   };
 
-   // Add the same handleBookmark function as above
+   
   const handleBookmark = async (courseId) => {
     try {
       const token = localStorage.getItem('Token');
@@ -164,7 +164,7 @@ const CoursesPage = () => {
     }
   };
 
-  // Add notification component
+  // notification component
   {notification.message && (
     <div className={`fixed top-4 right-4 p-4 rounded-md shadow-lg text-white z-50 ${
       notification.type === 'error' ? 'bg-red-500' : 'bg-green-500'
@@ -322,7 +322,7 @@ const CoursesPage = () => {
           ))}
         </div>
 
-        {/* Load More Button */}
+      
         <div className="text-center mt-12">
           <button className="bg-gradient-to-r from-teal-500 to-teal-600 text-white px-8 py-3 rounded-full font-semibold hover:from-teal-600 hover:to-teal-700 transition-all duration-300 shadow-lg hover:shadow-xl">
             Load More Courses

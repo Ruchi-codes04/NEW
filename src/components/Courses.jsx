@@ -49,7 +49,7 @@ const Courses = () => {
     fetchCourses();
   }, []);
 
-   // Add this function to handle bookmarking
+   
   const handleBookmark = async (courseId) => {
     try {
       const token = localStorage.getItem('Token');
@@ -92,7 +92,7 @@ const Courses = () => {
     }
   };
 
-  // Add this notification component inside the return statement, before the section element
+  
   {notification.message && (
     <div className={`fixed top-4 right-4 p-4 rounded-md shadow-lg text-white z-50 ${
       notification.type === 'error' ? 'bg-red-500' : 'bg-green-500'

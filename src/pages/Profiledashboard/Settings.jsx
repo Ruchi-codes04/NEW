@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { ThemeContext } from '../../contexts/ThemeContext';
 
+
 const Notification = ({ message, type, onClose }) => {
   const { theme } = useContext(ThemeContext);
   if (!message) return null;
@@ -33,7 +34,7 @@ const Notification = ({ message, type, onClose }) => {
   );
 };
 
-const Settings = () => {
+const SettingsAndPayment = () => {
   const { theme, setTheme, language, setLanguage } = useContext(ThemeContext);
   const [student, setStudent] = useState(null);
   const [formData, setFormData] = useState({
@@ -49,6 +50,16 @@ const Settings = () => {
   const [saving, setSaving] = useState(false);
   const [notification, setNotification] = useState({ message: '', type: '' });
   const [isEditing, setIsEditing] = useState(false);
+  const [ setPaymentData] = useState({
+    cardNumber: '',
+    expiry: '',
+    cvv: '',
+    amount: '',
+  });
+  const [ setProcessing] = useState(false);
+  const [paymentHistory, setPaymentHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
+
 
   useEffect(() => {
     if (notification.message) {
@@ -96,6 +107,33 @@ const Settings = () => {
       }
     };
     fetchProfile();
+  }, []);
+
+  useEffect(() => {
+    const fetchPaymentHistory = async () => {
+      try {
+        const token = localStorage.getItem('Token');
+        if (!token) return;
+        
+        const response = await axios.get('https://lms-backend-flwq.onrender.com/api/v1/payments/my-payments', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (response.data.success) {
+          setPaymentHistory(response.data.data);
+        } else {
+          setNotification({ message: 'Failed to fetch payment history.', type: 'error' });
+        }
+      } catch (err) {
+        setNotification({
+          message: err.message || 'Failed to fetch payment history.',
+          type: 'error',
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPaymentHistory();
   }, []);
 
   const handleChange = (e) => {
@@ -174,6 +212,41 @@ const Settings = () => {
     setTheme(e.target.value);
   };
 
+ 
+
+  const Payment = async (e) => {
+    e.preventDefault();
+    setProcessing(true);
+    setNotification({ message: '', type: '' });
+    try {
+      const token = localStorage.getItem('Token');
+      if (!token) {
+        setNotification({ message: 'Authentication required. Please log in.', type: 'error' });
+        return;
+      }
+      
+      // Simulated payment API call
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      setNotification({ message: 'Payment processed successfully!', type: 'success' });
+      setPaymentData({ cardNumber: '', expiry: '', cvv: '', amount: '' });
+      
+      // Refresh payment history after successful payment
+      const response = await axios.get('https://lms-backend-flwq.onrender.com/api/v1/payments/my-payments', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.data.success) {
+        setPaymentHistory(response.data.data);
+      }
+    } catch (err) {
+      setNotification({
+        message: err.message || 'Payment failed. Please try again.',
+        type: 'error',
+      });
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   return (
     <div
       className={`p-4 sm:p-5 font-sans min-h-screen transition-colors duration-300 ${
@@ -185,6 +258,7 @@ const Settings = () => {
         type={notification.type}
         onClose={() => setNotification({ message: '', type: '' })}
       />
+      
       {/* Edit Profile Section */}
       <div
         className={`rounded-lg p-4 sm:p-5 shadow-md mb-4 sm:mb-5 ${
@@ -201,7 +275,7 @@ const Settings = () => {
           </h2>
           <button
             onClick={toggleEditMode}
-            className={`mt-2 sm:mt-0 px-4 py-2 rounded-md text-sm transition ${
+            className={`mt-2 sm:mt-0 px hiv-4 sm:px-6 py-2 rounded-md text-sm transition ${
               theme === 'dark'
                 ? 'bg-gray-600 text-gray-200 hover:bg-gray-700'
                 : 'bg-gray-300 text-gray-800 hover:bg-gray-400'
@@ -316,7 +390,7 @@ const Settings = () => {
                       name={field}
                       value={formData[field]}
                       onChange={handleChange}
-                      className={`w-full border rounded-md p-2 text-xs sm:text-sm ${
+                      className={`w-full border rounded-md p-2 text3-xs sm:text-sm ${
                         theme === 'dark'
                           ? isEditing
                             ? 'border-gray-600 bg-gray-800 text-gray-100'
@@ -350,6 +424,7 @@ const Settings = () => {
           </div>
         )}
       </div>
+      
       {/* Choose Your Theme Section */}
       <div
         className={`rounded-lg p-4 sm:p-5 mb-4 sm:mb-5 shadow-md ${
@@ -414,6 +489,7 @@ const Settings = () => {
           </label>
         </div>
       </div>
+      
       {/* Choose Your Language Section */}
       <div
         className={`rounded-lg p-4 sm:p-5 mb-4 sm:mb-5 shadow-md ${
@@ -447,8 +523,106 @@ const Settings = () => {
           After changing the application language, the application will reload
         </p>
       </div>
+      
+     
+
+      {/* Payment History Section */}
+      <div
+        className={`rounded-lg p-6 sm:p-8 shadow-lg ${
+          theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+        }`}
+      >
+        <h2
+          className={`text-2xl font-bold mb-6 text-center ${
+            theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+          }`}
+        >
+          Payment History
+        </h2>
+        {loading ? (
+          <div className="text-center">
+            <svg
+              className="animate-spin h-8 w-8 mx-auto text-blue-500"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v8h8a8 8 0 01-8 8 8 8 0 01-8-8z"
+              ></path>
+            </svg>
+            <p className="mt-2">Loading payment history...</p>
+          </div>
+        ) : paymentHistory.length === 0 ? (
+          <p className="text-center text-gray-500">No payment history available.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table
+              className={`w-full text-sm ${
+                theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+              }`}
+            >
+              <thead>
+                <tr
+                  className={`text-left ${
+                    theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'
+                  }`}
+                >
+                  <th className="py-3 px-4 font-semibold">Course</th>
+                  <th className="py-3 px-4 font-semibold">Amount (INR)</th>
+                  <th className="py-3 px-4 font-semibold">Status</th>
+                  <th className="py-3 px-4 font-semibold">Date</th>
+                  <th className="py-3 px-4 font-semibold">Transaction ID</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paymentHistory.map((payment) => (
+                  <tr
+                    key={payment._id}
+                    className={`border-b ${
+                      theme === 'dark' ? 'border-gray-600' : 'border-gray-200'
+                    } hover:${
+                      theme === 'dark' ? 'bg-gray-700' : 'bg-gray-50'
+                    } transition duration-150`}
+                  >
+                    <td className="py-3 px-4">{payment.course?.title || 'N/A'}</td>
+                    <td className="py-3 px-4">{payment.amount?.toFixed(2) || '0.00'}</td>
+                    <td
+                      className={`py-3 px-4 font-medium ${
+                        payment.status === 'completed'
+                          ? 'text-green-500'
+                          : 'text-red-500'
+                      }`}
+                    >
+                      {payment.status?.charAt(0).toUpperCase() + payment.status?.slice(1) || 'Unknown'}
+                    </td>
+                    <td className="py-3 px-4">
+                      {payment.paymentDate ? 
+                        new Date(payment.paymentDate).toLocaleString('en-IN', {
+                          dateStyle: 'medium',
+                          timeStyle: 'short',
+                        }) : 'N/A'}
+                    </td>
+                    <td className="py-3 px-4 text-xs">{payment.transactionId || 'N/A'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
 
-export default Settings;
+export default SettingsAndPayment;

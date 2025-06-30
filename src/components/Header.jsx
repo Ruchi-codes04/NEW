@@ -5,7 +5,7 @@ import { useSignUp } from '../contexts/SignUpContext';
 import ComingSoonPopup from './ComingSoonPopup';
 import axios from 'axios';
 
-// Helper function to decode JWT token
+
 const parseJwt = (token) => {
   try {
     const base64Url = token.split('.')[1];
@@ -44,9 +44,9 @@ const Header = () => {
       if (token && !user) {
         setIsLoading(true);
         try {
-          // Decode token to get user role (adjust based on your token structure)
+          // Decode token to get user role
           const decodedToken = parseJwt(token);
-          const userRole = decodedToken?.role; // Adjust 'role' key based on your JWT payload
+          const userRole = decodedToken?.role;
 
           // Determine the appropriate endpoint based on role
           let profileEndpoint;
@@ -68,7 +68,7 @@ const Header = () => {
             setUser(response.data.data);
           } else {
             console.error('API response unsuccessful:', response.data.message);
-            // Optionally clear token if the response indicates an invalid session
+            
             localStorage.removeItem('Token');
             setUser(null);
             setIsLogin(false);
@@ -90,7 +90,7 @@ const Header = () => {
     };
 
     fetchUserProfile();
-  }, []); // Empty dependency array to run only on mount
+  }, []); 
 
   // Debugging: Log user state changes
   useEffect(() => {

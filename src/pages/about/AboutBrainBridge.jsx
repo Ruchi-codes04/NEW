@@ -153,7 +153,7 @@ const AboutBrainBridge = () => {
                 onClick={() => {
                   // Add click functionality
                   alert('Welcome! Let\'s get started with your learning journey!');
-                  // You can replace this with actual navigation or modal opening
+                  
                 }}
                 className="bg-teal-600 hover:bg-teal-700 text-white font-semibold py-4 px-8 rounded-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-teal-600/30 flex items-center gap-2 cursor-pointer"
               >

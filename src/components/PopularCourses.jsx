@@ -93,7 +93,7 @@ const PopularCourses = () => {
 
         {/* Courses Grid with Arrows */}
         <div className="flex items-center gap-2 sm:gap-3 mx-0 px-0">
-          {/* Left Arrow */}
+          
           <button
             onClick={handlePrev}
             disabled={startIndex === 0}
@@ -111,7 +111,7 @@ const PopularCourses = () => {
                 key={course.id}
                 className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 lg:p-5 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-2 group min-h-[360px] sm:min-h-[400px] flex flex-col w-full"
               >
-                {/* Logo */}
+                
                 <div className="flex justify-center mb-3 sm:mb-4">
                   <div className="w-25 h-25 bg-gray-100 rounded-full flex items-center justify-center">
                     <img
@@ -127,12 +127,12 @@ const PopularCourses = () => {
                   <p className="text-xs text-gray-600">{course.provider}</p>
                 </div>
 
-                {/* Title */}
+                
                 <h3 className="text-sm sm:text-base font-bold text-gray-900 text-center mb-2 sm:mb-3 group-hover:text-teal-600 transition-colors duration-300 leading-tight flex-grow">
                   {course.title}
                 </h3>
 
-                {/* Subtitle */}
+              
                 <p className="text-xs text-teal-600 text-center mb-3 sm:mb-4">
                   {course.subtitle}
                 </p>
@@ -166,7 +166,7 @@ const PopularCourses = () => {
             ))}
           </div>
 
-          {/* Right Arrow */}
+          
           <button
             onClick={handleNext}
             disabled={startIndex + visibleCount >= courses.length}

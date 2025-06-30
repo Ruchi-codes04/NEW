@@ -89,13 +89,13 @@ const AboutUs = () => {
     <section className="py-16 bg-white relative overflow-hidden">
       <div className="w-full h-full px-4 sm:px-8 lg:px-16 xl:px-20">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center max-w-7xl mx-auto">
-          {/* Left Content - Images */}
+          
           <div className="relative group">
-            {/* Main image container */}
+            
             <div className="relative">
-              {/* Three overlapping images */}
+              
               <div className="relative w-full max-w-lg mx-auto">
-                {/* Back image - left */}
+                
                 <div className="absolute top-0 left-0 w-56 h-72 rounded-3xl overflow-hidden shadow-lg transform -rotate-6 z-10 transition-all duration-500 group-hover:scale-105 group-hover:-rotate-12 group-hover:shadow-2xl">
                   <img
                     src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=500&h=600&fit=crop&crop=faces"
@@ -104,7 +104,7 @@ const AboutUs = () => {
                   />
                 </div>
 
-                {/* Middle image - center */}
+                
                 <div className="relative w-56 h-72 rounded-3xl overflow-hidden shadow-xl mx-auto z-20 transition-all duration-500 group-hover:scale-110 group-hover:shadow-2xl">
                   <img
                     src="https://images.unsplash.com/photo-1531482615713-2afd69097998?w=500&h=600&fit=crop&crop=faces"
@@ -113,7 +113,7 @@ const AboutUs = () => {
                   />
                 </div>
 
-                {/* Front image - right */}
+                
                 <div className="absolute top-0 right-0 w-56 h-72 rounded-3xl overflow-hidden shadow-lg transform rotate-6 z-10 transition-all duration-500 group-hover:scale-105 group-hover:rotate-12 group-hover:shadow-2xl">
                   <img
                     src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=500&h=600&fit=crop&crop=faces"
@@ -146,14 +146,14 @@ const AboutUs = () => {
             <div className="absolute bottom-10 -right-8 w-24 h-24 bg-pink-100 rounded-full opacity-40"></div> */}
           </div>
 
-          {/* Right Content - Text and Features */}
+          
           <div className="space-y-6 group-hover:transform group-hover:translate-x-2 transition-all duration-500">
             {/* Badge */}
             <div className="inline-flex items-center px-4 py-2 bg-teal-600 text-white rounded-full text-sm font-medium">
               About Us
             </div>
 
-            {/* Main Heading */}
+          
             <div className="space-y-2">
               <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">
                 Learn and Grow your Skills
@@ -162,14 +162,14 @@ const AboutUs = () => {
               </h2>
             </div>
 
-            {/* Description */}
+            
             <p className="text-gray-600 leading-relaxed text-base">
               Lorem ipsum dolor sit amet consectetur adipiscing elit sed eiusmod
               ex tempor incididunt labore dolore magna aliquaenim minim veniam
               quis nostrud exercitation ullamco laboris.
             </p>
 
-            {/* Features Grid */}
+        
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {features.map((feature, index) => (
                 <div
@@ -191,7 +191,7 @@ const AboutUs = () => {
               ))}
             </div>
 
-            {/* CTA Button */}
+            
             <div className="pt-1">
               <Link to = "/about/company"
                 className="bg-teal-600 text-white px-6 py-3 rounded-lg font-semibold text-sm transition-all duration-300 ease-in-out

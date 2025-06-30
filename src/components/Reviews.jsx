@@ -243,7 +243,7 @@ const Reviews = () => {
 
         {/* Category Filter */}
         <div className="mb-10 relative">
-          {/* Left Arrow */}
+          
           <button
             onClick={scrollLeft}
             className="absolute left-0 top-4 transform -translate-y-1/2 z-10 bg-white shadow-md rounded-full p-2 hover:bg-gray-50 transition-colors"
@@ -251,7 +251,7 @@ const Reviews = () => {
             <FaChevronLeft className="text-gray-600" />
           </button>
 
-          {/* Right Arrow */}
+          
           <button
             onClick={scrollRight}
             className="absolute right-0 top-4 transform -translate-y-1/2 z-10 bg-white shadow-md rounded-full p-2 hover:bg-gray-50 transition-colors"

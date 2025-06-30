@@ -1,53 +1,88 @@
 import React, { useState, useEffect } from 'react';
 import { FaMapMarkerAlt, FaPhone, FaEnvelope, FaClock, FaFacebook, FaTwitter, FaLinkedin, FaInstagram, FaYoutube, FaPaperPlane, FaComments, FaHeadset, FaGlobe, FaGraduationCap, FaBuilding } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
+// import { Link } from 'react-router-dom';
+import axios from 'axios';
 
 const ContactUs = () => {
-  const [showBackToTop, setShowBackToTop] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phone: '',
-    subject: '',
-    message: ''
+    type: '',
+    query: ''
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState('');
+  const [showBackToTop, setShowBackToTop] = useState(false); // Added state for back-to-top button
 
+  // Handle scroll to show/hide back-to-top button
   useEffect(() => {
     const handleScroll = () => {
-      setShowBackToTop(window.scrollY > 300);
+      if (window.scrollY > 300) { // Show button after scrolling 300px
+        setShowBackToTop(true);
+      } else {
+        setShowBackToTop(false);
+      }
     };
 
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll); // Cleanup on unmount
   }, []);
 
+  // Function to scroll to top
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
-      behavior: 'smooth'
+      behavior: 'smooth' // Smooth scrolling
     });
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission here
-    console.log('Form submitted:', formData);
-    alert('Thank you for your message! We will get back to you soon.');
-    setFormData({
-      name: '',
-      email: '',
-      phone: '',
-      subject: '',
-      message: ''
-    });
+    if (!document.getElementById('privacy').checked) {
+      setSubmitMessage('Please agree to the Privacy Policy and Terms of Service');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitMessage('');
+
+    const token = localStorage.getItem('Token'); // Adjust 'token' key based on your app's storage
+
+    try {
+      const response = await axios.post(
+        'https://new-lms-backend-vmgr.onrender.com/api/v1/contacts',
+        {
+          name: formData.name,
+          email: formData.email,
+          subject: formData.type,
+          query: formData.query,
+          type: formData.type
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      setSubmitMessage('Message sent successfully!');
+      setFormData({ name: '', email: '', type: '', query: '' });
+      document.getElementById('privacy').checked = false;
+    } catch (error) {
+      if (error.response?.status === 401) {
+        setSubmitMessage('Authentication failed. Please log in and try again.');
+      } else {
+        setSubmitMessage('Error sending message. Please try again.');
+      }
+      console.error('Submission error:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -320,7 +355,7 @@ const ContactUs = () => {
             </div>
 
             {/* Right Side - Contact Form */}
-            <div className="bg-white rounded-2xl p-8 shadow-2xl">
+            <div className="bg-white rounded-2xl p-8 shadow-2xl max-w-2xl mx-auto my-8">
               <div className="text-center mb-8">
                 <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-teal-500 to-teal-600 rounded-full mb-4">
                   <FaPaperPlane className="text-white text-2xl" />
@@ -364,53 +399,36 @@ const ContactUs = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-2">
-                      Phone Number
-                    </label>
-                    <input
-                      type="tel"
-                      id="phone"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300 hover:border-teal-300"
-                      placeholder="+91 98765 43210"
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="subject" className="block text-sm font-semibold text-gray-700 mb-2">
-                      Subject *
-                    </label>
-                    <select
-                      id="subject"
-                      name="subject"
-                      value={formData.subject}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300 hover:border-teal-300"
-                      required
-                    >
-                      <option value="">Select a subject</option>
-                      <option value="course-inquiry">Course Inquiry</option>
-                      <option value="technical-support">Technical Support</option>
-                      <option value="partnership">Partnership Opportunity</option>
-                      <option value="corporate-training">Corporate Training</option>
-                      <option value="general">General Question</option>
-                      <option value="other">Other</option>
-                    </select>
-                  </div>
+                <div>
+                  <label htmlFor="type" className="block text-sm font-semibold text-gray-700 mb-2">
+                    Type *
+                  </label>
+                  <select
+                    id="type"
+                    name="type"
+                    value={formData.type}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300 hover:border-teal-300"
+                    required
+                  >
+                    <option value="">Select a type</option>
+                    <option value="course-inquiry">Course Inquiry</option>
+                    <option value="technical">Technical Support</option>
+                    <option value="partnership">Partnership Opportunity</option>
+                    <option value="corporate-training">Corporate Training</option>
+                    <option value="general">General Question</option>
+                    <option value="other">Other</option>
+                  </select>
                 </div>
 
                 <div>
-                  <label htmlFor="message" className="block text-sm font-semibold text-gray-700 mb-2">
-                    Message *
+                  <label htmlFor="query" className="block text-sm font-semibold text-gray-700 mb-2">
+                    Query *
                   </label>
                   <textarea
-                    id="message"
-                    name="message"
-                    value={formData.message}
+                    id="query"
+                    name="query"
+                    value={formData.query}
                     onChange={handleInputChange}
                     rows={5}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300 hover:border-teal-300 resize-none"
@@ -431,12 +449,19 @@ const ContactUs = () => {
                   </label>
                 </div>
 
+                {submitMessage && (
+                  <p className={`text-sm ${submitMessage.includes('Error') ? 'text-red-600' : 'text-green-600'}`}>
+                    {submitMessage}
+                  </p>
+                )}
+
                 <button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-teal-600 to-teal-700 text-white py-4 px-6 rounded-lg hover:from-teal-700 hover:to-teal-800 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transform hover:-translate-y-0.5 hover:shadow-lg font-semibold text-lg flex items-center justify-center space-x-2"
+                  disabled={isSubmitting}
+                  className={`w-full bg-gradient-to-r from-teal-600 to-teal-700 text-white py-4 px-6 rounded-lg hover:from-teal-700 hover:to-teal-800 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transform hover:-translate-y-0.5 hover:shadow-lg font-semibold text-lg flex items-center justify-center space-x-2 ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <FaPaperPlane className="text-lg" />
-                  <span>Send Message</span>
+                  <span>{isSubmitting ? 'Sending...' : 'Send Message'}</span>
                 </button>
               </form>
             </div>

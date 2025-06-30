@@ -5,7 +5,7 @@ const ReviewCard = ({ review }) => {
   return (
     <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300">
       <div className="p-4 sm:p-6">
-        {/* Header with name and rating */}
+        
         <div className="mb-3 sm:mb-4">
           <h3 className="text-teal-600 text-sm sm:text-base font-bold mb-1 leading-tight">
             {review.name}, {review.rating} {review.course.includes('Henry Harvin') ? review.course.split('Henry Harvin')[1] : review.course}
