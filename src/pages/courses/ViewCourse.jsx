@@ -146,8 +146,14 @@ const ViewCourse = () => {
             duration: `${courseData.duration} hours`,
             level: courseData.level.charAt(0).toUpperCase() + courseData.level.slice(1),
             category: courseData.category.toLowerCase(),
-            price: courseData.discountPrice ? `₹${courseData.discountPrice}` : courseData.price === 0 ? 'Free' : `₹${courseData.price}`,
-            originalPrice: courseData.discountPrice && courseData.price !== 0 ? `₹${courseData.price}` : null,
+           price: courseData.discountPrice && courseData.price !== 0 
+  ? `₹${courseData.price - courseData.discountPrice}` 
+  : courseData.price === 0 
+    ? 'Free' 
+    : `₹${courseData.price}`,
+originalPrice: courseData.discountPrice && courseData.price !== 0 
+  ? `₹${courseData.price}` 
+  : null,
             image: courseData.thumbnail,
             thumbnail: courseData.thumbnail || DefaultImageCourse,
             videoUrl: courseData.videoUrl || 'https://www.youtube.com/embed/dQw4w9WgXcQ',
