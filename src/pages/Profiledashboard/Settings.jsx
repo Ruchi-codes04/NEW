@@ -34,7 +34,7 @@ const Notification = ({ message, type, onClose }) => {
 };
 
 const SettingsAndPayment = () => {
-  const { theme, setTheme,  setLanguage } = useContext(ThemeContext);
+  const { theme, setTheme, setLanguage } = useContext(ThemeContext);
   const [student, setStudent] = useState(null);
   const [formData, setFormData] = useState({
     firstName: '',
@@ -43,19 +43,22 @@ const SettingsAndPayment = () => {
     role: '',
     skills: '',
     email: '',
+    education: '',
+    occupation: '',
+    interests: '',
   });
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [saving, setSaving] = useState(false);
   const [notification, setNotification] = useState({ message: '', type: '' });
   const [isEditing, setIsEditing] = useState(false);
-  const [ setPaymentData] = useState({
+  const [paymentData, setPaymentData] = useState({
     cardNumber: '',
     expiry: '',
     cvv: '',
     amount: '',
   });
-  const [ setProcessing] = useState(false);
+  const [processing, setProcessing] = useState(false);
   const [paymentHistory, setPaymentHistory] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -87,15 +90,18 @@ const SettingsAndPayment = () => {
           lastName: data.lastName || '',
           phone: data.phone || '',
           role: data.role || '',
-          skills: data.skills || '',
+          skills: Array.isArray(data.skills) ? data.skills.join(', ') : data.skills || '',
           email: data.email || '',
+          education: data.education || '',
+          occupation: data.occupation || '',
+          interests: Array.isArray(data.interests) ? data.interests.join(', ') : data.interests || '',
         });
         setAvatarPreview(data.avatar || null);
       } catch (err) {
         console.error('Error fetching profile:', err);
         if (err.response?.status === 401) {
           setNotification({ message: 'Session expired. Please log in again.', type: 'error' });
-          localStorage.removeItem('token');
+          localStorage.removeItem('Token');
         } else {
           setNotification({
             message: err.response?.data?.message || 'Unable to retrieve profile data. Please try again later.',
@@ -117,7 +123,6 @@ const SettingsAndPayment = () => {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (response.data.success) {
-          // Filter only completed payments
           const completedPayments = response.data.data.filter(payment => payment.status === 'completed');
           setPaymentHistory(completedPayments);
         } else {
@@ -166,27 +171,82 @@ const SettingsAndPayment = () => {
       setSaving(false);
       return;
     }
+
+    // Validate required fields
+    if (!formData.firstName || !formData.lastName || !formData.email) {
+      setNotification({ message: 'First Name, Last Name, and Email are required.', type: 'error' });
+      setSaving(false);
+      return;
+    }
+
     try {
-      const payload = new FormData();
-      Object.keys(formData).forEach((key) => payload.append(key, formData[key]));
-      if (avatarFile) payload.append('avatar', avatarFile);
-      const res = await axios.put('https://lms-backend-flwq.onrender.com/api/v1/auth/updatedetails', payload, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      let res;
+      const payloadData = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        phone: formData.phone,
+        email: formData.email,
+        role: formData.role,
+        skills: formData.skills ? formData.skills.split(',').map(item => item.trim()).filter(item => item) : [],
+        education: formData.education,
+        occupation: formData.occupation,
+        interests: formData.interests ? formData.interests.split(',').map(item => item.trim()).filter(item => item) : [],
+      };
+
+      if (avatarFile) {
+        // Use FormData for avatar uploads
+        const formDataPayload = new FormData();
+        Object.entries(payloadData).forEach(([key, value]) => {
+          if (key === 'skills' || key === 'interests') {
+            value.forEach((item, index) => {
+              formDataPayload.append(`${key}[${index}]`, item);
+            });
+          } else {
+            formDataPayload.append(key, value);
+          }
+        });
+        formDataPayload.append('avatar', avatarFile);
+        res = await axios.put('https://lms-backend-flwq.onrender.com/api/v1/auth/updatedetails', formDataPayload, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+      } else {
+        // Use JSON for non-file updates
+        res = await axios.put('https://lms-backend-flwq.onrender.com/api/v1/auth/updatedetails', payloadData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+      }
+
       const updatedData = res.data.data;
       setStudent((prev) => ({
         ...prev,
-        ...formData,
-        avatar: updatedData.avatar || prev.avatar,
+        ...updatedData,
+        skills: Array.isArray(updatedData.skills) ? updatedData.skills : [],
+        interests: Array.isArray(updatedData.interests) ? updatedData.interests : [],
       }));
+      setFormData({
+        ...formData,
+        firstName: updatedData.firstName || '',
+        lastName: updatedData.lastName || '',
+        phone: updatedData.phone || '',
+        email: updatedData.email || '',
+        role: updatedData.role || '',
+        skills: Array.isArray(updatedData.skills) ? updatedData.skills.join(', ') : updatedData.skills || '',
+        education: updatedData.education || '',
+        occupation: updatedData.occupation || '',
+        interests: Array.isArray(updatedData.interests) ? updatedData.interests.join(', ') : updatedData.interests || '',
+      });
       setNotification({ message: 'Your profile has been updated successfully.', type: 'success' });
       setAvatarFile(null);
       setAvatarPreview(updatedData.avatar || avatarPreview);
       setIsEditing(false);
     } catch (err) {
+      console.error('Error updating profile:', err);
       setNotification({
         message: `Failed to update profile: ${err.response?.data?.message || 'An error occurred. Please try again.'}`,
         type: 'error',
@@ -203,16 +263,16 @@ const SettingsAndPayment = () => {
     if (!isEditing) setAvatarPreview(student?.avatar || null);
   };
 
-  const LanguageChange = (e) => {
+  const handleLanguageChange = (e) => {
     setLanguage(e.target.value);
     alert(`Application will reload after switching to ${e.target.value === 'en' ? 'English' : 'Hindi'}`);
   };
 
-  const handleThemeChange = (e) => {
+  const handleThemeChange = (e7) => {
     setTheme(e.target.value);
   };
 
-  const Payment = async (e) => {
+  const handlePayment = async (e) => {
     e.preventDefault();
     setProcessing(true);
     setNotification({ message: '', type: '' });
@@ -228,12 +288,10 @@ const SettingsAndPayment = () => {
       setNotification({ message: 'Payment processed successfully!', type: 'success' });
       setPaymentData({ cardNumber: '', expiry: '', cvv: '', amount: '' });
       
-      // Refresh payment history after successful payment
       const response = await axios.get('https://lms-backend-flwq.onrender.com/api/v1/payments/my-payments', {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (response.data.success) {
-        // Filter only completed payments
         const completedPayments = response.data.data.filter(payment => payment.status === 'completed');
         setPaymentHistory(completedPayments);
       }
@@ -351,12 +409,12 @@ const SettingsAndPayment = () => {
                     theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
                   }`}
                 >
-                  1 month ago
+                  Last updated: {new Date(student.updatedAt).toLocaleDateString('en-IN')}
                 </p>
               </div>
             </div>
-            <div className="grid grid-cols-1 gap-3 sm:gap-4">
-              {['firstName', 'lastName', 'phone', 'role', 'skills', 'email'].map((field) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              {['firstName', 'lastName', 'phone', 'role', 'skills', 'email', 'education', 'occupation', 'interests'].map((field) => (
                 <div key={field}>
                   <label
                     className={`block text-xs sm:text-sm capitalize ${
@@ -366,7 +424,10 @@ const SettingsAndPayment = () => {
                     {field
                       .replace('email', 'Email Address')
                       .replace('firstName', 'First Name')
-                      .replace('lastName', 'Last Name')}
+                      .replace('lastName', 'Last Name')
+                      .replace('education', 'Education')
+                      .replace('occupation', 'Occupation')
+                      .replace('interests', 'Interests')}
                   </label>
                   {field === 'role' && isEditing ? (
                     <select
@@ -380,9 +441,9 @@ const SettingsAndPayment = () => {
                       }`}
                     >
                       <option value="">Select Role</option>
-                      <option value="Student">Student</option>
-                      <option value="Teacher">Teacher</option>
-                      <option value="Administrator">Administrator</option>
+                      <option value="student">Student</option>
+                      <option value="teacher">Teacher</option>
+                      <option value="administrator">Administrator</option>
                     </select>
                   ) : (
                     <input
@@ -398,9 +459,10 @@ const SettingsAndPayment = () => {
                           : isEditing
                           ? 'border-gray-300 bg-white text-gray-900'
                           : 'border-gray-300 bg-gray-100 text-gray-900'
-                      } ${!isEditing && field === 'email' ? 'cursor-not-allowed' : ''}`}
+                      } ${!isEditing || field === 'email' ? 'cursor-not-allowed' : ''}`}
                       readOnly={!isEditing || field === 'email'}
-                      disabled={!isEditing && field === 'email'}
+                      disabled={!isEditing || field === 'email'}
+                      placeholder={field === 'skills' || field === 'interests' ? 'Comma-separated values' : ''}
                     />
                   )}
                 </div>
@@ -443,7 +505,7 @@ const SettingsAndPayment = () => {
             <input
               type="radio"
               name="theme"
-              value="ograft"
+              value="light"
               checked={theme === 'light'}
               onChange={handleThemeChange}
               className="hidden"
@@ -451,7 +513,7 @@ const SettingsAndPayment = () => {
             <div
               className={`w-full sm:w-48 h-12 sm:h-16 border rounded ${
                 theme === 'dark'
-                  ? 'border-gray6-600 bg-white'
+                  ? 'border-gray-600 bg-white'
                   : 'border-gray-300 bg-white'
               } ${theme === 'light' ? 'ring-2 ring-blue-500' : ''}`}
             ></div>
@@ -490,40 +552,6 @@ const SettingsAndPayment = () => {
         </div>
       </div>
       
-      {/* Choose Your Language Section */}
-      {/* <div
-        className={`rounded-lg p-4 sm:p-5 mb-4 sm:mb-5 shadow-md ${
-          theme === 'dark' ? 'bg-gray-800' : 'bg-white'
-        }`}
-      >
-        <h2
-          className={`text-lg sm:text-xl mb-2 ${
-            theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
-          }`}
-        >
-          Choose Your Language
-        </h2>
-        <select
-          value={language}
-          onChange={handleLanguageChange}
-          className={`w-full sm:w-auto p-2 border rounded text-sm ${
-            theme === 'dark'
-              ? 'border-gray-600 bg-gray-700 text-gray-100'
-              : 'border-gray-300 bg-white text-gray-900'
-          }`}
-        >
-          <option value="en">English</option>
-          <option value="hi">Hindi</option>
-        </select>
-        <p
-          className={`text-xs sm:text-sm mt-2 ${
-            theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-          }`}
-        >
-          After changing the application language, the application will reload
-        </p>
-      </div>
-       */}
       {/* Payment History Section */}
       <div
         className={`rounded-lg p-6 sm:p-8 shadow-lg ${
