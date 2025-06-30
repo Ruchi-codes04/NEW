@@ -65,6 +65,7 @@ const AllCourses = () => {
             title: course.title,
             description: course.description,
             instructor: `${course.instructor.firstName} ${course.instructor.lastName}`,
+              instructorAvatar: course.instructor.avatar,
             rating: course.rating,
             reviews: course.totalRatings,
             students: course.totalStudents,

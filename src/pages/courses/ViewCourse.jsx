@@ -133,7 +133,7 @@ const ViewCourse = () => {
             longDescription: courseData.longDescription || courseData.description,
             instructor: `${courseData.instructor.firstName} ${courseData.instructor.lastName}`,
             instructorBio: courseData.instructorBio || 'Experienced instructor with expertise in the field.',
-            instructorImage: courseData.instructorImage || 'https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80',
+            instructorAvatar: courseData.instructor.avatar || 'https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80',
             rating: courseData.rating,
             reviews: courseData.totalRatings,
             students: courseData.totalStudents,
@@ -818,7 +818,7 @@ const ViewCourse = () => {
                     <div className="flex flex-col md:flex-row items-start space-y-4 md:space-y-0 md:space-x-6">
                       <div className="flex-shrink-0">
                         <img
-                          src={course.instructorImage}
+                          src={course.instructorAvatar}
                           alt={course.instructor}
                           className="w-32 h-32 rounded-full border-4 border-white shadow-lg"
                         />
