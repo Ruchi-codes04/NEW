@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ThemeContext } from '../../contexts/ThemeContext';
-import { Bell, Grid, Heart, Home, MessageSquare, Settings, Star } from 'lucide-react';
+import { Bell, Grid, Heart, Home, Menu, MessageSquare, Settings, Star } from 'lucide-react';
 import { RiMedalLine } from 'react-icons/ri';
 import { FaSignOutAlt } from 'react-icons/fa';
 
@@ -12,6 +12,7 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, setIsS
   const [notifications, setNotifications] = useState([]);
   const [notificationCount, setNotificationCount] = useState(0);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false); // State for three-dot menu
   const [error, setError] = useState(null);
 
   // Sidebar width logic for desktop and mobile
@@ -47,7 +48,6 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, setIsS
     }
 
     try {
-      // Fetch only unread notifications by adding a query parameter (if supported by backend)
       const response = await fetch('https://new-lms-backend-vmgr.onrender.com/api/v1/notifications?read=false', {
         headers: {
           'Content-Type': 'application/json',
@@ -64,7 +64,6 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, setIsS
       }
       const data = await response.json();
       if (data.success) {
-        // Filter unread notifications in the frontend if the backend doesn't support the read=false query
         const unreadNotifications = data.data.filter(notification => !notification.isRead);
         setNotifications(unreadNotifications);
         setNotificationCount(unreadNotifications.length);
@@ -98,7 +97,6 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, setIsS
       if (!response.ok) {
         throw new Error('Failed to mark notification as read');
       }
-      // Remove the notification from the state
       setNotifications((prev) => prev.filter((n) => n._id !== notificationId));
       setNotificationCount((prev) => prev - 1);
     } catch (error) {
@@ -126,11 +124,9 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, setIsS
       }
       const data = await response.json();
       if (data.success) {
-        // Clear notifications locally and update count
         setNotifications([]);
         setNotificationCount(0);
         setError(null);
-        // Refetch notifications to ensure sync with backend
         await fetchNotifications();
       } else {
         throw new Error('API response unsuccessful');
@@ -152,6 +148,7 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, setIsS
 
   const togglePopup = () => {
     setIsPopupOpen(!isPopupOpen);
+    setIsMoreMenuOpen(false); // Close more menu when opening notifications
   };
 
   const handleRetry = () => {
@@ -167,6 +164,7 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, setIsS
   const handleLogout = () => {
     localStorage.removeItem('Token');
     navigate('/');
+    setIsMoreMenuOpen(false); // Close more menu on logout
   };
 
   const handleMenuClick = (itemName) => {
@@ -185,6 +183,11 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, setIsS
     } catch (error) {
       console.error('Error in handleMenuClick:', error);
     }
+  };
+
+  const toggleMoreMenu = () => {
+    setIsMoreMenuOpen(!isMoreMenuOpen);
+    setIsPopupOpen(false); // Close notifications popup when opening more menu
   };
 
   return (
@@ -267,49 +270,134 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, setIsS
           </div>
         </div>
         <div className="flex items-center space-x-4">
-          <button
-            className="p-2"
-            onClick={toggleThemeHandler}
-            aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-          >
-            <svg
-              className="w-6 h-6"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              style={{ color: theme === 'dark' ? '#FFD700' : 'currentColor' }}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-              />
-            </svg>
-          </button>
-          <div className="relative flex items-center">
+          {/* Show icons on medium and larger screens */}
+          <div className="hidden md:flex items-center space-x-4">
             <button
-              className={`p-2 rounded-full text-sm relative flex items-center ${
-                theme === 'dark' ? 'bg-gray-700 text-gray-200' : 'bg-gray-200 text-gray-600'
-              }`}
-              onClick={togglePopup}
-              aria-label={`Notifications, ${notificationCount} new`}
+              className="p-2"
+              onClick={toggleThemeHandler}
+              aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
             >
-              <Bell className="w-5 h-5" />
-              {notificationCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {notificationCount}
-                </span>
-              )}
+              <svg
+                className="w-6 h-6"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                style={{ color: theme === 'dark' ? '#FFD700' : 'currentColor' }}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+                />
+              </svg>
+            </button>
+            <div className="relative flex items-center">
+              <button
+                className={`p-2 rounded-full text-sm relative flex items-center ${
+                  theme === 'dark' ? 'bg-gray-700 text-gray-200' : 'bg-gray-200 text-gray-600'
+                }`}
+                onClick={togglePopup}
+                aria-label={`Notifications, ${notificationCount} new`}
+              >
+                <Bell className="w-5 h-5" />
+                {notificationCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {notificationCount}
+                  </span>
+                )}
+              </button>
+            </div>
+            <button
+              className={`p-2 text-white rounded-full w-8 h-8 flex items-center justify-center ${
+                theme === 'dark' ? 'bg-purple-700' : 'bg-purple-600'
+              }`}
+              aria-label={`User profile for ${userName || 'User'}`}
+            >
+              {initials}
             </button>
           </div>
-          <button
-            className={`p-2 text-white rounded-full w-8 h-8 flex items-center justify-center ${
-              theme === 'dark' ? 'bg-purple-700' : 'bg-purple-600'
-            }`}
-            aria-label={`User profile for ${userName || 'User'}`}
-          >
-            {initials}
-          </button>
+          {/* Three-dot menu for small screens */}
+          <div className="md:hidden relative">
+            <button
+              className="p-2"
+              onClick={toggleMoreMenu}
+              aria-label="More options"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+            {isMoreMenuOpen && (
+              <div
+                className={`absolute top-12 right-0 rounded-lg shadow-lg w-48 z-50 border ${
+                  theme === 'dark' ? 'bg-gray-800 border-gray-600 text-gray-200' : 'bg-white border-gray-300 text-gray-800'
+                }`}
+              >
+                <div className="p-4 flex flex-col space-y-2">
+                  <button
+                    className="flex items-center space-x-2 text-sm"
+                    onClick={toggleThemeHandler}
+                    aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      style={{ color: theme === 'dark' ? '#FFD700' : 'currentColor' }}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+                      />
+                    </svg>
+                    <span>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
+                  </button>
+                  <div className="relative">
+                    <button
+                      className={`flex items-center space-x-2 text-sm w-full text-left ${
+                        theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-200'
+                      }`}
+                      onClick={togglePopup}
+                      aria-label={`Notifications, ${notificationCount} new`}
+                    >
+                      <Bell className="w-5 h-5" />
+                      <span>Notifications</span>
+                      {notificationCount > 0 && (
+                        <span className="ml-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                          {notificationCount}
+                        </span>
+                      )}
+                    </button>
+                  </div>
+                  <button
+                    className={`flex items-center space-x-2 text-sm ${
+                      theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-200'
+                    }`}
+                    aria-label={`User profile for ${userName || 'User'}`}
+                  >
+                    <div
+                      className={`w-8 h-8 flex items-center justify-center rounded-full text-white ${
+                        theme === 'dark' ? 'bg-purple-700' : 'bg-purple-600'
+                      }`}
+                    >
+                      {initials}
+                    </div>
+                    <span>{userName || 'User'}</span>
+                  </button>
+                  <button
+                    className={`flex items-center space-x-2 text-sm ${
+                      theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-200'
+                    }`}
+                    onClick={handleLogout}
+                    aria-label="Sign out"
+                  >
+                    <FaSignOutAlt className="w-5 h-5" />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {isPopupOpen && (
