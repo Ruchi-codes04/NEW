@@ -89,7 +89,7 @@ const SignUpPopup = () => {
 
     try {
       const response = await axios.post(
-        'https://lms-backend-flwq.onrender.com/api/v1/auth/register',
+        'https://new-lms-backend-vmgr.onrender.com/api/v1/auth/register',
         {
           firstName: registerData.firstName,
           lastName: registerData.lastName,
@@ -153,7 +153,7 @@ const SignUpPopup = () => {
         confirmPassword: '',
         role: 'student',
       });
-      await fetchUserProfile();
+      // await fetchUserProfile();
     } catch (error) {
       console.error('OTP verification error:', error);
       setErrorMessage(error.response?.data?.message || 'Invalid OTP. Please try again.');
@@ -318,7 +318,7 @@ const SignUpPopup = () => {
               {successMessage && (
                 <div className="text-center">
                   <p className="text-green-500 mb-4 text-sm sm:text-base">{successMessage}</p>
-                  <button
+                  {/* <button
                     onClick={() => {
                       setSuccessMessage('');
                       setIsLogin(true);
@@ -326,7 +326,7 @@ const SignUpPopup = () => {
                     className="bg-teal-500 text-white px-3 py-2 sm:px-4 sm:py-2 rounded hover:bg-teal-600 text-sm sm:text-base"
                   >
                     Back to Login
-                  </button>
+                  </button> */}
                 </div>
               )}
 
