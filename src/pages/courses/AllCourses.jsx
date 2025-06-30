@@ -72,8 +72,8 @@ const AllCourses = () => {
             duration: `${course.duration} hours`,
             level: course.level.charAt(0).toUpperCase() + course.level.slice(1),
             category: course.category.toLowerCase(),
-            price: course.price === 0 ? 'Free' : `₹${course.price}`,
-            originalPrice: course.discountPrice ? `₹${course.discountPrice}` : null,
+            originalPrice: course.price === 0 ? 'Free' : `₹${course.price}`,
+            price: course.discountPrice ? `₹${course.discountPrice}` : null,
             image: course.thumbnail,
             language: course.language || 'english',
           }));
