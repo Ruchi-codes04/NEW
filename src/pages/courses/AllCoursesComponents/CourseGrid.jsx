@@ -95,7 +95,7 @@ const CourseGrid = ({ currentCourses, coursesScrollRef, searchQuery, setSearchQu
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="font-bold text-gray-900">
-                        {course.originalPrice === 'Free' ? 'Free' : `₹${course.price ? discountPriceNum : originalPriceNum}`}
+                        {course.originalPrice === 'Free' ? 'Free' : `₹${course.price ? originalPriceNum - discountPriceNum : originalPriceNum}`}
                       </span>
                       {hasDiscount && (
                         <>
