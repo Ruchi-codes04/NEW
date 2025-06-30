@@ -200,6 +200,8 @@ const SignUpPopup = () => {
       setTimeout(() => {
         handleClose();
       }, 2000);
+
+      window.location.reload();
     } catch (error) {
       console.error('Login error:', error);
       setErrorMessage(error.response?.data?.message || 'Invalid email or password. Please try again.');

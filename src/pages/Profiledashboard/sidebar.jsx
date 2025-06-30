@@ -164,7 +164,9 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, setIsS
 
   const handleLogout = () => {
     localStorage.removeItem('Token');
+    
     navigate('/');
+    window.location.reload();
     setIsUserMenuOpen(false); // Close user menu on logout
   };
 

@@ -4,6 +4,7 @@ import { FaSearch, FaChevronDown, FaGraduationCap } from 'react-icons/fa';
 import { useSignUp } from '../contexts/SignUpContext';
 import ComingSoonPopup from './ComingSoonPopup';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 
 const parseJwt = (token) => {
@@ -24,10 +25,12 @@ const parseJwt = (token) => {
 };
 
 const Header = () => {
+  
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showComingSoon, setShowComingSoon] = useState(false);
   const [comingSoonFeature, setComingSoonFeature] = useState('');
   const { showSignUpPopup, user, setUser, isLoading, setIsLoading, isLogin, setIsLogin } = useSignUp();
+  const navigate = useNavigate();
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -73,6 +76,8 @@ const Header = () => {
             setUser(null);
             setIsLogin(false);
           }
+
+       
         } catch (error) {
           console.error('Error fetching user profile:', error.response?.data || error.message);
           if (error.response?.status === 403) {
@@ -361,17 +366,28 @@ const Header = () => {
                 />
               </Link>
             ) : (
-              <div className="flex mb-4 sm:mb-6 justify-center">
+              <div className="flex mb-4 mt-4 sm:mb-6 justify-center">
                 <button
-                  className={`px-4 py-2 sm:px-6 sm:py-2 text-white rounded-l-md bg-teal-500 text-sm sm:text-base`}
-                  onClick={() => {
-                    showSignUpPopup();
-                    setIsLogin(true);
-                  }}
-                >
-                  LOGIN
-                </button>
-                <button
+    className={`
+      px-3 py-1.5 sm:px-5 sm:py-2  
+      text-white font-medium
+      rounded-l-md rounded-r-md 
+      ${isLogin ? 'bg-teal-600' : 'bg-teal-400'} 
+      hover:${isLogin ? 'bg-teal-700' : 'bg-teal-500'}
+      focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-1 
+      transition-colors duration-200
+      text-xs sm:text-sm  
+      shadow-sm
+    `}
+    onClick={() => {
+      showSignUpPopup();
+      setIsLogin(true);
+    }}
+  >
+    LOGIN
+  </button>
+ 
+                {/* <button
                   className={`px-4 py-2 sm:px-6 sm:py-2 text-white rounded-r-md bg-teal-300 text-sm sm:text-base`}
                   onClick={() => {
                     showSignUpPopup();
@@ -379,7 +395,7 @@ const Header = () => {
                   }}
                 >
                   REGISTER
-                </button>
+                </button> */}
               </div>
             )}
           </nav>
