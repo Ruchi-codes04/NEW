@@ -1,5 +1,5 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigationType } from 'react-router-dom';
 import { SignUpProvider } from './contexts/SignUpContext';
 import { ThemeProvider } from './contexts/ThemeContext'; 
 import Header from './components/Header';
@@ -69,6 +69,18 @@ const Home = () => {
 // Layout component to handle conditional Header and Footer rendering
 const AppLayout = () => {
   const location = useLocation();
+  const navigationType = useNavigationType();
+
+  // Scroll to top on route change, including back/forward navigation
+  useEffect(() => {
+    // Disable browser's default scroll restoration
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+    console.log('Navigation type:', navigationType, 'Pathname:', location.pathname); // Debug navigation
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [location.pathname, navigationType]);
+
   const hideHeaderAndFooter = location.pathname === '/profile-dashboard' || location.pathname.startsWith('/course-player');
 
   return (
