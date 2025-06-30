@@ -21,10 +21,6 @@ import {
   FaArrowLeft,
   FaShoppingCart
 } from 'react-icons/fa';
-<<<<<<< HEAD
-=======
-import Notification from './AllCoursesComponents/Notification'; 
->>>>>>> ef14fc06814d7a2bdfd0503ba4f7ddacc10d526c
 
 // Modal Component for Success/Error Feedback
 const Modal = ({ isOpen, message, type, onClose }) => {
