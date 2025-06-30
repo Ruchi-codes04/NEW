@@ -17,6 +17,7 @@ import SignUpPopup from './components/SignUpPopup';
 import NotFound from './pages/NotFound';
 import ProfileDashboard from './pages/Profiledashboard/parentLayout';
 import CoursePlayer from './pages/CoursePlayer';
+import AllReviews from './pages/courses/Allreviews';
 import {
   ParticipantReviews,
   VideoReviews,
@@ -81,7 +82,11 @@ const AppLayout = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [location.pathname, navigationType]);
 
-  const hideHeaderAndFooter = location.pathname === '/profile-dashboard' || location.pathname.startsWith('/course-player');
+  // Hide Header and Footer for specific routes
+  const hideHeaderAndFooter = 
+    location.pathname === '/profile-dashboard' ||
+    location.pathname.startsWith('/course-player') ||
+    location.pathname.startsWith('/courses') && location.pathname.endsWith('/reviews');
 
   return (
     <div className="min-h-screen overflow-x-hidden">
@@ -116,6 +121,7 @@ const AppLayout = () => {
         <Route path="/students/submit-feedback" element={<SubmitFeedback />} />
         <Route path="/courses/all" element={<AllCourses />} />
         <Route path="/courses/:id" element={<ViewCourse />} />
+        <Route path="/courses/:id/reviews" element={<AllReviews />} />
         <Route path="/corporate-training" element={<CorporateTraining />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
