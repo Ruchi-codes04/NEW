@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { SignUpProvider } from './contexts/SignUpContext';
-import { ThemeProvider } from './contexts/ThemeContext'; // Import ThemeProvider
+import { ThemeProvider } from './contexts/ThemeContext'; 
 import Header from './components/Header';
 import HeroSection from './components/HeroSection';
 import Courses from './components/Courses';
@@ -115,7 +115,7 @@ const AppLayout = () => {
 function App() {
   return (
     <SignUpProvider>
-      <ThemeProvider> {/* Add ThemeProvider here */}
+      <ThemeProvider> 
         <Router>
           <AppLayout />
         </Router>

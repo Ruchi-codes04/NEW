@@ -138,7 +138,7 @@ const AllCourses = () => {
       const response = await axios({
         method: isBookmarked ? 'delete' : 'patch',
         url: `https://new-lms-backend-vmgr.onrender.com/api/v1/students/courses/${courseId}/bookmark`,
-        data: isBookmarked ? {} : { bookmarked: true }, // Adjust payload as needed
+        data: isBookmarked ? {} : { bookmarked: true }, 
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',

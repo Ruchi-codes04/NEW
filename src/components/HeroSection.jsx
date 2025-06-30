@@ -33,9 +33,9 @@ const HeroSection = () => {
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-center">
 
-          {/* Left Content */}
+          
           <div className="space-y-4 sm:space-y-6 order-2 lg:order-1">
-            {/* Main Heading */}
+            
             <div className="space-y-2 sm:space-y-3 text-center lg:text-left">
               <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
                 Master tomorrow's skills today.
@@ -45,22 +45,7 @@ const HeroSection = () => {
               </p>
             </div>
 
-            {/* Search Bar
-            <div className="bg-white border border-gray-300 rounded-lg p-1 shadow-sm max-w-lg">
-              <div className="flex items-center">
-                <input
-                  type="text"
-                  placeholder="Tell us what you're looking to learn"
-                  className="flex-1 px-4 py-2.5 text-gray-700 placeholder-gray-500 bg-transparent focus:outline-none text-sm"
-                />
-                <Link
-                  to="/courses/all"
-                  className="bg-teal-600 text-white p-2.5 rounded-md hover:bg-teal-700 transition-colors duration-300 flex items-center justify-center"
-                >
-                  <FaSearch className="w-4 h-4" />
-                </Link>
-              </div>
-            </div> */}
+           
 
             {/* Goal Selection */}
             <div className="space-y-2 sm:space-y-3">
@@ -78,10 +63,10 @@ const HeroSection = () => {
             </div>
           </div>
 
-          {/* Right Content - Professional Image */}
+          
           <div className="relative flex justify-center lg:justify-end order-1 lg:order-2">
             <div className="relative w-full max-w-sm lg:max-w-none">
-              {/* Dotted border frame */}
+          
               <div className="absolute inset-0 border-2 border-dashed border-gray-300 rounded-lg transform translate-x-2 translate-y-2 sm:translate-x-3 sm:translate-y-3"></div>
 
               {/* Main content container */}
@@ -89,7 +74,7 @@ const HeroSection = () => {
                 <div className="text-center">
                   {/* <h2 className="text-lg font-bold text-teal-600 mb-3">BRAIN BRIDGE</h2> */}
 
-                  {/* Professional person image */}
+              
                   <div className="mb-2 sm:mb-3">
                     <img
                       src="https://images.pexels.com/photos/7034789/pexels-photo-7034789.jpeg"
@@ -98,7 +83,7 @@ const HeroSection = () => {
                     />
                   </div>
 
-                  {/* Quote */}
+                  
                   <p className="text-xs sm:text-sm text-gray-600 italic leading-relaxed">
                     "The flexibility of online learning helped me finish my degree"
                   </p>
@@ -141,7 +126,7 @@ const HeroSection = () => {
             ))}
           </div>
 
-          {/* Our Affiliations Button */}
+          
           <Link to = "/about/team" className="bg-teal-600 text-white px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg hover:bg-teal-700 transition-colors duration-300 text-sm">
             Our Affiliations →
           </Link>

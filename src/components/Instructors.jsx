@@ -127,11 +127,11 @@ const Instructors = () => {
         <FaArrowUp className="w-4 h-4" />
       </button>
 
-      {/* Decorative Elements */}
+    
       <div className="absolute top-20 left-20 w-32 h-32 bg-gradient-to-br from-purple-200 to-teal-200 rounded-full opacity-20 blur-xl"></div>
       <div className="absolute bottom-20 right-20 w-24 h-24 bg-gradient-to-br from-blue-200 to-purple-200 rounded-full opacity-20 blur-xl"></div>
       
-      {/* Background Pattern */}
+      
       <div className="absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-purple-400 rounded-full"></div>
         <div className="absolute top-1/3 right-1/3 w-2 h-2 bg-teal-400 rounded-full"></div>

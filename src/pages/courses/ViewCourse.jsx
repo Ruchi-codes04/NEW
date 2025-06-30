@@ -21,7 +21,7 @@ import {
   FaArrowLeft,
   FaShoppingCart
 } from 'react-icons/fa';
-import Notification from './AllCoursesComponents/Notification'; // Assumed to be available from AllCourses
+import Notification from './AllCoursesComponents/Notification'; 
 
 const API_BASE_URL = 'https://lms-backend-flwq.onrender.com';
 
@@ -79,7 +79,7 @@ const ViewCourse = () => {
             downloadable: courseData.downloadable !== undefined ? courseData.downloadable : true, // Default
             lifetime: courseData.lifetime !== undefined ? courseData.lifetime : true, // Default
             mobileAccess: courseData.mobileAccess !== undefined ? courseData.mobileAccess : true, // Default
-            modules: courseData.modules || [], // Ensure modules is an array
+            modules: courseData.modules || [], 
             learningOutcomes: courseData.learningOutcomes || [
               'Master key concepts and skills',
               'Apply knowledge to real-world projects',
@@ -225,11 +225,11 @@ const ViewCourse = () => {
 
                 {/* Instructor Info */}
                 <div className="flex items-center mt-6">
-                  <img 
+                  {/* <img 
                     src={course.instructorImage} 
                     alt={course.instructor}
                     className="w-12 h-12 rounded-full mr-3"
-                  />
+                  /> */}
                   <div>
                     <p className="text-sm text-black">Created by</p>
                     <p className="font-semibold">{course.instructor}</p>

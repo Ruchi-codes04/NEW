@@ -124,9 +124,9 @@ const WhyChooseUs = () => {
     <section className="py-16 ">
       <style dangerouslySetInnerHTML={{ __html: scrollbarHideStyles }} />
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Two Column Layout */}
+        
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Left Column - Features */}
+        
           <div className="order-2 lg:order-1">
             {/* Header */}
             <div className="mb-6">
@@ -165,14 +165,14 @@ const WhyChooseUs = () => {
                   >
                     {/* Icon with Number */}
                     <div className="relative mb-4 w-fit">
-                      {/* Outer dotted circle frame */}
+                      
                       <div className="w-16 h-16 rounded-full border-2 border-dashed border-gray-300 group-hover:border-teal-300 flex items-center justify-center transition-all duration-300">
-                        {/* Inner solid circle with icon */}
+                        
                         <div className="w-12 h-12 bg-white group-hover:bg-teal-600 rounded-full flex items-center justify-center text-gray-600 group-hover:text-white shadow-sm border border-gray-100 group-hover:border-teal-600 transition-all duration-300">
                           {feature.icon}
                         </div>
                       </div>
-                      {/* Number badge positioned at top-left */}
+                      
                       <div className="absolute -top-1 -left-1 w-6 h-6 bg-teal-600 group-hover:bg-teal-700 text-white rounded-full flex items-center justify-center text-xs font-semibold shadow-sm transition-all duration-300">
                         {feature.id}
                       </div>
