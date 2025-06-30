@@ -124,6 +124,8 @@ const ParentLayout = () => {
       return null;
     }
     switch (activePage) {
+      case 'home':
+        return <Home sidebarWidth={sidebarWidth} user={user} />;
       case 'dashboard':
         return <Dashboard sidebarWidth={sidebarWidth} user={user} />;
       case 'Achievements':

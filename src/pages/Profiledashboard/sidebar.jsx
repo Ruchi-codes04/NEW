@@ -88,7 +88,7 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, toggle
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body創業: JSON.stringify({ isRead: true }),
+        body: JSON.stringify({ isRead: true }), // Fixed syntax error
       });
       setNotifications((prev) => prev.filter((n) => n._id !== notificationId));
       setNotificationCount((prev) => prev - 1);
@@ -156,6 +156,24 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, toggle
     navigate('/');
   };
 
+  const handleMenuClick = (itemName) => {
+    try {
+      if (itemName === 'home') {
+        navigate('/'); // Navigate to the root route for the home page
+        setIsSidebarOpen(false); // Close sidebar on mobile
+      } else {
+        if (typeof setActivePage === 'function') {
+          setActivePage(itemName); // Use state-based navigation for other pages
+          setIsSidebarOpen(false); // Close sidebar on mobile
+        } else {
+          console.error('setActivePage is not a function');
+        }
+      }
+    } catch (error) {
+      console.error('Error in handleMenuClick:', error);
+    }
+  };
+
   return (
     <>
       <div
@@ -169,11 +187,11 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, toggle
           <div
             key={item.name}
             className="relative group w-full flex justify-center p-3 cursor-pointer rounded-xl transition-colors duration-200"
-            onClick={() => setActivePage(item.name)}
+            onClick={() => handleMenuClick(item.name)}
           >
             <div
               className={`flex items-center gap-4 rounded-xl p-2 transition-colors duration-200 ${
-                activePage === item.name
+                activePage === item.name && item.name !== 'home'
                   ? theme === 'dark'
                     ? 'bg-gray-700 text-gray-100'
                     : 'bg-gray-200 text-gray-800'
@@ -242,7 +260,6 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, toggle
           >
             <svg
               className="w-6 h-6"
-              fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
               style={{ color: theme === 'dark' ? '#FFD700' : 'currentColor' }}
@@ -277,7 +294,7 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, toggle
             }`}
             aria-label={`User profile for ${userName || 'User'}`}
           >
-            {initials}
+        
           </button>
         </div>
 
@@ -292,7 +309,7 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, toggle
                 <h2 className="text-lg font-semibold">Notifications</h2>
                 {notifications.length > 0 && (
                   <button
-                    className={`text-sm ${theme === 'dark' ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-500'}`}
+                    className={`text-sm ${theme === 'dark' ? 'text-blue-@400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-500'}`}
                     onClick={markAllAsRead}
                     aria-label="Mark all notifications as read"
                   >
