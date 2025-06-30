@@ -72,7 +72,7 @@ const ParentLayout = () => {
         let message = 'Unable to retrieve profile data. Please try again later.';
         if (err.response?.status === 401) {
           message = 'Session expired. Please log in again.';
-          localStorage.removeItem('token');
+          localStorage.removeItem('Token');
           setNotification({ message, type: 'error' });
           setTimeout(() => navigate('/'), 3000);
         } else if (err.response?.data?.message) {

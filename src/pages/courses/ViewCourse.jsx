@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { motion } from 'framer-motion';
 import {
   FaStar,
   FaRegClock,
   FaUserGraduate,
   FaUsers,
-  FaPlay,
   FaCheck,
   FaDownload,
   FaGlobe,
@@ -21,20 +21,74 @@ import {
   FaArrowLeft,
   FaShoppingCart
 } from 'react-icons/fa';
-import Notification from './AllCoursesComponents/Notification'; // Assumed to be available from AllCourses
 
-const API_BASE_URL = 'https://lms-backend-flwq.onrender.com';
+// Modal Component for Success/Error Feedback
+const Modal = ({ isOpen, message, type, onClose }) => {
+  useEffect(() => {
+    if (isOpen) {
+      const timer = setTimeout(() => {
+        onClose();
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div
+        className={`p-6 rounded-lg shadow-lg max-w-sm w-full ${
+          type === 'success' ? 'bg-green-100' : 'bg-red-100'
+        }`}
+      >
+        <p
+          className={`text-sm font-medium ${
+            type === 'success' ? 'text-green-800' : 'text-red-800'
+          }`}
+        >
+          {message}
+        </p>
+        <button
+          onClick={onClose}
+          className={`mt-4 px-4 py-2 rounded text-white text-sm ${
+            type === 'success' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
+          }`}
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// Hardcoded values to avoid process.env
+const API_BASE_URL = 'https://lms-backend-flwq.onrender.com/api/v1';
+const RAZORPAY_KEY_ID = 'rzp_test_wEHfns4O1eHdMO';
 
 const ViewCourse = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const [expandedModule, setExpandedModule] = useState(null);
-  const [showVideoModal, setShowVideoModal] = useState(false);
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [notification, setNotification] = useState({ message: '', type: '' });
+  const [enrollLoading, setEnrollLoading] = useState(false);
+  const [enrollError, setEnrollError] = useState(null);
+  const [enrollSuccess, setEnrollSuccess] = useState(null);
+
+  // Load Razorpay script
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
 
   // Scroll to top when component mounts or when course ID changes
   useEffect(() => {
@@ -44,63 +98,72 @@ const ViewCourse = () => {
   // Fetch course data from API
   useEffect(() => {
     const fetchCourse = async () => {
+      if (!/^[0-9a-fA-F]{24}$/.test(id)) {
+        setError('Invalid course ID format');
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         const token = localStorage.getItem('Token');
-        const headers = token ? { Authorization: `Bearer ${token}` } : {};
-        const response = await axios.get(`${API_BASE_URL}/api/v1/courses/${id}`, { headers });
+        if (!token) {
+          setError('Please log in to view course details');
+          setTimeout(() => navigate('/'), 2000);
+          return;
+        }
+        const headers = { Authorization: `Bearer ${token}` };
+        const response = await axios.get(`${API_BASE_URL}/courses/${id}`, { headers });
         console.log('Course details response:', response.data);
 
         if (response.data.success) {
           const courseData = response.data.data;
-          // Transform API data to match expected structure
           const transformedCourse = {
             id: courseData._id,
             title: courseData.title,
             description: courseData.description,
-            longDescription: courseData.longDescription || courseData.description, // Fallback to description
+            longDescription: courseData.longDescription || courseData.description,
             instructor: `${courseData.instructor.firstName} ${courseData.instructor.lastName}`,
-            instructorBio: courseData.instructorBio || 'Experienced instructor with expertise in the field.', // Default
-            instructorImage: courseData.instructorImage || 'https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80', // Default
+            instructorBio: courseData.instructorBio || 'Experienced instructor with expertise in the field.',
+            instructorImage: courseData.instructorImage || 'https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80',
             rating: courseData.rating,
             reviews: courseData.totalRatings,
             students: courseData.totalStudents,
             duration: `${courseData.duration} hours`,
             level: courseData.level.charAt(0).toUpperCase() + courseData.level.slice(1),
             category: courseData.category.toLowerCase(),
-            price: courseData.price === 0 ? 'Free' : `₹${courseData.price}`,
-            originalPrice: courseData.discountPrice ? `₹${courseData.discountPrice}` : null,
-            image: courseData.thumbnail,
-            videoUrl: courseData.videoUrl || 'https://www.youtube.com/embed/dQw4w9WgXcQ', // Default
-            language: courseData.language || 'English', // Default
-            subtitles: courseData.subtitles || ['English', 'Hindi'], // Default
-            lastUpdated: courseData.lastUpdated || 'December 2024', // Default
-            certificate: courseData.certificate !== undefined ? courseData.certificate : true, // Default
-            downloadable: courseData.downloadable !== undefined ? courseData.downloadable : true, // Default
-            lifetime: courseData.lifetime !== undefined ? courseData.lifetime : true, // Default
-            mobileAccess: courseData.mobileAccess !== undefined ? courseData.mobileAccess : true, // Default
-            modules: courseData.modules || [], // Ensure modules is an array
+            price: courseData.discountPrice === 0 ? 'Free' : `₹${courseData.discountPrice || courseData.price}`,
+            originalPrice: courseData.discountPrice ? `₹${courseData.price}` : null,
+            thumbnail: courseData.thumbnail || 'https://via.placeholder.com/600x400?text=Course+Thumbnail',
+            language: courseData.language || 'English',
+            subtitles: courseData.subtitles || ['English', 'Hindi'],
+            lastUpdated: courseData.lastUpdated || 'December 2024',
+            certificate: courseData.certificate !== undefined ? courseData.certificate : true,
+            downloadable: courseData.downloadable !== undefined ? courseData.downloadable : true,
+            lifetime: courseData.lifetime !== undefined ? courseData.lifetime : true,
+            mobileAccess: courseData.mobileAccess !== undefined ? courseData.mobileAccess : true,
+            modules: courseData.modules || [],
             learningOutcomes: courseData.learningOutcomes || [
               'Master key concepts and skills',
               'Apply knowledge to real-world projects',
               'Gain industry-relevant expertise'
-            ], // Default
+            ],
             requirements: courseData.requirements || [
               'Basic computer skills',
               'Internet access',
               'Willingness to learn'
-            ], // Default
+            ],
             features: courseData.features || [
               { icon: FaRegClock, text: `${courseData.duration} hours of on-demand video` },
               { icon: FaDownload, text: 'Downloadable resources' },
               { icon: FaGlobe, text: 'Access on mobile and desktop' },
               { icon: FaCertificate, text: 'Certificate of completion' },
               { icon: FaUsers, text: 'Access to student community' }
-            ] // Default
+            ]
           };
           setCourse(transformedCourse);
         } else {
-          throw new Error('Failed to fetch course details');
+          throw new Error(response.data.message || 'Failed to fetch course details');
         }
       } catch (err) {
         console.error('Fetch Course Error:', err);
@@ -112,8 +175,7 @@ const ViewCourse = () => {
           setTimeout(() => navigate('/'), 2000);
         }
         setError(errorMessage);
-        setNotification({ message: errorMessage, type: 'error' });
-        setTimeout(() => setNotification({ message: '', type: '' }), 3000);
+        setEnrollError(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -135,13 +197,174 @@ const ViewCourse = () => {
       });
     } else {
       navigator.clipboard.writeText(window.location.href);
-      setNotification({ message: 'Course link copied to clipboard!', type: 'success' });
-      setTimeout(() => setNotification({ message: '', type: '' }), 3000);
+      setEnrollSuccess('Course link copied to clipboard!');
+      setTimeout(() => setEnrollSuccess(null), 3000);
     }
   };
 
-  const handlePreviewVideo = () => {
-    setShowVideoModal(true);
+  const handleEnrollNow = async () => {
+    if (!/^[0-9a-fA-F]{24}$/.test(id)) {
+      setEnrollError('Invalid course ID format');
+      return;
+    }
+
+    const token = localStorage.getItem('Token');
+    if (!token) {
+      setEnrollError('You must be logged in to enroll.');
+      setTimeout(() => navigate('/'), 2000);
+      return;
+    }
+
+    if (!RAZORPAY_KEY_ID) {
+      setEnrollError('Razorpay Key ID is not configured');
+      setEnrollLoading(false);
+      return;
+    }
+
+    setEnrollLoading(true);
+    setEnrollError(null);
+    setEnrollSuccess(null);
+
+    try {
+      if (course.price === 'Free') {
+        console.log('Enrolling in free course:', id);
+        const enrollResponse = await axios.post(
+          `${API_BASE_URL}/students/courses`,
+          { courseId: id, paymentId: null },
+          {
+            headers: { Authorization: `Bearer ${token}` }
+          }
+        );
+
+        if (enrollResponse.data.success) {
+          setEnrollSuccess('You have been enrolled successfully!');
+          setTimeout(() => navigate('/profile-dashboard'), 2000);
+        } else {
+          setEnrollError(enrollResponse.data.message || 'Enrollment failed');
+        }
+        setEnrollLoading(false);
+        return;
+      }
+
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) {
+        setEnrollError('Failed to load Razorpay payment gateway');
+        setEnrollLoading(false);
+        return;
+      }
+
+      console.log('Creating order for course:', id);
+      const orderResponse = await axios.post(
+        `${API_BASE_URL}/payments/create-order`,
+        { courseId: id },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      if (!orderResponse.data.success) {
+        console.error('Order creation failed:', orderResponse.data);
+        setEnrollError(orderResponse.data.message || 'Failed to create payment order');
+        setEnrollLoading(false);
+        return;
+      }
+
+      const { orderId, amount, currency, paymentId } = orderResponse.data.data;
+      console.log('Order created:', { orderId, amount, currency, paymentId });
+
+      const options = {
+        key: RAZORPAY_KEY_ID,
+        amount,
+        currency,
+        name: 'LMS Platform',
+        description: `Payment for course: ${course.title}`,
+        order_id: orderId,
+        handler: async function (response) {
+          console.log('Razorpay payment response:', response);
+          try {
+            const verifyResponse = await axios.post(
+              `${API_BASE_URL}/payments/verify`,
+              {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                paymentId
+              },
+              {
+                headers: { Authorization: `Bearer ${token}` }
+              }
+            );
+
+            if (!verifyResponse.data.success) {
+              setEnrollError(verifyResponse.data.message || 'Payment verification failed');
+              setEnrollLoading(false);
+              return;
+            }
+
+            console.log('Enrolling with paymentId:', verifyResponse.data.data.paymentId);
+            const enrollResponse = await axios.post(
+              `${API_BASE_URL}/students/courses`,
+              { courseId: id, paymentId: verifyResponse.data.data.paymentId },
+              {
+                headers: { Authorization: `Bearer ${token}` }
+              }
+            );
+
+            if (enrollResponse.data.success) {
+              setEnrollSuccess('You have been enrolled successfully!');
+              setTimeout(() => navigate('/my-courses'), 2000);
+            } else {
+              setEnrollError(enrollResponse.data.message || 'Enrollment failed');
+            }
+          } catch (error) {
+            console.error('Payment verification or enrollment error:', error);
+            const errorMessage =
+              error.response?.data?.message ||
+              error.message ||
+              'An error occurred during payment verification or enrollment';
+            setEnrollError(errorMessage);
+          } finally {
+            setEnrollLoading(false);
+          }
+        },
+        prefill: {
+          name: localStorage.getItem('user') || 'Student',
+          email: localStorage.getItem('userEmail') || 'student@example.com',
+          contact: '9999999999'
+        },
+        theme: {
+          color: '#0D9488' // Teal-600 to match UI
+        },
+        modal: {
+          ondismiss: () => {
+            console.log('Razorpay modal dismissed');
+            setEnrollError('Payment was cancelled');
+            setEnrollLoading(false);
+          }
+        }
+      };
+
+      console.log('Razorpay options:', options);
+      const razorpay = new window.Razorpay(options);
+      razorpay.on('payment.failed', function (response) {
+        console.error('Razorpay payment failed:', response);
+        setEnrollError(`Payment failed: ${response.error.description || 'Unknown error'}`);
+        setEnrollLoading(false);
+      });
+      razorpay.open();
+    } catch (error) {
+      console.error('Enroll API error:', error);
+      const errorMessage =
+        error.response?.data?.message || error.message || 'An error occurred during enrollment';
+      setEnrollError(errorMessage);
+      setEnrollLoading(false);
+    }
+  };
+
+  // Validate thumbnail URL
+  const isValidThumbnailUrl = (url) => {
+    if (!url) return false;
+    return url.match(/\.(jpg|jpeg|png|gif|webp)$/i);
   };
 
   const getLessonIcon = (type) => {
@@ -157,8 +380,17 @@ const ViewCourse = () => {
     }
   };
 
+  const closeModal = () => {
+    setEnrollSuccess(null);
+    setEnrollError(null);
+  };
+
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading course...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-teal-600"></div>
+      </div>
+    );
   }
 
   if (error || !course) {
@@ -171,7 +403,12 @@ const ViewCourse = () => {
 
   return (
     <div className="min-h-screen">
-      <Notification notification={notification} setNotification={setNotification} />
+      <Modal
+        isOpen={!!enrollSuccess || !!enrollError}
+        message={enrollSuccess || enrollError}
+        type={enrollSuccess ? 'success' : 'error'}
+        onClose={closeModal}
+      />
       {/* Course Header */}
       <section className="py-18">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -183,7 +420,13 @@ const ViewCourse = () => {
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
             {/* Left Content */}
-            <div className="lg:col-span-2 space-y-6 lg:space-y-8">
+            <motion.div
+              className="lg:col-span-2 space-y-6 lg:space-y-8"
+              initial={{ opacity: 0, x: 100 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5 }}
+              viewport={{ once: true }}
+            >
               {/* Course Badge */}
               <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                 <span className="bg-teal-600 text-white px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium">
@@ -225,8 +468,8 @@ const ViewCourse = () => {
 
                 {/* Instructor Info */}
                 <div className="flex items-center mt-6">
-                  <img 
-                    src={course.instructorImage} 
+                  <img
+                    src={course.instructorImage}
                     alt={course.instructor}
                     className="w-12 h-12 rounded-full mr-3"
                   />
@@ -247,29 +490,35 @@ const ViewCourse = () => {
                   </button>
                 </div>
               </div>
-            </div>
+            </motion.div>
 
             {/* Right Content - Course Preview */}
-            <div className="lg:col-span-1">
+            <motion.div
+              className="lg:col-span-1"
+              initial={{ opacity: 0, x: -100 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5 }}
+              viewport={{ once: true }}
+            >
               <div className="bg-white rounded-lg shadow-lg overflow-hidden sticky top-4">
-                {/* Video Preview */}
-                <div className="relative group">
-                  <img
-                    src={course.image}
-                    alt={course.title}
-                    className="w-full h-60 object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center group-hover:bg-opacity-60 transition-all duration-300">
-                    <button
-                      onClick={handlePreviewVideo}
-                      className="bg-white rounded-full p-3 hover:bg-gray-100 transition-all duration-300 transform hover:scale-110 shadow-lg"
-                    >
-                      <FaPlay className="text-teal-600 text-lg ml-1" />
-                    </button>
-                  </div>
-                  <div className="absolute top-3 left-3 bg-black bg-opacity-70 text-white px-2 py-1 rounded text-xs">
-                    Preview Course
-                  </div>
+                {/* Thumbnail Display */}
+                <div>
+                  {isValidThumbnailUrl(course.thumbnail) ? (
+                    <img
+                      src={course.thumbnail}
+                      alt={course.title}
+                      className="w-full h-60 object-cover"
+                      onError={(e) => {
+                        e.target.src = 'https://via.placeholder.com/600x400?text=Course+Thumbnail';
+                        setEnrollError('Failed to load thumbnail image');
+                        setTimeout(() => setEnrollError(null), 3000);
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-60 flex items-center justify-center bg-gray-100">
+                      <p className="text-gray-600 text-center">Thumbnail image unavailable</p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Pricing and Enrollment */}
@@ -293,14 +542,30 @@ const ViewCourse = () => {
                       ⏰ Offer ends in 2 days
                     </div>
                   </div>
-
-                  <button className="w-full bg-teal-600 text-white py-3 rounded-lg font-semibold text-lg hover:bg-teal-700 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 mb-4">
-                    <FaShoppingCart className="inline mr-2" />
-                    Enroll Now
-                  </button>
+                  <ul className="text-xs text-gray-700 space-y-2 mb-4">
+                    <li>✔ Full lifetime access</li>
+                    <li>✔ Certificate of completion</li>
+                    <li>✔ Access on mobile and TV</li>
+                    <li>✔ Training for 5+ people</li>
+                  </ul>
+                  <div className="relative">
+                    <button
+                      onClick={handleEnrollNow}
+                      disabled={enrollLoading}
+                      className={`w-full bg-teal-600 text-white py-3 rounded-lg font-semibold text-lg hover:bg-teal-700 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 mb-4 ${enrollLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      <FaShoppingCart className="inline mr-2" />
+                      {enrollLoading ? 'Processing Payment...' : 'Enroll Now'}
+                    </button>
+                    {enrollLoading && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-teal-600 bg-opacity-50 rounded-lg">
+                        <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-white"></div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>
@@ -310,7 +575,13 @@ const ViewCourse = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main Content */}
-            <div className="lg:col-span-2">
+            <motion.div
+              className="lg:col-span-2"
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              viewport={{ once: true }}
+            >
               {/* Tab Navigation */}
               <div className="border-b border-gray-200 mb-8">
                 <nav className="flex space-x-8">
@@ -338,13 +609,10 @@ const ViewCourse = () => {
               {/* Tab Content */}
               {activeTab === 'overview' && (
                 <div className="space-y-8">
-                  {/* About Course */}
                   <div>
                     <h3 className="text-2xl font-bold text-gray-900 mb-4">About this course</h3>
                     <p className="text-gray-700 leading-relaxed mb-6">{course.longDescription}</p>
                   </div>
-
-                  {/* What You'll Learn */}
                   <div>
                     <h3 className="text-2xl font-bold text-gray-900 mb-4">What you'll learn</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -356,8 +624,6 @@ const ViewCourse = () => {
                       ))}
                     </div>
                   </div>
-
-                  {/* Requirements */}
                   <div>
                     <h3 className="text-2xl font-bold text-gray-900 mb-4">Requirements</h3>
                     <ul className="space-y-2">
@@ -380,7 +646,6 @@ const ViewCourse = () => {
                       {course.modules.length} sections • {course.modules.reduce((total, module) => total + module.lessons.length, 0)} lessons • {course.duration}
                     </div>
                   </div>
-
                   <div className="space-y-4">
                     {course.modules.map((module, moduleIndex) => (
                       <div key={module.id} className="border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow">
@@ -408,7 +673,6 @@ const ViewCourse = () => {
                             )}
                           </div>
                         </button>
-
                         {expandedModule === module.id && (
                           <div className="border-t border-gray-200 bg-gray-50">
                             {module.lessons.map((lesson) => (
@@ -435,7 +699,7 @@ const ViewCourse = () => {
                                 <div className="flex items-center space-x-3">
                                   {lesson.preview ? (
                                     <button className="text-teal-600 text-sm font-medium hover:text-teal-700 flex items-center">
-                                      <FaPlay className="mr-1 text-xs" />
+                                      <FaPlayCircle className="mr-1 text-xs" />
                                       Preview
                                     </button>
                                   ) : (
@@ -468,7 +732,6 @@ const ViewCourse = () => {
                         <h4 className="text-2xl font-bold text-gray-900 mb-2">{course.instructor}</h4>
                         <p className="text-teal-600 font-medium mb-4">Senior Instructor</p>
                         <p className="text-gray-700 leading-relaxed mb-6">{course.instructorBio}</p>
-
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                           <div className="bg-white rounded-lg p-4 text-center shadow-sm">
                             <div className="flex items-center justify-center mb-2">
@@ -492,7 +755,6 @@ const ViewCourse = () => {
                             <p className="text-sm text-gray-600">Courses Created</p>
                           </div>
                         </div>
-
                         <div className="flex flex-wrap gap-2">
                           <span className="bg-teal-100 text-teal-800 px-3 py-1 rounded-full text-sm">Expert Instructor</span>
                           <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">{course.category} Specialist</span>
@@ -513,11 +775,16 @@ const ViewCourse = () => {
                   </div>
                 </div>
               )}
-            </div>
+            </motion.div>
 
             {/* Sidebar */}
-            <div className="lg:col-span-1 space-y-6">
-              {/* Course Details */}
+            <motion.div
+              className="lg:col-span-1 space-y-6"
+              initial={{ opacity: 0, x: -100 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5 }}
+              viewport={{ once: true }}
+            >
               <div className="bg-white rounded-xl shadow-lg p-6 sticky top-4">
                 <h4 className="font-bold text-gray-900 mb-4 flex items-center">
                   <FaCertificate className="mr-2 text-teal-600" />
@@ -559,7 +826,6 @@ const ViewCourse = () => {
                     </span>
                   </div>
                 </div>
-
                 <div className="mt-6 pt-6 border-t border-gray-200">
                   <h5 className="font-semibold text-gray-900 mb-3">Share this course</h5>
                   <button
@@ -571,47 +837,10 @@ const ViewCourse = () => {
                   </button>
                 </div>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>
-
-      {/* Video Preview Modal */}
-      {showVideoModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div
-            className="absolute inset-0 bg-black bg-opacity-75 backdrop-blur-sm"
-            onClick={() => setShowVideoModal(false)}
-          ></div>
-          <div className="relative bg-white rounded-xl shadow-2xl max-w-4xl w-full mx-4 overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">Course Preview</h3>
-              <button
-                onClick={() => setShowVideoModal(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="aspect-video">
-              <iframe
-                src={course.videoUrl}
-                title="Course Preview"
-                className="w-full h-full"
-                style={{ border: 'none' }}
-                allowFullScreen
-              ></iframe>
-            </div>
-            <div className="p-4 bg-gray-50">
-              <p className="text-sm text-gray-600">
-                This is a preview of the course content. Enroll now to access the full course with {course.modules.reduce((total, module) => total + module.lessons.length, 0)} lessons.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

@@ -45,23 +45,6 @@ const HeroSection = () => {
               </p>
             </div>
 
-            {/* Search Bar
-            <div className="bg-white border border-gray-300 rounded-lg p-1 shadow-sm max-w-lg">
-              <div className="flex items-center">
-                <input
-                  type="text"
-                  placeholder="Tell us what you're looking to learn"
-                  className="flex-1 px-4 py-2.5 text-gray-700 placeholder-gray-500 bg-transparent focus:outline-none text-sm"
-                />
-                <Link
-                  to="/courses/all"
-                  className="bg-teal-600 text-white p-2.5 rounded-md hover:bg-teal-700 transition-colors duration-300 flex items-center justify-center"
-                >
-                  <FaSearch className="w-4 h-4" />
-                </Link>
-              </div>
-            </div> */}
-
             {/* Goal Selection */}
             <div className="space-y-2 sm:space-y-3">
               <p className="text-teal-600 font-medium text-sm text-center lg:text-left">Or select your goal 📌 </p>

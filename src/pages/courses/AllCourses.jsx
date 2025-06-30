@@ -16,7 +16,7 @@ import Notification from './AllCoursesComponents/Notification';
 import Pagination from './AllCoursesComponents/Pagination';
 import StatsSection from './AllCoursesComponents/StatsSection';
 
-const API_BASE_URL = 'https://lms-backend-flwq.onrender.com';
+const API_BASE_URL = 'https://new-lms-backend-vmgr.onrender.com';
 
 const scrollbarHideStyles = `
   .scrollbar-hide::-webkit-scrollbar {
