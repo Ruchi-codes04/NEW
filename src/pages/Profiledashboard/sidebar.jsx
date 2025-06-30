@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ThemeContext } from '../../contexts/ThemeContext';
-import { Bell, Grid, Heart, Home, Menu, MessageSquare, Settings, Star } from 'lucide-react';
+import { Bell, Grid, Heart, Home, MessageSquare, Settings, Star } from 'lucide-react';
 import { RiMedalLine } from 'react-icons/ri';
 import { FaSignOutAlt } from 'react-icons/fa';
 
@@ -12,7 +12,7 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, setIsS
   const [notifications, setNotifications] = useState([]);
   const [notificationCount, setNotificationCount] = useState(0);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
-  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false); // State for three-dot menu
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [error, setError] = useState(null);
 
   // Sidebar width logic for desktop and mobile
@@ -144,11 +144,12 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, setIsS
   const toggleThemeHandler = () => {
     console.log('Toggling theme from:', theme);
     setTheme(theme === 'light' ? 'dark' : 'light');
+    setIsUserMenuOpen(false); // Close user menu on theme toggle
   };
 
   const togglePopup = () => {
     setIsPopupOpen(!isPopupOpen);
-    setIsMoreMenuOpen(false); // Close more menu when opening notifications
+    setIsUserMenuOpen(false); // Close user menu when opening notifications
   };
 
   const handleRetry = () => {
@@ -164,7 +165,7 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, setIsS
   const handleLogout = () => {
     localStorage.removeItem('Token');
     navigate('/');
-    setIsMoreMenuOpen(false); // Close more menu on logout
+    setIsUserMenuOpen(false); // Close user menu on logout
   };
 
   const handleMenuClick = (itemName) => {
@@ -185,9 +186,9 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, setIsS
     }
   };
 
-  const toggleMoreMenu = () => {
-    setIsMoreMenuOpen(!isMoreMenuOpen);
-    setIsPopupOpen(false); // Close notifications popup when opening more menu
+  const toggleUserMenu = () => {
+    setIsUserMenuOpen(!isUserMenuOpen);
+    setIsPopupOpen(false); // Close notifications popup when opening user menu
   };
 
   return (
@@ -316,16 +317,18 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, setIsS
               {initials}
             </button>
           </div>
-          {/* Three-dot menu for small screens */}
+          {/* User profile logo for small screens */}
           <div className="md:hidden relative">
             <button
-              className="p-2"
-              onClick={toggleMoreMenu}
-              aria-label="More options"
+              className={`p-2 text-white rounded-full w-8 h-8 flex items-center justify-center ${
+                theme === 'dark' ? 'bg-purple-700' : 'bg-purple-600'
+              }`}
+              onClick={toggleUserMenu}
+              aria-label={`User profile menu for ${userName || 'User'}`}
             >
-              <Menu className="w-6 h-6" />
+              {initials}
             </button>
-            {isMoreMenuOpen && (
+            {isUserMenuOpen && (
               <div
                 className={`absolute top-12 right-0 rounded-lg shadow-lg w-48 z-50 border ${
                   theme === 'dark' ? 'bg-gray-800 border-gray-600 text-gray-200' : 'bg-white border-gray-300 text-gray-800'
@@ -343,7 +346,7 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, setIsS
                       viewBox="0 0 24 24"
                       style={{ color: theme === 'dark' ? '#FFD700' : 'currentColor' }}
                     >
-                      <path
+                      <no-stroke
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth="2"
@@ -369,21 +372,6 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, setIsS
                       )}
                     </button>
                   </div>
-                  <button
-                    className={`flex items-center space-x-2 text-sm ${
-                      theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-200'
-                    }`}
-                    aria-label={`User profile for ${userName || 'User'}`}
-                  >
-                    <div
-                      className={`w-8 h-8 flex items-center justify-center rounded-full text-white ${
-                        theme === 'dark' ? 'bg-purple-700' : 'bg-purple-600'
-                      }`}
-                    >
-                      {initials}
-                    </div>
-                    <span>{userName || 'User'}</span>
-                  </button>
                   <button
                     className={`flex items-center space-x-2 text-sm ${
                       theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-200'

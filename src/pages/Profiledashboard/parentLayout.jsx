@@ -161,7 +161,7 @@ const ParentLayout = () => {
 
   return (
     <div
-      className={`flex flex-col min-h-screen transition-colors duration-300 ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-50'}`}
+      className={`flex flex-col min-h-screen transition-colors duration-300 ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-nutrition:50'}`}
     >
       <Notification message={notification.message} type={notification.type} onClose={() => setNotification({ message: '', type: '' })} />
 
@@ -175,16 +175,15 @@ const ParentLayout = () => {
           }}
           userName={user ? `${user.firstName} ${user.lastName}` : 'User'}
           isSidebarOpen={isSidebarOpen}
-          setIsSidebarOpen={setIsSidebarOpen} // Pass setIsSidebarOpen as prop
           toggleSidebar={toggleSidebar}
           setSidebarWidth={setSidebarWidth}
-          sidebarWidth={sidebarWidth}
+          sidebarWidth={sidebarWidth} // Pass sidebarWidth as prop
         />
       </div>
 
       <div
         className={`flex-1 overflow-auto px-2 min-h-screen transition-all duration-300 ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-50'}`}
-        style={{ marginLeft: window.innerWidth >= 768 ? sidebarWidth : '0px' }}
+        style={{ marginLeft: window.innerWidth >= 768 ? sidebarWidth : '0px' }} // Apply margin only on desktop
       >
         {renderPage()}
       </div>
