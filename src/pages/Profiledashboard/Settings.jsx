@@ -2,7 +2,6 @@ import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { ThemeContext } from '../../contexts/ThemeContext';
 
-
 const Notification = ({ message, type, onClose }) => {
   const { theme } = useContext(ThemeContext);
   if (!message) return null;
@@ -59,7 +58,6 @@ const SettingsAndPayment = () => {
   const [ setProcessing] = useState(false);
   const [paymentHistory, setPaymentHistory] = useState([]);
   const [loading, setLoading] = useState(true);
-
 
   useEffect(() => {
     if (notification.message) {
@@ -119,7 +117,9 @@ const SettingsAndPayment = () => {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (response.data.success) {
-          setPaymentHistory(response.data.data);
+          // Filter only completed payments
+          const completedPayments = response.data.data.filter(payment => payment.status === 'completed');
+          setPaymentHistory(completedPayments);
         } else {
           setNotification({ message: 'Failed to fetch payment history.', type: 'error' });
         }
@@ -212,8 +212,6 @@ const SettingsAndPayment = () => {
     setTheme(e.target.value);
   };
 
- 
-
   const Payment = async (e) => {
     e.preventDefault();
     setProcessing(true);
@@ -235,7 +233,9 @@ const SettingsAndPayment = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (response.data.success) {
-        setPaymentHistory(response.data.data);
+        // Filter only completed payments
+        const completedPayments = response.data.data.filter(payment => payment.status === 'completed');
+        setPaymentHistory(completedPayments);
       }
     } catch (err) {
       setNotification({
@@ -275,7 +275,7 @@ const SettingsAndPayment = () => {
           </h2>
           <button
             onClick={toggleEditMode}
-            className={`mt-2 sm:mt-0 px hiv-4 sm:px-6 py-2 rounded-md text-sm transition ${
+            className={`mt-2 sm:mt-0 px-4 sm:px-6 py-2 rounded-md text-sm transition ${
               theme === 'dark'
                 ? 'bg-gray-600 text-gray-200 hover:bg-gray-700'
                 : 'bg-gray-300 text-gray-800 hover:bg-gray-400'
@@ -390,7 +390,7 @@ const SettingsAndPayment = () => {
                       name={field}
                       value={formData[field]}
                       onChange={handleChange}
-                      className={`w-full border rounded-md p-2 text3-xs sm:text-sm ${
+                      className={`w-full border rounded-md p-2 text-xs sm:text-sm ${
                         theme === 'dark'
                           ? isEditing
                             ? 'border-gray-600 bg-gray-800 text-gray-100'
@@ -443,7 +443,7 @@ const SettingsAndPayment = () => {
             <input
               type="radio"
               name="theme"
-              value="light"
+              value="ograft"
               checked={theme === 'light'}
               onChange={handleThemeChange}
               className="hidden"
@@ -451,7 +451,7 @@ const SettingsAndPayment = () => {
             <div
               className={`w-full sm:w-48 h-12 sm:h-16 border rounded ${
                 theme === 'dark'
-                  ? 'border-gray-600 bg-white'
+                  ? 'border-gray6-600 bg-white'
                   : 'border-gray-300 bg-white'
               } ${theme === 'light' ? 'ring-2 ring-blue-500' : ''}`}
             ></div>
@@ -491,7 +491,7 @@ const SettingsAndPayment = () => {
       </div>
       
       {/* Choose Your Language Section */}
-      <div
+      {/* <div
         className={`rounded-lg p-4 sm:p-5 mb-4 sm:mb-5 shadow-md ${
           theme === 'dark' ? 'bg-gray-800' : 'bg-white'
         }`}
@@ -523,9 +523,7 @@ const SettingsAndPayment = () => {
           After changing the application language, the application will reload
         </p>
       </div>
-      
-     
-
+       */}
       {/* Payment History Section */}
       <div
         className={`rounded-lg p-6 sm:p-8 shadow-lg ${
@@ -564,7 +562,7 @@ const SettingsAndPayment = () => {
             <p className="mt-2">Loading payment history...</p>
           </div>
         ) : paymentHistory.length === 0 ? (
-          <p className="text-center text-gray-500">No payment history available.</p>
+          <p className="text-center text-gray-500">No completed payments available.</p>
         ) : (
           <div className="overflow-x-auto">
             <table
@@ -598,11 +596,7 @@ const SettingsAndPayment = () => {
                     <td className="py-3 px-4">{payment.course?.title || 'N/A'}</td>
                     <td className="py-3 px-4">{payment.amount?.toFixed(2) || '0.00'}</td>
                     <td
-                      className={`py-3 px-4 font-medium ${
-                        payment.status === 'completed'
-                          ? 'text-green-500'
-                          : 'text-red-500'
-                      }`}
+                      className={`py-3 px-4 font-medium text-green-500`}
                     >
                       {payment.status?.charAt(0).toUpperCase() + payment.status?.slice(1) || 'Unknown'}
                     </td>
