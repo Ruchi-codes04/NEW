@@ -49,7 +49,33 @@ const Courses = () => {
     fetchCourses();
   }, []);
 
-   
+  // Fetch bookmarked courses
+  useEffect(() => {
+    const fetchBookmarkedCourses = async () => {
+      try {
+        const token = localStorage.getItem('Token');
+        if (!token) return;
+
+        const response = await axios.get(
+          'https://new-lms-backend-vmgr.onrender.com/api/v1/students/courses/bookmarked',
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.data.success) {
+          setBookmarkedCourses(response.data.data.map(course => course._id));
+        }
+      } catch (err) {
+        console.error('Error fetching bookmarked courses:', err);
+      }
+    };
+
+    fetchBookmarkedCourses();
+  }, []);
+
   const handleBookmark = async (courseId) => {
     try {
       const token = localStorage.getItem('Token');
@@ -62,7 +88,7 @@ const Courses = () => {
       const isBookmarked = bookmarkedCourses.includes(courseId);
       
       const response = await axios.patch(
-        `https://lms-backend-flwq.onrender.com/api/v1/students/courses/${courseId}/bookmark`,
+        `https://new-lms-backend-vmgr.onrender.com/api/v1/students/courses/${courseId}/bookmark`,
         {},
         {
           headers: {
@@ -91,20 +117,6 @@ const Courses = () => {
       });
     }
   };
-
-  
-  {notification.message && (
-    <div className={`fixed top-4 right-4 p-4 rounded-md shadow-lg text-white z-50 ${
-      notification.type === 'error' ? 'bg-red-500' : 'bg-green-500'
-    }`}>
-      <div className="flex items-center justify-between">
-        <span>{notification.message}</span>
-        <button onClick={() => setNotification({ message: '', type: '' })} className="ml-4">
-          ✕
-        </button>
-      </div>
-    </div>
-  )}
 
   // Handle escape key to close modal
   useEffect(() => {
@@ -181,7 +193,6 @@ const Courses = () => {
                     <div className="w-16 h-16 sm:w-20 sm:h-20 border-2 border-dashed rounded-full absolute inset-0 border-teal-600"></div>
                     <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white rounded-full flex items-center justify-center m-2 shadow-sm">
                       <svg className="w-6 h-6 sm:w-8 sm:h-8 text-teal-600" fill="currentColor" viewBox="0 0 24 24">
-                        {/* Dynamic icon based on category ID */}
                         {category.id % 16 === 1 && (
                           <path d="M10 2v2H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-2V2h-4zm2 4h4v12H8V6h4z" />
                         )}
@@ -264,6 +275,20 @@ const Courses = () => {
         </div>
       </div>
 
+      {/* Notification */}
+      {notification.message && (
+        <div className={`fixed top-4 right-4 p-4 rounded-md shadow-2xl text-white z-[60] transition-all duration-300 transform ${
+          notification.type === 'error' ? 'bg-red-500' : 'bg-green-500'
+        }`}>
+          <div className="flex items-center justify-between">
+            <span>{notification.message}</span>
+            <button onClick={() => setNotification({ message: '', type: '' })} className="ml-4">
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Modal Popup */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
@@ -309,21 +334,20 @@ const Courses = () => {
                       key={course._id}
                       className="group rounded-2xl p-4 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer border-[0.5px] border-gray-200 bg-white hover:bg-teal-50"
                     >
-
-                       <button
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          handleBookmark(course._id);
-        }}
-        className={`absolute top-2 right-2 p-2 rounded-full ${
-          bookmarkedCourses.includes(course._id) 
-            ? 'text-yellow-500 bg-white' 
-            : 'text-gray-400 bg-white hover:text-yellow-500'
-        }`}
-      >
-        <FaBookmark />
-      </button>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleBookmark(course._id);
+                        }}
+                        className={`absolute top-2 right-2 p-2 rounded-full ${
+                          bookmarkedCourses.includes(course._id) 
+                            ? 'text-yellow-500 bg-white' 
+                            : 'text-gray-400 bg-white hover:text-yellow-500'
+                        }`}
+                      >
+                        <FaBookmark />
+                      </button>
                       <img
                         src={course.thumbnail}
                         alt={course.title}
