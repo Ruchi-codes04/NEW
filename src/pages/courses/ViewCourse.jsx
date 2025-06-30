@@ -63,7 +63,7 @@ const Modal = ({ isOpen, message, type, onClose }) => {
 };
 
 // Hardcoded values to avoid process.env
-const API_BASE_URL = 'https://lms-backend-flwq.onrender.com/api/v1';
+const API_BASE_URL = 'https://new-lms-backend-vmgr.onrender.com/api/v1';
 const RAZORPAY_KEY_ID = 'rzp_test_wEHfns4O1eHdMO';
 
 const ViewCourse = () => {
@@ -77,6 +77,7 @@ const ViewCourse = () => {
   const [enrollLoading, setEnrollLoading] = useState(false);
   const [enrollError, setEnrollError] = useState(null);
   const [enrollSuccess, setEnrollSuccess] = useState(null);
+  const [isEnrolled, setIsEnrolled] = useState(false);
 
   // Load Razorpay script
   const loadRazorpayScript = () => {
@@ -95,7 +96,7 @@ const ViewCourse = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [id]);
 
-  // Fetch course data from API
+  // Fetch course data and enrollment status from API
   useEffect(() => {
     const fetchCourse = async () => {
       if (!/^[0-9a-fA-F]{24}$/.test(id)) {
@@ -107,12 +108,19 @@ const ViewCourse = () => {
       try {
         setLoading(true);
         const token = localStorage.getItem('Token');
+        console.log('Token:', token); // Log token for debugging
+        console.log('Course ID:', id); // Log course ID
         if (!token) {
           setError('Please log in to view course details');
           setTimeout(() => navigate('/'), 2000);
           return;
         }
-        const headers = { Authorization: `Bearer ${token}` };
+        const headers = { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        };
+
+        // Fetch course details
         const response = await axios.get(`${API_BASE_URL}/courses/${id}`, { headers });
         console.log('Course details response:', response.data);
 
@@ -132,18 +140,19 @@ const ViewCourse = () => {
             duration: `${courseData.duration} hours`,
             level: courseData.level.charAt(0).toUpperCase() + courseData.level.slice(1),
             category: courseData.category.toLowerCase(),
-            price: courseData.price === 0 ? 'Free' : `₹${courseData.price}`,
-            originalPrice: courseData.discountPrice ? `₹${courseData.discountPrice}` : null,
+            price: courseData.discountPrice ? `₹${courseData.discountPrice}` : courseData.price === 0 ? 'Free' : `₹${courseData.price}`,
+            originalPrice: courseData.discountPrice && courseData.price !== 0 ? `₹${courseData.price}` : null,
             image: courseData.thumbnail,
-            videoUrl: courseData.videoUrl || 'https://www.youtube.com/embed/dQw4w9WgXcQ', // Default
-            language: courseData.language || 'English', // Default
-            subtitles: courseData.subtitles || ['English', 'Hindi'], // Default
-            lastUpdated: courseData.lastUpdated || 'December 2024', // Default
-            certificate: courseData.certificate !== undefined ? courseData.certificate : true, // Default
-            downloadable: courseData.downloadable !== undefined ? courseData.downloadable : true, // Default
-            lifetime: courseData.lifetime !== undefined ? courseData.lifetime : true, // Default
-            mobileAccess: courseData.mobileAccess !== undefined ? courseData.mobileAccess : true, // Default
-            modules: courseData.modules || [], 
+            thumbnail: courseData.thumbnail || 'https://images.unsplash.com/photo-1516321310762-479e78c73e13?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+            videoUrl: courseData.videoUrl || 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+            language: courseData.language || 'English',
+            subtitles: courseData.subtitles || ['English', 'Hindi'],
+            lastUpdated: courseData.lastUpdated || 'December 2024',
+            certificate: courseData.certificate !== undefined ? courseData.certificate : true,
+            downloadable: courseData.downloadable !== undefined ? courseData.downloadable : true,
+            lifetime: courseData.lifetime !== undefined ? courseData.lifetime : true,
+            mobileAccess: courseData.mobileAccess !== undefined ? courseData.mobileAccess : true,
+            modules: courseData.modules || [],
             learningOutcomes: courseData.learningOutcomes || [
               'Master key concepts and skills',
               'Apply knowledge to real-world projects',
@@ -162,12 +171,49 @@ const ViewCourse = () => {
               { icon: FaUsers, text: 'Access to student community' }
             ]
           };
+          console.log('Thumbnail URL:', courseData.thumbnail); // Log thumbnail URL
+          console.log('Course pricing:', {
+            price: courseData.price,
+            discountPrice: courseData.discountPrice,
+            transformedPrice: transformedCourse.price,
+            transformedOriginalPrice: transformedCourse.originalPrice
+          }); // Log pricing details
           setCourse(transformedCourse);
+
+          // Check enrollment status
+          try {
+            const enrollmentResponse = await axios.get(`${API_BASE_URL}/students/courses`, { headers });
+            console.log('Enrollment response:', enrollmentResponse.data);
+            console.log('Enrolled courses:', enrollmentResponse.data.data); // Log full enrolled courses array
+            if (enrollmentResponse.data.success) {
+              const enrolledCourses = enrollmentResponse.data.data || enrollmentResponse.data.courses || [];
+              const enrolled = enrolledCourses.some(course => {
+                console.log('Checking course:', course); // Log each course object
+                return (
+                  course._id === id ||
+                  course.courseId === id ||
+                  course.id === id ||
+                  (course.course && course.course._id === id) ||
+                  (course.course && course.course.id === id)
+                );
+              });
+              setIsEnrolled(enrolled);
+              console.log('Is Enrolled:', enrolled);
+            } else {
+              console.warn('Enrollment check failed:', enrollmentResponse.data.message);
+              setEnrollError('Failed to check enrollment status: ' + enrollmentResponse.data.message);
+              setTimeout(() => setEnrollError(null), 3000);
+            }
+          } catch (enrollErr) {
+            console.error('Enrollment check error:', enrollErr.response?.data || enrollErr);
+            setEnrollError('Failed to check enrollment status');
+            setTimeout(() => setEnrollError(null), 3000);
+          }
         } else {
           throw new Error(response.data.message || 'Failed to fetch course details');
         }
       } catch (err) {
-        console.error('Fetch Course Error:', err);
+        console.error('Fetch Course Error:', err.response?.data || err);
         let errorMessage = err.response?.data?.message || 'Error fetching course details';
         if (err.response?.status === 401) {
           errorMessage = 'Session expired. Please log in again.';
@@ -204,6 +250,12 @@ const ViewCourse = () => {
   };
 
   const handleEnrollNow = async () => {
+    if (isEnrolled) {
+      setEnrollSuccess('You are already enrolled in this course!');
+      setTimeout(() => setEnrollSuccess(null), 3000);
+      return;
+    }
+
     if (!/^[0-9a-fA-F]{24}$/.test(id)) {
       setEnrollError('Invalid course ID format');
       return;
@@ -214,6 +266,38 @@ const ViewCourse = () => {
       setEnrollError('You must be logged in to enroll.');
       setTimeout(() => navigate('/'), 2000);
       return;
+    }
+
+    // Double-check enrollment status before proceeding
+    try {
+      console.log('Checking enrollment before proceeding:', id);
+      const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+      const enrollmentResponse = await axios.get(`${API_BASE_URL}/students/courses`, { headers });
+      console.log('Pre-enrollment check response:', enrollmentResponse.data);
+      console.log('Enrolled courses in pre-check:', enrollmentResponse.data.data);
+      if (enrollmentResponse.data.success) {
+        const enrolledCourses = enrollmentResponse.data.data || enrollmentResponse.data.courses || [];
+        const enrolled = enrolledCourses.some(course => {
+          console.log('Checking course in pre-check:', course);
+          return (
+            course._id === id ||
+            course.courseId === id ||
+            course.id === id ||
+            (course.course && course.course._id === id) ||
+            (course.course && course.course.id === id)
+          );
+        });
+        if (enrolled) {
+          setIsEnrolled(true);
+          setEnrollSuccess('You are already enrolled in this course!');
+          setTimeout(() => setEnrollSuccess(null), 3000);
+          return;
+        }
+      } else {
+        console.warn('Pre-enrollment check failed:', enrollmentResponse.data.message);
+      }
+    } catch (enrollErr) {
+      console.error('Pre-enrollment check error:', enrollErr.response?.data || enrollErr);
     }
 
     if (!RAZORPAY_KEY_ID) {
@@ -228,17 +312,17 @@ const ViewCourse = () => {
 
     try {
       if (course.price === 'Free') {
-        console.log('Enrolling in free course:', id);
+        console.log('Enrolling in free course with ID:', id);
         const enrollResponse = await axios.post(
           `${API_BASE_URL}/students/courses`,
           { courseId: id, paymentId: null },
-          {
-            headers: { Authorization: `Bearer ${token}` }
-          }
+          { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
         );
+        console.log('Enroll response:', enrollResponse.data);
 
         if (enrollResponse.data.success) {
           setEnrollSuccess('You have been enrolled successfully!');
+          setIsEnrolled(true);
           setTimeout(() => navigate('/profile-dashboard'), 2000);
         } else {
           setEnrollError(enrollResponse.data.message || 'Enrollment failed');
@@ -254,18 +338,23 @@ const ViewCourse = () => {
         return;
       }
 
-      console.log('Creating order for course:', id);
+      console.log('Creating order for course with ID:', id);
       const orderResponse = await axios.post(
         `${API_BASE_URL}/payments/create-order`,
         { courseId: id },
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
+        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
       );
+      console.log('Order response:', orderResponse.data);
 
       if (!orderResponse.data.success) {
         console.error('Order creation failed:', orderResponse.data);
-        setEnrollError(orderResponse.data.message || 'Failed to create payment order');
+        if (orderResponse.data.message === 'Already enrolled in this course') {
+          setIsEnrolled(true);
+          setEnrollSuccess('You are already enrolled in this course!');
+          setTimeout(() => setEnrollSuccess(null), 3000);
+        } else {
+          setEnrollError(orderResponse.data.message || 'Failed to create payment order');
+        }
         setEnrollLoading(false);
         return;
       }
@@ -291,10 +380,9 @@ const ViewCourse = () => {
                 razorpay_signature: response.razorpay_signature,
                 paymentId
               },
-              {
-                headers: { Authorization: `Bearer ${token}` }
-              }
+              { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
             );
+            console.log('Verify response:', verifyResponse.data);
 
             if (!verifyResponse.data.success) {
               setEnrollError(verifyResponse.data.message || 'Payment verification failed');
@@ -306,19 +394,19 @@ const ViewCourse = () => {
             const enrollResponse = await axios.post(
               `${API_BASE_URL}/students/courses`,
               { courseId: id, paymentId: verifyResponse.data.data.paymentId },
-              {
-                headers: { Authorization: `Bearer ${token}` }
-              }
+              { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
             );
+            console.log('Enroll response:', enrollResponse.data);
 
             if (enrollResponse.data.success) {
               setEnrollSuccess('You have been enrolled successfully!');
+              setIsEnrolled(true);
               setTimeout(() => navigate('/profile-dashboard'), 2000);
             } else {
               setEnrollError(enrollResponse.data.message || 'Enrollment failed');
             }
           } catch (error) {
-            console.error('Payment verification or enrollment error:', error);
+            console.error('Payment verification or enrollment error:', error.response?.data || error);
             const errorMessage =
               error.response?.data?.message ||
               error.message ||
@@ -334,7 +422,7 @@ const ViewCourse = () => {
           contact: '9999999999'
         },
         theme: {
-          color: '#0D9488' // Teal-600 to match UI
+          color: '#0D9488'
         },
         modal: {
           ondismiss: () => {
@@ -354,10 +442,16 @@ const ViewCourse = () => {
       });
       razorpay.open();
     } catch (error) {
-      console.error('Enroll API error:', error);
+      console.error('Enroll API error:', error.response?.data || error);
       const errorMessage =
         error.response?.data?.message || error.message || 'An error occurred during enrollment';
-      setEnrollError(errorMessage);
+      if (errorMessage === 'Already enrolled in this course') {
+        setIsEnrolled(true);
+        setEnrollSuccess('You are already enrolled in this course!');
+        setTimeout(() => setEnrollSuccess(null), 3000);
+      } else {
+        setEnrollError(errorMessage);
+      }
       setEnrollLoading(false);
     }
   };
@@ -365,7 +459,7 @@ const ViewCourse = () => {
   // Validate thumbnail URL
   const isValidThumbnailUrl = (url) => {
     if (!url) return false;
-    return url.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+    return /^https?:\/\/.*$/i.test(url);
   };
 
   const getLessonIcon = (type) => {
@@ -469,11 +563,6 @@ const ViewCourse = () => {
 
                 {/* Instructor Info */}
                 <div className="flex items-center mt-6">
-                  {/* <img
-                    src={course.instructorImage}
-                    alt={course.instructor}
-                    className="w-12 h-12 rounded-full mr-3"
-                  />  */}
                   <div>
                     <p className="text-sm text-black">Created by</p>
                     <p className="font-semibold">{course.instructor}</p>
@@ -504,13 +593,14 @@ const ViewCourse = () => {
               <div className="bg-white rounded-lg shadow-lg overflow-hidden sticky top-4">
                 {/* Thumbnail Display */}
                 <div>
-                  {isValidThumbnailUrl(course.thumbnail) ? (
+                  {course.thumbnail && isValidThumbnailUrl(course.thumbnail) ? (
                     <img
                       src={course.thumbnail}
                       alt={course.title}
                       className="w-full h-60 object-cover"
                       onError={(e) => {
-                        e.target.src = 'https://via.placeholder.com/600x400?text=Course+Thumbnail';
+                        e.target.src = 'https://images.unsplash.com/photo-1516321310762-479e78c73e13?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80';
+                        console.error('Thumbnail load error for URL:', course.thumbnail);
                         setEnrollError('Failed to load thumbnail image');
                         setTimeout(() => setEnrollError(null), 3000);
                       }}
@@ -531,7 +621,7 @@ const ViewCourse = () => {
                         <span className="text-lg text-gray-500 line-through">{course.originalPrice}</span>
                       )}
                     </div>
-                    {course.originalPrice && (
+                    {course.originalPrice && course.price !== 'Free' && (
                       <div className="flex items-center justify-center gap-2 mb-2">
                         <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">
                           {Math.round(((parseFloat(course.originalPrice.replace('₹', '')) - parseFloat(course.price.replace('₹', ''))) / parseFloat(course.originalPrice.replace('₹', ''))) * 100)}% OFF
@@ -552,11 +642,15 @@ const ViewCourse = () => {
                   <div className="relative">
                     <button
                       onClick={handleEnrollNow}
-                      disabled={enrollLoading}
-                      className={`w-full bg-teal-600 text-white py-3 rounded-lg font-semibold text-lg hover:bg-teal-700 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 mb-4 ${enrollLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      disabled={enrollLoading || isEnrolled}
+                      className={`w-full py-3 rounded-lg font-semibold text-lg transition-colors shadow-lg transform hover:-translate-y-0.5 mb-4 ${
+                        isEnrolled
+                          ? 'bg-gray-400 text-white cursor-not-allowed'
+                          : 'bg-teal-600 text-white hover:bg-teal-700'
+                      } ${enrollLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                       <FaShoppingCart className="inline mr-2" />
-                      {enrollLoading ? 'Processing Payment...' : 'Enroll Now'}
+                      {isEnrolled ? 'Enrolled' : enrollLoading ? 'Processing Payment...' : 'Enroll Now'}
                     </button>
                     {enrollLoading && (
                       <div className="absolute inset-0 flex items-center justify-center bg-teal-600 bg-opacity-50 rounded-lg">
