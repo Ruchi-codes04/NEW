@@ -33,8 +33,48 @@ const Notification = ({ message, type, onClose }) => {
   );
 };
 
-const Settings = () => {
-  const { theme, setTheme, language, setLanguage } = useContext(ThemeContext);
+const ProfileDetailsForm = ({ formData, handleChange, isEditing, theme }) => {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+      {['education', 'occupation', 'skills', 'interests'].map((field) => (
+        <div key={field}>
+          <label
+            className={`block text-xs sm:text-sm capitalize ${
+              theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+            } mb-1`}
+          >
+            {field
+              .replace('education', 'Education')
+              .replace('occupation', 'Occupation')
+              .replace('interests', 'Interests')
+              .replace('skills', 'Skills')}
+          </label>
+          <input
+            type="text"
+            name={field}
+            value={formData[field]}
+            onChange={handleChange}
+            className={`w-full border rounded-md p-2 text-xs sm:text-sm ${
+              theme === 'dark'
+                ? isEditing
+                  ? 'border-gray-600 bg-gray-800 text-gray-100'
+                  : 'border-gray-600 bg-gray-700 text-gray-100'
+                : isEditing
+                ? 'border-gray-300 bg-white text-gray-900'
+                : 'border-gray-300 bg-gray-100 text-gray-900'
+            } ${!isEditing ? 'cursor-not-allowed' : ''}`}
+            readOnly={!isEditing}
+            disabled={!isEditing}
+            placeholder={field === 'skills' || field === 'interests' ? 'Comma-separated values' : ''}
+          />
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const SettingsAndPayment = () => {
+  const { theme } = useContext(ThemeContext);
   const [student, setStudent] = useState(null);
   const [formData, setFormData] = useState({
     firstName: '',
@@ -43,12 +83,24 @@ const Settings = () => {
     role: '',
     skills: '',
     email: '',
+    education: '',
+    occupation: '',
+    interests: '',
   });
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [saving, setSaving] = useState(false);
   const [notification, setNotification] = useState({ message: '', type: '' });
   const [isEditing, setIsEditing] = useState(false);
+  const [ setPaymentData] = useState({
+    cardNumber: '',
+    expiry: '',
+    cvv: '',
+    amount: '',
+  });
+  const [ setProcessing] = useState(false);
+  const [paymentHistory, setPaymentHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (notification.message) {
@@ -78,15 +130,18 @@ const Settings = () => {
           lastName: data.lastName || '',
           phone: data.phone || '',
           role: data.role || '',
-          skills: data.skills || '',
+          skills: Array.isArray(data.skills) ? data.skills.join(', ') : data.skills || '',
           email: data.email || '',
+          education: data.education || '',
+          occupation: data.occupation || '',
+          interests: Array.isArray(data.interests) ? data.interests.join(', ') : data.interests || '',
         });
         setAvatarPreview(data.avatar || null);
       } catch (err) {
         console.error('Error fetching profile:', err);
         if (err.response?.status === 401) {
           setNotification({ message: 'Session expired. Please log in again.', type: 'error' });
-          localStorage.removeItem('token');
+          localStorage.removeItem('Token');
         } else {
           setNotification({
             message: err.response?.data?.message || 'Unable to retrieve profile data. Please try again later.',
@@ -96,6 +151,34 @@ const Settings = () => {
       }
     };
     fetchProfile();
+  }, []);
+
+  useEffect(() => {
+    const fetchPaymentHistory = async () => {
+      try {
+        const token = localStorage.getItem('Token');
+        if (!token) return;
+        
+        const response = await axios.get('https://lms-backend-flwq.onrender.com/api/v1/payments/my-payments', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (response.data.success) {
+          const completedPayments = response.data.data.filter(payment => payment.status === 'completed');
+          setPaymentHistory(completedPayments);
+        } else {
+          setNotification({ message: 'Failed to fetch payment history.', type: 'error' });
+        }
+      } catch (err) {
+        setNotification({
+          message: err.message || 'Failed to fetch payment history.',
+          type: 'error',
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPaymentHistory();
   }, []);
 
   const handleChange = (e) => {
@@ -128,27 +211,80 @@ const Settings = () => {
       setSaving(false);
       return;
     }
+
+    // Validate required fields
+    if (!formData.firstName || !formData.lastName || !formData.email) {
+      setNotification({ message: 'First Name, Last Name, and Email are required.', type: 'error' });
+      setSaving(false);
+      return;
+    }
+
     try {
-      const payload = new FormData();
-      Object.keys(formData).forEach((key) => payload.append(key, formData[key]));
-      if (avatarFile) payload.append('avatar', avatarFile);
-      const res = await axios.put('https://lms-backend-flwq.onrender.com/api/v1/auth/updatedetails', payload, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      let res;
+      const payloadData = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        phone: formData.phone,
+        email: formData.email,
+        role: formData.role,
+        skills: formData.skills ? formData.skills.split(',').map(item => item.trim()).filter(item => item) : [],
+        education: formData.education,
+        occupation: formData.occupation,
+        interests: formData.interests ? formData.interests.split(',').map(item => item.trim()).filter(item => item) : [],
+      };
+
+      if (avatarFile) {
+        const formDataPayload = new FormData();
+        Object.entries(payloadData).forEach(([key, value]) => {
+          if (key === 'skills' || key === 'interests') {
+            value.forEach((item, index) => {
+              formDataPayload.append(`${key}[${index}]`, item);
+            });
+          } else {
+            formDataPayload.append(key, value);
+          }
+        });
+        formDataPayload.append('avatar', avatarFile);
+        res = await axios.put('https://lms-backend-flwq.onrender.com/api/v1/auth/updatedetails', formDataPayload, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+      } else {
+        res = await axios.put('https://lms-backend-flwq.onrender.com/api/v1/auth/updatedetails', payloadData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+      }
+
       const updatedData = res.data.data;
       setStudent((prev) => ({
         ...prev,
-        ...formData,
-        avatar: updatedData.avatar || prev.avatar,
+        ...updatedData,
+        skills: Array.isArray(updatedData.skills) ? updatedData.skills : [],
+        interests: Array.isArray(updatedData.interests) ? updatedData.interests : [],
       }));
+      setFormData({
+        ...formData,
+        firstName: updatedData.firstName || '',
+        lastName: updatedData.lastName || '',
+        phone: updatedData.phone || '',
+        email: updatedData.email || '',
+        role: updatedData.role || '',
+        skills: Array.isArray(updatedData.skills) ? updatedData.skills.join(', ') : updatedData.skills || '',
+        education: updatedData.education || '',
+        occupation: updatedData.occupation || '',
+        interests: Array.isArray(updatedData.interests) ? updatedData.interests.join(', ') : updatedData.interests || '',
+      });
       setNotification({ message: 'Your profile has been updated successfully.', type: 'success' });
       setAvatarFile(null);
       setAvatarPreview(updatedData.avatar || avatarPreview);
       setIsEditing(false);
     } catch (err) {
+      console.error('Error updating profile:', err);
       setNotification({
         message: `Failed to update profile: ${err.response?.data?.message || 'An error occurred. Please try again.'}`,
         type: 'error',
@@ -165,13 +301,36 @@ const Settings = () => {
     if (!isEditing) setAvatarPreview(student?.avatar || null);
   };
 
-  const handleLanguageChange = (e) => {
-    setLanguage(e.target.value);
-    alert(`Application will reload after switching to ${e.target.value === 'en' ? 'English' : 'Hindi'}`);
-  };
-
-  const handleThemeChange = (e) => {
-    setTheme(e.target.value);
+  const Payment = async (e) => {
+    e.preventDefault();
+    setProcessing(true);
+    setNotification({ message: '', type: '' });
+    try {
+      const token = localStorage.getItem('Token');
+      if (!token) {
+        setNotification({ message: 'Authentication required. Please log in.', type: 'error' });
+        return;
+      }
+      
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      setNotification({ message: 'Payment processed successfully!', type: 'success' });
+      setPaymentData({ cardNumber: '', expiry: '', cvv: '', amount: '' });
+      
+      const response = await axios.get('https://lms-backend-flwq.onrender.com/api/v1/payments/my-payments', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.data.success) {
+        const completedPayments = response.data.data.filter(payment => payment.status === 'completed');
+        setPaymentHistory(completedPayments);
+      }
+    } catch (err) {
+      setNotification({
+        message: err.message || 'Payment failed. Please try again.',
+        type: 'error',
+      });
+    } finally {
+      setProcessing(false);
+    }
   };
 
   return (
@@ -185,6 +344,7 @@ const Settings = () => {
         type={notification.type}
         onClose={() => setNotification({ message: '', type: '' })}
       />
+      
       {/* Edit Profile Section */}
       <div
         className={`rounded-lg p-4 sm:p-5 shadow-md mb-4 sm:mb-5 ${
@@ -201,7 +361,7 @@ const Settings = () => {
           </h2>
           <button
             onClick={toggleEditMode}
-            className={`mt-2 sm:mt-0 px-4 py-2 rounded-md text-sm transition ${
+            className={`mt-2 sm:mt-0 px-4 sm:px-6 py-2 rounded-md text-sm transition ${
               theme === 'dark'
                 ? 'bg-gray-600 text-gray-200 hover:bg-gray-700'
                 : 'bg-gray-300 text-gray-800 hover:bg-gray-400'
@@ -277,12 +437,12 @@ const Settings = () => {
                     theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
                   }`}
                 >
-                  1 month ago
+                  Last updated: {new Date(student.updatedAt).toLocaleDateString('en-IN')}
                 </p>
               </div>
             </div>
-            <div className="grid grid-cols-1 gap-3 sm:gap-4">
-              {['firstName', 'lastName', 'phone', 'role', 'skills', 'email'].map((field) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              {['firstName', 'lastName', 'phone', 'role', 'email'].map((field) => (
                 <div key={field}>
                   <label
                     className={`block text-xs sm:text-sm capitalize ${
@@ -306,9 +466,9 @@ const Settings = () => {
                       }`}
                     >
                       <option value="">Select Role</option>
-                      <option value="Student">Student</option>
-                      <option value="Teacher">Teacher</option>
-                      <option value="Administrator">Administrator</option>
+                      <option value="student">Student</option>
+                      <option value="teacher">Teacher</option>
+                      <option value="administrator">Administrator</option>
                     </select>
                   ) : (
                     <input
@@ -324,14 +484,20 @@ const Settings = () => {
                           : isEditing
                           ? 'border-gray-300 bg-white text-gray-900'
                           : 'border-gray-300 bg-gray-100 text-gray-900'
-                      } ${!isEditing && field === 'email' ? 'cursor-not-allowed' : ''}`}
+                      } ${!isEditing || field === 'email' ? 'cursor-not-allowed' : ''}`}
                       readOnly={!isEditing || field === 'email'}
-                      disabled={!isEditing && field === 'email'}
+                      disabled={!isEditing || field === 'email'}
                     />
                   )}
                 </div>
               ))}
             </div>
+            <ProfileDetailsForm
+              formData={formData}
+              handleChange={handleChange}
+              isEditing={isEditing}
+              theme={theme}
+            />
             {isEditing && (
               <div className="mt-4 sm:mt-6 flex justify-end">
                 <button
@@ -350,6 +516,7 @@ const Settings = () => {
           </div>
         )}
       </div>
+      
       {/* Choose Your Theme Section */}
       <div
         className={`rounded-lg p-4 sm:p-5 mb-4 sm:mb-5 shadow-md ${
@@ -370,7 +537,6 @@ const Settings = () => {
               name="theme"
               value="light"
               checked={theme === 'light'}
-              onChange={handleThemeChange}
               className="hidden"
             />
             <div
@@ -394,7 +560,6 @@ const Settings = () => {
               name="theme"
               value="dark"
               checked={theme === 'dark'}
-              onChange={handleThemeChange}
               className="hidden"
             />
             <div
@@ -414,41 +579,100 @@ const Settings = () => {
           </label>
         </div>
       </div>
-      {/* Choose Your Language Section */}
+      
+      {/* Payment History Section */}
       <div
-        className={`rounded-lg p-4 sm:p-5 mb-4 sm:mb-5 shadow-md ${
+        className={`rounded-lg p-6 sm:p-8 shadow-lg ${
           theme === 'dark' ? 'bg-gray-800' : 'bg-white'
         }`}
       >
         <h2
-          className={`text-lg sm:text-xl mb-2 ${
+          className={`text-2xl font-bold mb-6 text-center ${
             theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
           }`}
         >
-          Choose Your Language
+          Payment History
         </h2>
-        <select
-          value={language}
-          onChange={handleLanguageChange}
-          className={`w-full sm:w-auto p-2 border rounded text-sm ${
-            theme === 'dark'
-              ? 'border-gray-600 bg-gray-700 text-gray-100'
-              : 'border-gray-300 bg-white text-gray-900'
-          }`}
-        >
-          <option value="en">English</option>
-          <option value="hi">Hindi</option>
-        </select>
-        <p
-          className={`text-xs sm:text-sm mt-2 ${
-            theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-          }`}
-        >
-          After changing the application language, the application will reload
-        </p>
+        {loading ? (
+          <div className="text-center">
+            <svg
+              className="animate-spin h-8 w-8 mx-auto text-blue-500"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v8h8a8 8 0 01-8 8 8 8 0 01-8-8z"
+              ></path>
+            </svg>
+            <p className="mt-2">Loading payment history...</p>
+          </div>
+        ) : paymentHistory.length === 0 ? (
+          <p className="text-center text-gray-500">No completed payments available.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table
+              className={`w-full text-sm ${
+                theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+              }`}
+            >
+              <thead>
+                <tr
+                  className={`text-left ${
+                    theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'
+                  }`}
+                >
+                  <th className="py-3 px-4 font-semibold">Course</th>
+                  <th className="py-3 px-4 font-semibold">Amount (INR)</th>
+                  <th className="py-3 px-4 font-semibold">Status</th>
+                  <th className="py-3 px-4 font-semibold">Date</th>
+                  <th className="py-3 px-4 font-semibold">Transaction ID</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paymentHistory.map((payment) => (
+                  <tr
+                    key={payment._id}
+                    className={`border-b ${
+                      theme === 'dark' ? 'border-gray-600' : 'border-gray-200'
+                    } hover:${
+                      theme === 'dark' ? 'bg-gray-700' : 'bg-gray-50'
+                    } transition duration-150`}
+                  >
+                    <td className="py-3 px-4">{payment.course?.title || 'N/A'}</td>
+                    <td className="py-3 px-4">{payment.amount?.toFixed(2) || '0.00'}</td>
+                    <td
+                        className={`py-3 px-4 font-medium text-green-500`}
+                    >
+                      {payment.status?.charAt(0).toUpperCase() + payment.status?.slice(1) || 'Unknown'}
+                    </td>
+                    <td className="py-3 px-4">
+                      {payment.paymentDate ? 
+                        new Date(payment.paymentDate).toLocaleString('en-IN', {
+                          dateStyle: 'medium',
+                          timeStyle: 'short',
+                        }) : 'N/A'}
+                    </td>
+                    <td className="py-3 px-4 text-xs">{payment.transactionId || 'N/A'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-export default Settings;
+export default SettingsAndPayment;
