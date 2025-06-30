@@ -33,72 +33,28 @@ const Notification = ({ message, type, onClose }) => {
   );
 };
 
-const ProfileDetailsForm = ({ formData, handleChange, isEditing, theme }) => {
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-      {['education', 'occupation', 'skills', 'interests'].map((field) => (
-        <div key={field}>
-          <label
-            className={`block text-xs sm:text-sm capitalize ${
-              theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-            } mb-1`}
-          >
-            {field
-              .replace('education', 'Education')
-              .replace('occupation', 'Occupation')
-              .replace('interests', 'Interests')
-              .replace('skills', 'Skills')}
-          </label>
-          <input
-            type="text"
-            name={field}
-            value={formData[field]}
-            onChange={handleChange}
-            className={`w-full border rounded-md p-2 text-xs sm:text-sm ${
-              theme === 'dark'
-                ? isEditing
-                  ? 'border-gray-600 bg-gray-800 text-gray-100'
-                  : 'border-gray-600 bg-gray-700 text-gray-100'
-                : isEditing
-                ? 'border-gray-300 bg-white text-gray-900'
-                : 'border-gray-300 bg-gray-100 text-gray-900'
-            } ${!isEditing ? 'cursor-not-allowed' : ''}`}
-            readOnly={!isEditing}
-            disabled={!isEditing}
-            placeholder={field === 'skills' || field === 'interests' ? 'Comma-separated values' : ''}
-          />
-        </div>
-      ))}
-    </div>
-  );
-};
-
 const SettingsAndPayment = () => {
-  const { theme } = useContext(ThemeContext);
+  const { theme, setTheme, language, setLanguage } = useContext(ThemeContext);
   const [student, setStudent] = useState(null);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     phone: '',
     role: '',
-    skills: '',
     email: '',
-    education: '',
-    occupation: '',
-    interests: '',
   });
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [saving, setSaving] = useState(false);
   const [notification, setNotification] = useState({ message: '', type: '' });
   const [isEditing, setIsEditing] = useState(false);
-  const [ setPaymentData] = useState({
+  const [paymentData, setPaymentData] = useState({
     cardNumber: '',
     expiry: '',
     cvv: '',
     amount: '',
   });
-  const [ setProcessing] = useState(false);
+  const [processing, setProcessing] = useState(false);
   const [paymentHistory, setPaymentHistory] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -130,18 +86,14 @@ const SettingsAndPayment = () => {
           lastName: data.lastName || '',
           phone: data.phone || '',
           role: data.role || '',
-          skills: Array.isArray(data.skills) ? data.skills.join(', ') : data.skills || '',
           email: data.email || '',
-          education: data.education || '',
-          occupation: data.occupation || '',
-          interests: Array.isArray(data.interests) ? data.interests.join(', ') : data.interests || '',
         });
         setAvatarPreview(data.avatar || null);
       } catch (err) {
         console.error('Error fetching profile:', err);
         if (err.response?.status === 401) {
           setNotification({ message: 'Session expired. Please log in again.', type: 'error' });
-          localStorage.removeItem('Token');
+          localStorage.removeItem('token');
         } else {
           setNotification({
             message: err.response?.data?.message || 'Unable to retrieve profile data. Please try again later.',
@@ -163,6 +115,7 @@ const SettingsAndPayment = () => {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (response.data.success) {
+          // Filter only completed payments
           const completedPayments = response.data.data.filter(payment => payment.status === 'completed');
           setPaymentHistory(completedPayments);
         } else {
@@ -211,80 +164,27 @@ const SettingsAndPayment = () => {
       setSaving(false);
       return;
     }
-
-    // Validate required fields
-    if (!formData.firstName || !formData.lastName || !formData.email) {
-      setNotification({ message: 'First Name, Last Name, and Email are required.', type: 'error' });
-      setSaving(false);
-      return;
-    }
-
     try {
-      let res;
-      const payloadData = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        phone: formData.phone,
-        email: formData.email,
-        role: formData.role,
-        skills: formData.skills ? formData.skills.split(',').map(item => item.trim()).filter(item => item) : [],
-        education: formData.education,
-        occupation: formData.occupation,
-        interests: formData.interests ? formData.interests.split(',').map(item => item.trim()).filter(item => item) : [],
-      };
-
-      if (avatarFile) {
-        const formDataPayload = new FormData();
-        Object.entries(payloadData).forEach(([key, value]) => {
-          if (key === 'skills' || key === 'interests') {
-            value.forEach((item, index) => {
-              formDataPayload.append(`${key}[${index}]`, item);
-            });
-          } else {
-            formDataPayload.append(key, value);
-          }
-        });
-        formDataPayload.append('avatar', avatarFile);
-        res = await axios.put('https://lms-backend-flwq.onrender.com/api/v1/auth/updatedetails', formDataPayload, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data',
-          },
-        });
-      } else {
-        res = await axios.put('https://lms-backend-flwq.onrender.com/api/v1/auth/updatedetails', payloadData, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-      }
-
+      const payload = new FormData();
+      Object.keys(formData).forEach((key) => payload.append(key, formData[key]));
+      if (avatarFile) payload.append('avatar', avatarFile);
+      const res = await axios.put('https://lms-backend-flwq.onrender.com/api/v1/auth/updatedetails', payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      });
       const updatedData = res.data.data;
       setStudent((prev) => ({
         ...prev,
-        ...updatedData,
-        skills: Array.isArray(updatedData.skills) ? updatedData.skills : [],
-        interests: Array.isArray(updatedData.interests) ? updatedData.interests : [],
-      }));
-      setFormData({
         ...formData,
-        firstName: updatedData.firstName || '',
-        lastName: updatedData.lastName || '',
-        phone: updatedData.phone || '',
-        email: updatedData.email || '',
-        role: updatedData.role || '',
-        skills: Array.isArray(updatedData.skills) ? updatedData.skills.join(', ') : updatedData.skills || '',
-        education: updatedData.education || '',
-        occupation: updatedData.occupation || '',
-        interests: Array.isArray(updatedData.interests) ? updatedData.interests.join(', ') : updatedData.interests || '',
-      });
+        avatar: updatedData.avatar || prev.avatar,
+      }));
       setNotification({ message: 'Your profile has been updated successfully.', type: 'success' });
       setAvatarFile(null);
       setAvatarPreview(updatedData.avatar || avatarPreview);
       setIsEditing(false);
     } catch (err) {
-      console.error('Error updating profile:', err);
       setNotification({
         message: `Failed to update profile: ${err.response?.data?.message || 'An error occurred. Please try again.'}`,
         type: 'error',
@@ -301,7 +201,16 @@ const SettingsAndPayment = () => {
     if (!isEditing) setAvatarPreview(student?.avatar || null);
   };
 
-  const Payment = async (e) => {
+  const handleLanguageChange = (e) => {
+    setLanguage(e.target.value);
+    alert(`Application will reload after switching to ${e.target.value === 'en' ? 'English' : 'Hindi'}`);
+  };
+
+  const handleThemeChange = (e) => {
+    setTheme(e.target.value);
+  };
+
+  const handlePayment = async (e) => {
     e.preventDefault();
     setProcessing(true);
     setNotification({ message: '', type: '' });
@@ -312,14 +221,17 @@ const SettingsAndPayment = () => {
         return;
       }
       
+      // Simulated payment API call
       await new Promise((resolve) => setTimeout(resolve, 2000));
       setNotification({ message: 'Payment processed successfully!', type: 'success' });
       setPaymentData({ cardNumber: '', expiry: '', cvv: '', amount: '' });
       
+      // Refresh payment history after successful payment
       const response = await axios.get('https://lms-backend-flwq.onrender.com/api/v1/payments/my-payments', {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (response.data.success) {
+        // Filter only completed payments
         const completedPayments = response.data.data.filter(payment => payment.status === 'completed');
         setPaymentHistory(completedPayments);
       }
@@ -437,12 +349,12 @@ const SettingsAndPayment = () => {
                     theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
                   }`}
                 >
-                  Last updated: {new Date(student.updatedAt).toLocaleDateString('en-IN')}
+                  1 month ago
                 </p>
               </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              {['firstName', 'lastName', 'phone', 'role', 'email'].map((field) => (
+            <div className="grid grid-cols-1 gap-3 sm:gap-4">
+              {['firstName', 'lastName', 'phone', 'role',  'email'].map((field) => (
                 <div key={field}>
                   <label
                     className={`block text-xs sm:text-sm capitalize ${
@@ -466,9 +378,9 @@ const SettingsAndPayment = () => {
                       }`}
                     >
                       <option value="">Select Role</option>
-                      <option value="student">Student</option>
-                      <option value="teacher">Teacher</option>
-                      <option value="administrator">Administrator</option>
+                      <option value="Student">Student</option>
+                      <option value="Teacher">Teacher</option>
+                      <option value="Administrator">Administrator</option>
                     </select>
                   ) : (
                     <input
@@ -484,20 +396,14 @@ const SettingsAndPayment = () => {
                           : isEditing
                           ? 'border-gray-300 bg-white text-gray-900'
                           : 'border-gray-300 bg-gray-100 text-gray-900'
-                      } ${!isEditing || field === 'email' ? 'cursor-not-allowed' : ''}`}
+                      } ${!isEditing && field === 'email' ? 'cursor-not-allowed' : ''}`}
                       readOnly={!isEditing || field === 'email'}
-                      disabled={!isEditing || field === 'email'}
+                      disabled={!isEditing && field === 'email'}
                     />
                   )}
                 </div>
               ))}
             </div>
-            <ProfileDetailsForm
-              formData={formData}
-              handleChange={handleChange}
-              isEditing={isEditing}
-              theme={theme}
-            />
             {isEditing && (
               <div className="mt-4 sm:mt-6 flex justify-end">
                 <button
@@ -535,14 +441,15 @@ const SettingsAndPayment = () => {
             <input
               type="radio"
               name="theme"
-              value="light"
+              value="ograft"
               checked={theme === 'light'}
+              onChange={handleThemeChange}
               className="hidden"
             />
             <div
               className={`w-full sm:w-48 h-12 sm:h-16 border rounded ${
                 theme === 'dark'
-                  ? 'border-gray-600 bg-white'
+                  ? 'border-gray6-600 bg-white'
                   : 'border-gray-300 bg-white'
               } ${theme === 'light' ? 'ring-2 ring-blue-500' : ''}`}
             ></div>
@@ -560,6 +467,7 @@ const SettingsAndPayment = () => {
               name="theme"
               value="dark"
               checked={theme === 'dark'}
+              onChange={handleThemeChange}
               className="hidden"
             />
             <div
@@ -579,6 +487,9 @@ const SettingsAndPayment = () => {
           </label>
         </div>
       </div>
+      
+      {/* Choose Your Language Section */}
+     
       
       {/* Payment History Section */}
       <div
@@ -652,7 +563,7 @@ const SettingsAndPayment = () => {
                     <td className="py-3 px-4">{payment.course?.title || 'N/A'}</td>
                     <td className="py-3 px-4">{payment.amount?.toFixed(2) || '0.00'}</td>
                     <td
-                        className={`py-3 px-4 font-medium text-green-500`}
+                      className={`py-3 px-4 font-medium text-green-500`}
                     >
                       {payment.status?.charAt(0).toUpperCase() + payment.status?.slice(1) || 'Unknown'}
                     </td>
