@@ -5,7 +5,7 @@ import { Bell, Grid, Heart, Home, MessageSquare, Settings, Star } from 'lucide-r
 import { RiMedalLine } from 'react-icons/ri';
 import { FaSignOutAlt } from 'react-icons/fa';
 
-const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, toggleSidebar, setSidebarWidth, sidebarWidth }) => {
+const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, setIsSidebarOpen, toggleSidebar, setSidebarWidth, sidebarWidth }) => {
   const { theme, setTheme } = useContext(ThemeContext);
   const navigate = useNavigate();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -162,11 +162,11 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, toggle
     try {
       if (itemName === 'home') {
         navigate('/');
-        setIsSidebarOpen(false);
+        setIsSidebarOpen(false); // Use the prop
       } else {
         if (typeof setActivePage === 'function') {
           setActivePage(itemName);
-          setIsSidebarOpen(false);
+          setIsSidebarOpen(false); // Use the prop
         } else {
           console.error('setActivePage is not a function');
         }
@@ -236,7 +236,7 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, toggle
         className={`p-4 shadow-md flex items-center justify-between transition-colors duration-300 ${
           theme === 'dark' ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-800'
         }`}
-        style={{ marginLeft: window.innerWidth >= 768 ? sidebarWidth : '0px' }} // Apply margin only on desktop
+        style={{ marginLeft: window.innerWidth >= 768 ? sidebarWidth : '0px' }}
       >
         <div className="flex items-center space-x-4">
           <button
