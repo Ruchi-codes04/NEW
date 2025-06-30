@@ -50,6 +50,7 @@ const AllCourses = () => {
     level: { beginner: false, intermediate: false, advanced: false },
     duration: { short: false, medium: false, long: false },
     rating: { high: false, good: false, average: false },
+     language: { english: false, hindi: false, other: false },
   });
 
   // Fetch courses from API
@@ -73,6 +74,7 @@ const AllCourses = () => {
             price: course.price === 0 ? 'Free' : `₹${course.price}`,
             originalPrice: course.discountPrice ? `₹${course.discountPrice}` : null,
             image: course.thumbnail,
+            language: course.language || 'english',
           }));
           setCourses(transformedCourses);
         } else {
@@ -200,6 +202,7 @@ const AllCourses = () => {
       level: { beginner: false, intermediate: false, advanced: false },
       duration: { short: false, medium: false, long: false },
       rating: { high: false, good: false, average: false },
+         language: { english: false, hindi: false, other: false },
     });
   };
 
@@ -244,6 +247,20 @@ const AllCourses = () => {
     );
   };
 
+  const matchesLanguageFilter = course => {
+  const { english, hindi, other } = filters.language;
+  if (!english && !hindi && !other) return true;
+  
+  // Assuming course.language exists and contains the language info
+  const courseLanguage = course.language?.toLowerCase() || '';
+  
+  return (
+    (english && courseLanguage.includes('english')) ||
+    (hindi && courseLanguage.includes('hindi')) ||
+    (other && !['english', 'hindi'].includes(courseLanguage))
+  );
+};
+
   const categories = [
     { id: 'all', name: 'All Courses' },
     ...[...new Set(courses.map(course => course.category))].map(cat => ({
@@ -272,7 +289,9 @@ const AllCourses = () => {
     const matchesLevel = matchesLevelFilter(course);
     const matchesDuration = matchesDurationFilter(course);
     const matchesRating = matchesRatingFilter(course);
-    return matchesCategory && matchesSearchQuery && matchesPrice && matchesLevel && matchesDuration && matchesRating;
+    const matchesLanguage = matchesLanguageFilter(course);
+    return matchesCategory && matchesSearchQuery && matchesPrice && matchesLevel && matchesDuration && matchesRating &&
+    matchesLanguage;
   });
 
   const totalPages = Math.ceil(filteredCourses.length / coursesPerPage);

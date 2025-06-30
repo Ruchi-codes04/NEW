@@ -14,6 +14,9 @@ const DesktopFilters = ({ filters, handleFilterChange, clearAllFilters }) => (
         </button>
       </div>
       <div className="space-y-6">
+       
+
+        {/* Price Filter */}
         <div>
           <h3 className="font-medium text-gray-900 mb-2">Price</h3>
           <div className="space-y-2">
@@ -37,6 +40,8 @@ const DesktopFilters = ({ filters, handleFilterChange, clearAllFilters }) => (
             </label>
           </div>
         </div>
+
+        {/* Level filters  */}
         <div>
           <h3 className="font-medium text-gray-900 mb-2">Level</h3>
           <div className="space-y-2">
@@ -69,6 +74,41 @@ const DesktopFilters = ({ filters, handleFilterChange, clearAllFilters }) => (
             </label>
           </div>
         </div>
+         {/* Language Filter Section */}
+        <div>
+          <h3 className="font-medium text-gray-900 mb-2">Language</h3>
+          <div className="space-y-2">
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                className="rounded text-teal-600 focus:ring-teal-500"
+                checked={filters.language?.english || false}
+                onChange={() => handleFilterChange('language', 'english')}
+              />
+              <span className="ml-2 text-gray-700">English</span>
+            </label>
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                className="rounded text-teal-600 focus:ring-teal-500"
+                checked={filters.language?.hindi || false}
+                onChange={() => handleFilterChange('language', 'hindi')}
+              />
+              <span className="ml-2 text-gray-700">Hindi</span>
+            </label>
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                className="rounded text-teal-600 focus:ring-teal-500"
+                checked={filters.language?.other || false}
+                onChange={() => handleFilterChange('language', 'other')}
+              />
+              <span className="ml-2 text-gray-700">Other</span>
+            </label>
+          </div>
+        </div>
+
+        {/* Duration Filter */}
         <div>
           <h3 className="font-medium text-gray-900 mb-2">Duration</h3>
           <div className="space-y-2">
@@ -101,6 +141,8 @@ const DesktopFilters = ({ filters, handleFilterChange, clearAllFilters }) => (
             </label>
           </div>
         </div>
+
+        {/* Rating filters */}
         <div>
           <h3 className="font-medium text-gray-900 mb-2">Rating</h3>
           <div className="space-y-2">
