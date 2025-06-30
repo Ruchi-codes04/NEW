@@ -41,7 +41,7 @@ const Settings = () => {
     lastName: '',
     phone: '',
     role: '',
-    skills: '',
+    // skills: '',
     email: '',
   });
   const [avatarFile, setAvatarFile] = useState(null);
@@ -78,7 +78,7 @@ const Settings = () => {
           lastName: data.lastName || '',
           phone: data.phone || '',
           role: data.role || '',
-          skills: data.skills || '',
+          // skills: data.skills || '',
           email: data.email || '',
         });
         setAvatarPreview(data.avatar || null);
@@ -282,7 +282,7 @@ const Settings = () => {
               </div>
             </div>
             <div className="grid grid-cols-1 gap-3 sm:gap-4">
-              {['firstName', 'lastName', 'phone', 'role', 'skills', 'email'].map((field) => (
+              {['firstName', 'lastName', 'phone', 'role', 'email'].map((field) => (
                 <div key={field}>
                   <label
                     className={`block text-xs sm:text-sm capitalize ${
