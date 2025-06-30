@@ -1,5 +1,6 @@
 import { FaStar, FaRegClock, FaUserGraduate, FaBookmark } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
+import DefaultImageCourse from '../../../assets/DefaultImageCourse.webp'; 
 
 // Course Grid Component
 const CourseGrid = ({ currentCourses, coursesScrollRef, searchQuery, setSearchQuery, bookmarkedCourses, handleBookmark }) => {
@@ -51,10 +52,14 @@ const CourseGrid = ({ currentCourses, coursesScrollRef, searchQuery, setSearchQu
                     <FaBookmark />
                   </button>
                   <img
-                    src={course.image}
-                    alt={course.title}
-                    className="absolute h-full w-full object-cover"
-                  />
+    src={course.image || DefaultImageCourse}
+    alt={course.title}
+    className="absolute h-full w-full object-cover"
+    onError={(e) => {
+      e.target.src = DefaultImageCourse;
+      e.target.onerror = null;
+    }}
+  />
                 </div>
                 <div className="p-5">
                   <h3 className="font-bold text-gray-900 text-lg mb-2 line-clamp-2">{course.title}</h3>
