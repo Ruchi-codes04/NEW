@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { motion } from 'framer-motion';
+import DefaultImageCourse from '../../assets/DefaultImageCourse.webp'; 
+const DEFAULT_AVATAR = 'https://res.cloudinary.com/dcgilmdbm/image/upload/v1747893719/default_avatar_xpw8jv.jpg';
 import {
   FaStar,
   FaRegClock,
@@ -147,7 +149,7 @@ const ViewCourse = () => {
             price: courseData.discountPrice ? `₹${courseData.discountPrice}` : courseData.price === 0 ? 'Free' : `₹${courseData.price}`,
             originalPrice: courseData.discountPrice && courseData.price !== 0 ? `₹${courseData.price}` : null,
             image: courseData.thumbnail,
-            thumbnail: courseData.thumbnail || 'https://images.unsplash.com/photo-1516321310762-479e78c73e13?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+            thumbnail: courseData.thumbnail || DefaultImageCourse,
             videoUrl: courseData.videoUrl || 'https://www.youtube.com/embed/dQw4w9WgXcQ',
             language: courseData.language || 'English',
             subtitles: courseData.subtitles || ['English', 'Hindi'],
@@ -636,25 +638,28 @@ const ViewCourse = () => {
             >
               <div className="bg-white rounded-lg shadow-lg overflow-hidden sticky top-4">
                 {/* Thumbnail Display */}
-                <div>
-                  {course.thumbnail && isValidThumbnailUrl(course.thumbnail) ? (
-                    <img
-                      src={course.thumbnail}
-                      alt={course.title}
-                      className="w-full h-60 object-cover"
-                      onError={(e) => {
-                        e.target.src = 'https://images.unsplash.com/photo-1516321310762-479e78c73e13?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80';
-                        console.error('Thumbnail load error for URL:', course.thumbnail);
-                        setEnrollError('Failed to load thumbnail image');
-                        setTimeout(() => setEnrollError(null), 3000);
-                      }}
-                    />
-                  ) : (
-                    <div className="w-full h-60 flex items-center justify-center bg-gray-100">
-                      <p className="text-gray-600 text-center">Thumbnail image unavailable</p>
-                    </div>
-                  )}
-                </div>
+<div className="w-full h-60 relative">
+  {course.thumbnail && isValidThumbnailUrl(course.thumbnail) ? (
+    <img
+      src={course.thumbnail}
+      alt={course.title}
+      className="w-full h-full object-cover"
+      onError={(e) => {
+        e.target.src = DefaultImageCourse;
+        e.target.onerror = null;
+        console.error('Thumbnail load error for URL:', course.thumbnail);
+      }}
+    />
+  ) : (
+    <div className="w-full h-full flex items-center justify-center bg-gray-100">
+      <img 
+        src={DefaultImageCourse} 
+        alt="Default course thumbnail" 
+        className="w-full h-full object-cover"
+      />
+    </div>
+  )}
+</div>
 
                 {/* Pricing and Enrollment */}
                 <div className="p-5">

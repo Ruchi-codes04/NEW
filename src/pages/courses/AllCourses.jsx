@@ -15,7 +15,7 @@ import MobileFilters from './AllCoursesComponents/MobileFilters';
 import Notification from './AllCoursesComponents/Notification';
 import Pagination from './AllCoursesComponents/Pagination';
 import StatsSection from './AllCoursesComponents/StatsSection';
-
+import DefaultImageCourse from '../../assets/DefaultImageCourse.webp';
 const API_BASE_URL = 'https://new-lms-backend-vmgr.onrender.com';
 
 const scrollbarHideStyles = `
@@ -74,7 +74,7 @@ const AllCourses = () => {
             category: course.category.toLowerCase(),
             originalPrice: course.price === 0 ? 'Free' : `₹${course.price}`,
             price: course.discountPrice ? `₹${course.discountPrice}` : null,
-            image: course.thumbnail,
+            image: course.thumbnail || DefaultImageCourse,
             language: course.language || 'english',
           }));
           setCourses(transformedCourses);

@@ -63,55 +63,54 @@ const TrendingCourses = () => {
   };
 
   const handleBookmark = async (courseId, e) => {
-  e.preventDefault();
-  e.stopPropagation();
+    e.preventDefault();
+    e.stopPropagation();
 
-  try {
-    const token = localStorage.getItem('Token');
-    if (!token) {
-      setNotification({ message: 'Please log in to bookmark courses', type: 'error' });
-      setTimeout(() => navigate('/'), 2000); // Delay navigation to show notification
-      return;
-    }
-
-    console.log('bookmarkedCourses:', bookmarkedCourses); // Debug state
-    const isBookmarked = bookmarkedCourses.includes(courseId);
-
-    const response = await axios.patch(
-      `https://new-lms-backend-vmgr.onrender.com/api/v1/students/courses/${courseId}/bookmark`,
-      { bookmarked: !isBookmarked }, // Include payload if required by backend
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
+    try {
+      const token = localStorage.getItem('Token');
+      if (!token) {
+        setNotification({ message: 'Please log in to bookmark courses', type: 'error' });
+        setTimeout(() => navigate('/'), 2000);
+        return;
       }
-    );
 
-    console.log('Bookmark response:', response.data); // Debug response
+      console.log('bookmarkedCourses:', bookmarkedCourses);
+      const isBookmarked = bookmarkedCourses.includes(courseId);
 
-    // Handle different response structures
-    const success = response.data.success || response.data.data?.success || response.data.status === 'success';
-    if (!success) {
-      throw new Error('Bookmark update failed. Unexpected response structure.');
+      const response = await axios.patch(
+        `https://new-lms-backend-vmgr.onrender.com/api/v1/students/courses/${courseId}/bookmark`,
+        { bookmarked: !isBookmarked },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      console.log('Bookmark response:', response.data);
+
+      const success = response.data.success || response.data.data?.success || response.data.status === 'success';
+      if (!success) {
+        throw new Error('Bookmark update failed. Unexpected response structure.');
+      }
+
+      setNotification({
+        message: isBookmarked ? 'Removed from bookmarks' : 'Added to bookmarks',
+        type: 'success',
+      });
+
+      if (isBookmarked) {
+        setBookmarkedCourses(bookmarkedCourses.filter(id => id !== courseId));
+      } else {
+        setBookmarkedCourses([...bookmarkedCourses, courseId]);
+      }
+    } catch (err) {
+      console.error('Bookmark Error:', err);
+      const errorMsg = err.response?.data?.message || 'Failed to update bookmark. Please try again.';
+      setNotification({ message: errorMsg, type: 'error' });
     }
-
-    setNotification({
-      message: isBookmarked ? 'Removed from bookmarks' : 'Added to bookmarks',
-      type: 'success',
-    });
-
-    if (isBookmarked) {
-      setBookmarkedCourses(bookmarkedCourses.filter(id => id !== courseId));
-    } else {
-      setBookmarkedCourses([...bookmarkedCourses, courseId]);
-    }
-  } catch (err) {
-    console.error('Bookmark Error:', err);
-    const errorMsg = err.response?.data?.message || 'Failed to update bookmark. Please try again.';
-    setNotification({ message: errorMsg, type: 'error' });
-  }
-};
+  };
 
   // Close modal on Escape key
   useEffect(() => {
@@ -223,9 +222,9 @@ const TrendingCourses = () => {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
             <span className="font-bold text-gray-900 text-lg">
-              ₹{course.discountPrice || course.price}
+              ₹{course.discountPrice && course.discountPrice > 0 ? course.price - course.discountPrice : course.price}
             </span>
-            {course.discountPrice && (
+            {course.discountPrice && course.discountPrice > 0 && (
               <span className="text-gray-500 text-sm line-through">
                 ₹{course.price}
               </span>
@@ -245,7 +244,7 @@ const TrendingCourses = () => {
   return (
     <section className="py-12 sm:py-16 lg:py-20 bg-white">
       {notification.message && (
-        <div className={`fixed top-4 right-4 p-4 rounded-md shadow-lg text-white z-50 ${
+        <div className={`fixed top-4 right-4 p-4 rounded-md shadow-lg text-white z-60 ${
           notification.type === 'error' ? 'bg-red-500' : 'bg-green-500'
         }`}>
           <div className="flex items-center justify-between">
