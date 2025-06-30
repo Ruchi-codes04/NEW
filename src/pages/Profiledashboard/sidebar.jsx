@@ -65,6 +65,8 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, setIsS
       const data = await response.json();
       if (data.success) {
         const unreadNotifications = data.data.filter(notification => !notification.isRead);
+        // Log notifications for debugging
+        console.log('Fetched notifications:', unreadNotifications);
         setNotifications(unreadNotifications);
         setNotificationCount(unreadNotifications.length);
         setError(null);
@@ -144,12 +146,12 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, setIsS
   const toggleThemeHandler = () => {
     console.log('Toggling theme from:', theme);
     setTheme(theme === 'light' ? 'dark' : 'light');
-    setIsUserMenuOpen(false); // Close user menu on theme toggle
+    setIsUserMenuOpen(false);
   };
 
   const togglePopup = () => {
     setIsPopupOpen(!isPopupOpen);
-    setIsUserMenuOpen(false); // Close user menu when opening notifications
+    setIsUserMenuOpen(false);
   };
 
   const handleRetry = () => {
@@ -164,10 +166,9 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, setIsS
 
   const handleLogout = () => {
     localStorage.removeItem('Token');
-    
     navigate('/');
     window.location.reload();
-    setIsUserMenuOpen(false); // Close user menu on logout
+    setIsUserMenuOpen(false);
   };
 
   const handleMenuClick = (itemName) => {
@@ -190,7 +191,12 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, setIsS
 
   const toggleUserMenu = () => {
     setIsUserMenuOpen(!isUserMenuOpen);
-    setIsPopupOpen(false); // Close notifications popup when opening user menu
+    setIsPopupOpen(false);
+  };
+
+  // Optional: Validate ObjectId format
+  const isValidObjectId = (id) => {
+    return /^[0-9a-fA-F]{24}$/.test(id);
   };
 
   return (
@@ -241,7 +247,6 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, setIsS
         </div>
       </div>
 
-      {/* Overlay for mobile when sidebar is open */}
       {isSidebarOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
@@ -273,7 +278,6 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, setIsS
           </div>
         </div>
         <div className="flex items-center space-x-4">
-          {/* Show icons on medium and larger screens */}
           <div className="hidden md:flex items-center space-x-4">
             <button
               className="p-2"
@@ -319,7 +323,6 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, setIsS
               {initials}
             </button>
           </div>
-          {/* User profile logo for small screens */}
           <div className="md:hidden relative">
             <button
               className={`p-2 text-white rounded-full w-8 h-8 flex items-center justify-center ${
@@ -348,7 +351,7 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, setIsS
                       viewBox="0 0 24 24"
                       style={{ color: theme === 'dark' ? '#FFD700' : 'currentColor' }}
                     >
-                      <no-stroke
+                      <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth="2"
@@ -435,7 +438,7 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, setIsS
                     <p className={`text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
                       {new Date(notification.createdAt).toLocaleString()}
                     </p>
-                    {notification.actionUrl && (
+                    {notification.actionUrl && notification.relatedEntity && isValidObjectId(notification.relatedEntity._id) ? (
                       <Link
                         to={`/courses/${notification.relatedEntity._id}`}
                         className={`text-xs ${theme === 'dark' ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-500'} hover:underline mt-1 block`}
@@ -444,10 +447,16 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, setIsS
                           markAsRead(notification._id);
                           setActivePage('courseplayer');
                         }}
-                        aria-label={`View course: ${notification.relatedEntity.title}`}
+                        aria-label={`View course: ${notification.relatedEntity.title || 'Course'}`}
                       >
                         View Course
                       </Link>
+                    ) : (
+                      notification.actionUrl && (
+                        <p className={`text-xs ${theme === 'dark' ? 'text-red-400' : 'text-red-600'}`}>
+                          Invalid course ID
+                        </p>
+                      )
                     )}
                   </div>
                 ))
