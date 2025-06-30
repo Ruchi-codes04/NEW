@@ -34,7 +34,7 @@ const Notification = ({ message, type, onClose }) => {
 };
 
 const SettingsAndPayment = () => {
-  const { theme, setTheme, language, setLanguage } = useContext(ThemeContext);
+  const { theme, setTheme,  setLanguage } = useContext(ThemeContext);
   const [student, setStudent] = useState(null);
   const [formData, setFormData] = useState({
     firstName: '',
@@ -203,7 +203,7 @@ const SettingsAndPayment = () => {
     if (!isEditing) setAvatarPreview(student?.avatar || null);
   };
 
-  const handleLanguageChange = (e) => {
+  const LanguageChange = (e) => {
     setLanguage(e.target.value);
     alert(`Application will reload after switching to ${e.target.value === 'en' ? 'English' : 'Hindi'}`);
   };

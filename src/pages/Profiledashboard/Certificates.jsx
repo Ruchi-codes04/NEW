@@ -16,7 +16,7 @@ const Certificates = () => {
   useEffect(() => {
     const fetchCertificates = async () => {
       try {
-        const token = localStorage.getItem('Token'); // Use 'Token' as specified
+        const token = localStorage.getItem('Token');
         if (!token) {
           setError('Please log in to view certificates');
           navigate('/login');
@@ -40,7 +40,7 @@ const Certificates = () => {
       } catch (err) {
         if (err.response?.status === 401) {
           setError('Unauthorized: Invalid or expired token. Please log in again.');
-          localStorage.removeItem('Token'); // Clear invalid token
+          localStorage.removeItem('Token');
           navigate('/login');
         } else {
           setError(`Error fetching certificates: ${err.message}`);
@@ -54,10 +54,10 @@ const Certificates = () => {
   }, [navigate]);
 
   // Fetch single certificate by ID
-  const fetchCertificateById = async (certificateId) => {
+  const CertificateById = async (certificateId) => {
     try {
       setModalError(null);
-      const token = localStorage.getItem('Token'); // Use 'Token' as specified
+      const token = localStorage.getItem('Token');
       if (!token) {
         setModalError('Please log in to view certificate details');
         navigate('/login');
@@ -81,7 +81,7 @@ const Certificates = () => {
     } catch (err) {
       if (err.response?.status === 401) {
         setModalError('Unauthorized: Invalid or expired token. Please log in again.');
-        localStorage.removeItem('Token'); // Clear invalid token
+        localStorage.removeItem('Token');
         navigate('/login');
       } else {
         setModalError(`Error fetching certificate details: ${err.message}`);
@@ -211,23 +211,17 @@ const Certificates = () => {
                   })}
                 </td>
                 <td className="py-2">
-                  <span
-                    onClick={() => fetchCertificateById(certificate._id)}
-                    className={`cursor-pointer ${
-                      theme === 'dark' ? 'text-blue-400' : 'text-blue-500'
-                    }`}
-                  >
-                    👁️
-                  </span>
                   <a
                     href={certificate.pdfUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`cursor-pointer ml-2 ${
-                      theme === 'dark' ? 'text-blue-400' : 'text-blue-500'
+                    className={`px-3 py-1 rounded text-sm ${
+                      theme === 'dark'
+                        ? 'bg-blue-600 text-white hover:bg-blue-500'
+                        : 'bg-blue-500 text-white hover:bg-blue-600'
                     }`}
                   >
-                    ⬆️
+                    Download
                   </a>
                 </td>
               </tr>
