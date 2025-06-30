@@ -80,6 +80,7 @@ const SettingsAndPayment = () => {
     firstName: '',
     lastName: '',
     phone: '',
+    role: '',
     skills: '',
     email: '',
     education: '',
@@ -91,13 +92,13 @@ const SettingsAndPayment = () => {
   const [saving, setSaving] = useState(false);
   const [notification, setNotification] = useState({ message: '', type: '' });
   const [isEditing, setIsEditing] = useState(false);
-  const [paymentData, setPaymentData] = useState({
+  const [ setPaymentData] = useState({
     cardNumber: '',
     expiry: '',
     cvv: '',
     amount: '',
   });
-  const [processing, setProcessing] = useState(false);
+  const [ setProcessing] = useState(false);
   const [paymentHistory, setPaymentHistory] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -128,6 +129,7 @@ const SettingsAndPayment = () => {
           firstName: data.firstName || '',
           lastName: data.lastName || '',
           phone: data.phone || '',
+          role: data.role || '',
           skills: Array.isArray(data.skills) ? data.skills.join(', ') : data.skills || '',
           email: data.email || '',
           education: data.education || '',
@@ -146,8 +148,6 @@ const SettingsAndPayment = () => {
             type: 'error',
           });
         }
-      } finally {
-        setLoading(false);
       }
     };
     fetchProfile();
@@ -226,6 +226,7 @@ const SettingsAndPayment = () => {
         lastName: formData.lastName,
         phone: formData.phone,
         email: formData.email,
+        role: formData.role,
         skills: formData.skills ? formData.skills.split(',').map(item => item.trim()).filter(item => item) : [],
         education: formData.education,
         occupation: formData.occupation,
@@ -244,14 +245,14 @@ const SettingsAndPayment = () => {
           }
         });
         formDataPayload.append('avatar', avatarFile);
-        res = await axios.put('https://lms-backend-flwq.onrender.com/api/v1/students/profile', formDataPayload, {
+        res = await axios.put('https://lms-backend-flwq.onrender.com/api/v1/auth/updatedetails', formDataPayload, {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'multipart/form-data',
           },
         });
       } else {
-        res = await axios.put('https://lms-backend-flwq.onrender.com/api/v1/students/profile', payloadData, {
+        res = await axios.put('https://lms-backend-flwq.onrender.com/api/v1/auth/updatedetails', payloadData, {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
@@ -272,6 +273,7 @@ const SettingsAndPayment = () => {
         lastName: updatedData.lastName || '',
         phone: updatedData.phone || '',
         email: updatedData.email || '',
+        role: updatedData.role || '',
         skills: Array.isArray(updatedData.skills) ? updatedData.skills.join(', ') : updatedData.skills || '',
         education: updatedData.education || '',
         occupation: updatedData.occupation || '',
@@ -299,7 +301,7 @@ const SettingsAndPayment = () => {
     if (!isEditing) setAvatarPreview(student?.avatar || null);
   };
 
-  const handlePayment = async (e) => {
+  const Payment = async (e) => {
     e.preventDefault();
     setProcessing(true);
     setNotification({ message: '', type: '' });
@@ -440,7 +442,7 @@ const SettingsAndPayment = () => {
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              {['firstName', 'lastName', 'phone', 'email'].map((field) => (
+              {['firstName', 'lastName', 'phone', 'role', 'email'].map((field) => (
                 <div key={field}>
                   <label
                     className={`block text-xs sm:text-sm capitalize ${
@@ -452,23 +454,41 @@ const SettingsAndPayment = () => {
                       .replace('firstName', 'First Name')
                       .replace('lastName', 'Last Name')}
                   </label>
-                  <input
-                    type={field === 'email' ? 'email' : field === 'phone' ? 'tel' : 'text'}
-                    name={field}
-                    value={formData[field]}
-                    onChange={handleChange}
-                    className={`w-full border rounded-md p-2 text-xs sm:text-sm ${
-                      theme === 'dark'
-                        ? isEditing
+                  {field === 'role' && isEditing ? (
+                    <select
+                      name="role"
+                      value={formData.role}
+                      onChange={handleChange}
+                      className={`w-full border rounded-md p-2 text-xs sm:text-sm ${
+                        theme === 'dark'
                           ? 'border-gray-600 bg-gray-800 text-gray-100'
-                          : 'border-gray-600 bg-gray-700 text-gray-100'
-                        : isEditing
-                        ? 'border-gray-300 bg-white text-gray-900'
-                        : 'border-gray-300 bg-gray-100 text-gray-900'
-                    } ${!isEditing || field === 'email' ? 'cursor-not-allowed' : ''}`}
-                    readOnly={!isEditing || field === 'email'}
-                    disabled={!isEditing || field === 'email'}
-                  />
+                          : 'border-gray-300 bg-white text-gray-900'
+                      }`}
+                    >
+                      <option value="">Select Role</option>
+                      <option value="student">Student</option>
+                      <option value="teacher">Teacher</option>
+                      <option value="administrator">Administrator</option>
+                    </select>
+                  ) : (
+                    <input
+                      type={field === 'email' ? 'email' : field === 'phone' ? 'tel' : 'text'}
+                      name={field}
+                      value={formData[field]}
+                      onChange={handleChange}
+                      className={`w-full border rounded-md p-2 text-xs sm:text-sm ${
+                        theme === 'dark'
+                          ? isEditing
+                            ? 'border-gray-600 bg-gray-800 text-gray-100'
+                            : 'border-gray-600 bg-gray-700 text-gray-100'
+                          : isEditing
+                          ? 'border-gray-300 bg-white text-gray-900'
+                          : 'border-gray-300 bg-gray-100 text-gray-900'
+                      } ${!isEditing || field === 'email' ? 'cursor-not-allowed' : ''}`}
+                      readOnly={!isEditing || field === 'email'}
+                      disabled={!isEditing || field === 'email'}
+                    />
+                  )}
                 </div>
               ))}
             </div>
@@ -632,7 +652,7 @@ const SettingsAndPayment = () => {
                     <td className="py-3 px-4">{payment.course?.title || 'N/A'}</td>
                     <td className="py-3 px-4">{payment.amount?.toFixed(2) || '0.00'}</td>
                     <td
-                      className={`py-3 px-4 font-medium text-green-500`}
+                        className={`py-3 px-4 font-medium text-green-500`}
                     >
                       {payment.status?.charAt(0).toUpperCase() + payment.status?.slice(1) || 'Unknown'}
                     </td>
