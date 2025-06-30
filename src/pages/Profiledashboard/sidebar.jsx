@@ -5,7 +5,7 @@ import { Bell, Grid, Heart, Home, MessageSquare, Settings, Star } from 'lucide-r
 import { RiMedalLine } from 'react-icons/ri';
 import { FaSignOutAlt } from 'react-icons/fa';
 
-const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, toggleSidebar, setSidebarWidth }) => {
+const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, toggleSidebar, setSidebarWidth, sidebarWidth }) => {
   const { theme, setTheme } = useContext(ThemeContext);
   const navigate = useNavigate();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -15,10 +15,12 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, toggle
   const [error, setError] = useState(null);
 
   // Sidebar width logic for desktop and mobile
-  const sidebarWidth = isSidebarOpen ? '70vw' : isExpanded ? '256px' : '64px';
-
   useEffect(() => {
-    setSidebarWidth(window.innerWidth >= 768 ? sidebarWidth : isSidebarOpen ? '70vw' : '0px');
+    if (window.innerWidth >= 768) {
+      setSidebarWidth(isExpanded ? '256px' : '64px');
+    } else {
+      setSidebarWidth(isSidebarOpen ? '70vw' : '0px');
+    }
   }, [isExpanded, isSidebarOpen, setSidebarWidth]);
 
   const pageName = activePage.charAt(0).toUpperCase() + activePage.slice(1);
@@ -88,7 +90,7 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, toggle
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ isRead: true }), // Fixed syntax error
+        body: JSON.stringify({ isRead: true }),
       });
       setNotifications((prev) => prev.filter((n) => n._id !== notificationId));
       setNotificationCount((prev) => prev - 1);
@@ -159,12 +161,12 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, toggle
   const handleMenuClick = (itemName) => {
     try {
       if (itemName === 'home') {
-        navigate('/'); // Navigate to the root route for the home page
-        setIsSidebarOpen(false); // Close sidebar on mobile
+        navigate('/');
+        setIsSidebarOpen(false);
       } else {
         if (typeof setActivePage === 'function') {
-          setActivePage(itemName); // Use state-based navigation for other pages
-          setIsSidebarOpen(false); // Close sidebar on mobile
+          setActivePage(itemName);
+          setIsSidebarOpen(false);
         } else {
           console.error('setActivePage is not a function');
         }
@@ -234,6 +236,7 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, toggle
         className={`p-4 shadow-md flex items-center justify-between transition-colors duration-300 ${
           theme === 'dark' ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-800'
         }`}
+        style={{ marginLeft: window.innerWidth >= 768 ? sidebarWidth : '0px' }} // Apply margin only on desktop
       >
         <div className="flex items-center space-x-4">
           <button
@@ -294,7 +297,7 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, toggle
             }`}
             aria-label={`User profile for ${userName || 'User'}`}
           >
-        
+            {initials}
           </button>
         </div>
 
@@ -309,7 +312,7 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, toggle
                 <h2 className="text-lg font-semibold">Notifications</h2>
                 {notifications.length > 0 && (
                   <button
-                    className={`text-sm ${theme === 'dark' ? 'text-blue-@400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-500'}`}
+                    className={`text-sm ${theme === 'dark' ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-500'}`}
                     onClick={markAllAsRead}
                     aria-label="Mark all notifications as read"
                   >
