@@ -47,7 +47,8 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, setIsS
     }
 
     try {
-      const response = await fetch('https://new-lms-backend-vmgr.onrender.com/api/v1/notifications', {
+      // Fetch only unread notifications by adding a query parameter (if supported by backend)
+      const response = await fetch('https://new-lms-backend-vmgr.onrender.com/api/v1/notifications?read=false', {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
@@ -63,8 +64,10 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, setIsS
       }
       const data = await response.json();
       if (data.success) {
-        setNotifications(data.data);
-        setNotificationCount(data.pagination.total);
+        // Filter unread notifications in the frontend if the backend doesn't support the read=false query
+        const unreadNotifications = data.data.filter(notification => !notification.isRead);
+        setNotifications(unreadNotifications);
+        setNotificationCount(unreadNotifications.length);
         setError(null);
       } else {
         throw new Error('API response unsuccessful. Please try again later.');
@@ -84,7 +87,7 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, setIsS
       return;
     }
     try {
-      await fetch(`https://new-lms-backend-vmgr.onrender.com/api/v1/notifications/${notificationId}`, {
+      const response = await fetch(`https://new-lms-backend-vmgr.onrender.com/api/v1/notifications/${notificationId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -92,10 +95,15 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, setIsS
         },
         body: JSON.stringify({ isRead: true }),
       });
+      if (!response.ok) {
+        throw new Error('Failed to mark notification as read');
+      }
+      // Remove the notification from the state
       setNotifications((prev) => prev.filter((n) => n._id !== notificationId));
       setNotificationCount((prev) => prev - 1);
     } catch (error) {
       console.error('Error marking notification as read:', error);
+      setError(error.message || 'Failed to mark notification as read');
     }
   };
 
@@ -118,9 +126,12 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, setIsS
       }
       const data = await response.json();
       if (data.success) {
+        // Clear notifications locally and update count
         setNotifications([]);
         setNotificationCount(0);
         setError(null);
+        // Refetch notifications to ensure sync with backend
+        await fetchNotifications();
       } else {
         throw new Error('API response unsuccessful');
       }
@@ -162,11 +173,11 @@ const Navigation = ({ activePage, setActivePage, userName, isSidebarOpen, setIsS
     try {
       if (itemName === 'home') {
         navigate('/');
-        setIsSidebarOpen(false); // Use the prop
+        setIsSidebarOpen(false);
       } else {
         if (typeof setActivePage === 'function') {
           setActivePage(itemName);
-          setIsSidebarOpen(false); // Use the prop
+          setIsSidebarOpen(false);
         } else {
           console.error('setActivePage is not a function');
         }
