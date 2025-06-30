@@ -45,11 +45,7 @@ const HeroSection = () => {
               </p>
             </div>
 
-<<<<<<< HEAD
-=======
-           
 
->>>>>>> ef14fc06814d7a2bdfd0503ba4f7ddacc10d526c
             {/* Goal Selection */}
             <div className="space-y-2 sm:space-y-3">
               <p className="text-teal-600 font-medium text-sm text-center lg:text-left">Or select your goal 📌 </p>
