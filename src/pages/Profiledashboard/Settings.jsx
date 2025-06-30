@@ -214,7 +214,7 @@ const SettingsAndPayment = () => {
 
  
 
-  const handlePayment = async (e) => {
+  const Payment = async (e) => {
     e.preventDefault();
     setProcessing(true);
     setNotification({ message: '', type: '' });
