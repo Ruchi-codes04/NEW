@@ -11,7 +11,7 @@ import {
 } from "react-icons/fa";
 import FAQ from "../../components/FAQ";
 
-import accentureLogo from "../../assets/logo/accenture.png";
+import accentureLogo from "../../assets/Logo/accenture.png";
 import amazonLogo from "../../assets/logo/Amazon.png";
 import deloitteLogo from "../../assets/logo/Deloitte.png";
 import eyLogo from "../../assets/logo/EY.png";

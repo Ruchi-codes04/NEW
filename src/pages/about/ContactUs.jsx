@@ -377,7 +377,7 @@ const ContactUs = () => {
                       value={formData.name}
                       onChange={handleInputChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300 hover:border-teal-300"
-                      placeholder="John Doe"
+                      placeholder="Your name"
                       required
                     />
                   </div>
@@ -393,7 +393,7 @@ const ContactUs = () => {
                       value={formData.email}
                       onChange={handleInputChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300 hover:border-teal-300"
-                      placeholder="john@example.com"
+                      placeholder="youremail@example.com"
                       required
                     />
                   </div>
@@ -412,12 +412,12 @@ const ContactUs = () => {
                     required
                   >
                     <option value="">Select a type</option>
-                    <option value="course-inquiry">Course Inquiry</option>
+                    
                     <option value="technical">Technical Support</option>
-                    <option value="partnership">Partnership Opportunity</option>
-                    <option value="corporate-training">Corporate Training</option>
+                    <option value="financial">Financial Inquiry</option>
+                    
                     <option value="general">General Question</option>
-                    <option value="other">Other</option>
+                    
                   </select>
                 </div>
 
