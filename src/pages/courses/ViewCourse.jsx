@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { motion } from 'framer-motion';
-
 import {
   FaStar,
   FaRegClock,
@@ -65,6 +64,7 @@ const Modal = ({ isOpen, message, type, onClose }) => {
 
 // Hardcoded values to avoid process.env
 const API_BASE_URL = 'https://new-lms-backend-vmgr.onrender.com/api/v1';
+const REVIEWS_API_BASE_URL = 'https://lms-backend-flwq.onrender.com/api/v1';
 const RAZORPAY_KEY_ID = 'rzp_test_wEHfns4O1eHdMO';
 
 const ViewCourse = () => {
@@ -73,8 +73,11 @@ const ViewCourse = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [expandedModule, setExpandedModule] = useState(null);
   const [course, setCourse] = useState(null);
+  const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [reviewsError, setReviewsError] = useState(null);
   const [enrollLoading, setEnrollLoading] = useState(false);
   const [enrollError, setEnrollError] = useState(null);
   const [enrollSuccess, setEnrollSuccess] = useState(null);
@@ -109,8 +112,8 @@ const ViewCourse = () => {
       try {
         setLoading(true);
         const token = localStorage.getItem('Token');
-        console.log('Token:', token); // Log token for debugging
-        console.log('Course ID:', id); // Log course ID
+        console.log('Token:', token);
+        console.log('Course ID:', id);
         if (!token) {
           setError('Please log in to view course details');
           setTimeout(() => navigate('/'), 2000);
@@ -172,24 +175,24 @@ const ViewCourse = () => {
               { icon: FaUsers, text: 'Access to student community' }
             ]
           };
-          console.log('Thumbnail URL:', courseData.thumbnail); // Log thumbnail URL
+          console.log('Thumbnail URL:', courseData.thumbnail);
           console.log('Course pricing:', {
             price: courseData.price,
             discountPrice: courseData.discountPrice,
             transformedPrice: transformedCourse.price,
             transformedOriginalPrice: transformedCourse.originalPrice
-          }); // Log pricing details
+          });
           setCourse(transformedCourse);
 
           // Check enrollment status
           try {
             const enrollmentResponse = await axios.get(`${API_BASE_URL}/students/courses`, { headers });
             console.log('Enrollment response:', enrollmentResponse.data);
-            console.log('Enrolled courses:', enrollmentResponse.data.data); // Log full enrolled courses array
+            console.log('Enrolled courses:', enrollmentResponse.data.data);
             if (enrollmentResponse.data.success) {
               const enrolledCourses = enrollmentResponse.data.data || enrollmentResponse.data.courses || [];
               const enrolled = enrolledCourses.some(course => {
-                console.log('Checking course:', course); // Log each course object
+                console.log('Checking course:', course);
                 return (
                   course._id === id ||
                   course.courseId === id ||
@@ -232,6 +235,37 @@ const ViewCourse = () => {
     fetchCourse();
   }, [id, navigate]);
 
+  // Fetch reviews data when reviews tab is active
+  useEffect(() => {
+    if (activeTab === 'reviews') {
+      const fetchReviews = async () => {
+        try {
+          setReviewsLoading(true);
+          setReviewsError(null);
+          const token = localStorage.getItem('Token');
+          if (!token) {
+            setReviewsError('Please log in to view reviews');
+            return;
+          }
+          const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+          const response = await axios.get(`${REVIEWS_API_BASE_URL}/courses/${id}/reviews`, { headers });
+          console.log('Reviews response:', response.data);
+          if (response.data.success) {
+            setReviews(response.data.data);
+          } else {
+            throw new Error(response.data.message || 'Failed to fetch reviews');
+          }
+        } catch (err) {
+          console.error('Fetch Reviews Error:', err.response?.data || err);
+          setReviewsError(err.response?.data?.message || 'Error fetching reviews');
+        } finally {
+          setReviewsLoading(false);
+        }
+      };
+      fetchReviews();
+    }
+  }, [activeTab, id]);
+
   const toggleModule = (moduleId) => {
     setExpandedModule(expandedModule === moduleId ? null : moduleId);
   };
@@ -269,7 +303,6 @@ const ViewCourse = () => {
       return;
     }
 
-    // Double-check enrollment status before proceeding
     try {
       console.log('Checking enrollment before proceeding:', id);
       const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
@@ -476,9 +509,19 @@ const ViewCourse = () => {
     }
   };
 
+  // Format date for display
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  };
+
   const closeModal = () => {
     setEnrollSuccess(null);
     setEnrollError(null);
+    setReviewsError(null);
   };
 
   if (loading) {
@@ -500,8 +543,8 @@ const ViewCourse = () => {
   return (
     <div className="min-h-screen">
       <Modal
-        isOpen={!!enrollSuccess || !!enrollError}
-        message={enrollSuccess || enrollError}
+        isOpen={!!enrollSuccess || !!enrollError || !!reviewsError}
+        message={enrollSuccess || enrollError || reviewsError}
         type={enrollSuccess ? 'success' : 'error'}
         onClose={closeModal}
       />
@@ -822,6 +865,10 @@ const ViewCourse = () => {
                           src={course.instructorAvatar}
                           alt={course.instructor}
                           className="w-32 h-32 rounded-full border-4 border-white shadow-lg"
+                          onError={(e) => {
+                            e.target.src = 'https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80';
+                            console.error('Instructor avatar load error for URL:', course.instructorAvatar);
+                          }}
                         />
                       </div>
                       <div className="flex-1">
@@ -865,10 +912,59 @@ const ViewCourse = () => {
               {activeTab === 'reviews' && (
                 <div>
                   <h3 className="text-2xl font-bold text-gray-900 mb-6">Student reviews</h3>
-                  <div className="bg-gray-100 rounded-lg p-6 text-center">
-                    <p className="text-gray-600">Reviews section coming soon...</p>
-                    <p className="text-sm text-gray-500 mt-2">Students will be able to leave reviews after course completion.</p>
-                  </div>
+                  {reviewsLoading ? (
+                    <div className="flex items-center justify-center py-10">
+                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-teal-600"></div>
+                    </div>
+                  ) : reviewsError ? (
+                    <div className="bg-red-100 rounded-lg p-6 text-center">
+                      <p className="text-red-600">{reviewsError}</p>
+                    </div>
+                  ) : reviews.length === 0 ? (
+                    <div className="bg-gray-100 rounded-lg p-6 text-center">
+                      <p className="text-gray-600">No reviews yet for this course.</p>
+                      <p className="text-sm text-gray-500 mt-2">Be the first to leave a review after completing the course!</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      {reviews.map((review) => (
+                        <div
+                          key={review._id}
+                          className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
+                        >
+                          <div className="flex items-start space-x-4">
+                            <img
+                              src={review.user.avatar}
+                              alt={`${review.user.firstName} ${review.user.lastName}`}
+                              className="w-12 h-12 rounded-full border-2 border-gray-200"
+                              onError={(e) => {
+                                e.target.src = 'https://res.cloudinary.com/dcgilmdbm/image/upload/v1747893719/default_avatar_xpw8jv.jpg';
+                                console.error('User avatar load error for URL:', review.user.avatar);
+                              }}
+                            />
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <p className="font-semibold text-gray-900">{`${review.user.firstName} ${review.user.lastName}`}</p>
+                                  <div className="flex items-center mt-1">
+                                    {[...Array(5)].map((_, index) => (
+                                      <FaStar
+                                        key={index}
+                                        className={index < review.rating ? 'text-yellow-400' : 'text-gray-300'}
+                                      />
+                                    ))}
+                                    <span className="ml-2 text-sm text-gray-600">{review.rating}/5</span>
+                                  </div>
+                                </div>
+                                <p className="text-sm text-gray-500">{formatDate(review.createdAt)}</p>
+                              </div>
+                              <p className="mt-3 text-gray-700 leading-relaxed">{review.comment}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </motion.div>
