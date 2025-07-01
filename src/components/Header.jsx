@@ -1,35 +1,41 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { FaSearch, FaChevronDown, FaGraduationCap } from 'react-icons/fa';
-import { useSignUp } from '../contexts/SignUpContext';
-import ComingSoonPopup from './ComingSoonPopup';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { FaSearch, FaChevronDown, FaGraduationCap } from "react-icons/fa";
+import { useSignUp } from "../contexts/SignUpContext";
+import ComingSoonPopup from "./ComingSoonPopup";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const parseJwt = (token) => {
   try {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
     const jsonPayload = decodeURIComponent(
       atob(base64)
-        .split('')
-        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join('')
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
     );
     return JSON.parse(jsonPayload);
   } catch (e) {
-    console.error('Error decoding JWT:', e);
+    console.error("Error decoding JWT:", e);
     return null;
   }
 };
 
 const Header = () => {
-  
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showComingSoon, setShowComingSoon] = useState(false);
-  const [comingSoonFeature, setComingSoonFeature] = useState('');
-  const { showSignUpPopup, user, setUser, isLoading, setIsLoading, isLogin, setIsLogin } = useSignUp();
+  const [comingSoonFeature, setComingSoonFeature] = useState("");
+  const {
+    showSignUpPopup,
+    user,
+    setUser,
+    isLoading,
+    setIsLoading,
+    isLogin,
+    setIsLogin,
+  } = useSignUp();
   const navigate = useNavigate();
 
   const toggleMobileMenu = () => {
@@ -43,7 +49,7 @@ const Header = () => {
 
   useEffect(() => {
     const fetchUserProfile = async () => {
-      const token = localStorage.getItem('Token');
+      const token = localStorage.getItem("Token");
       if (token && !user) {
         setIsLoading(true);
         try {
@@ -53,12 +59,14 @@ const Header = () => {
 
           // Determine the appropriate endpoint based on role
           let profileEndpoint;
-          if (userRole === 'instructor') {
-            profileEndpoint = 'https://new-lms-backend-vmgr.onrender.com/api/v1/instructors/profile';
-          } else if (userRole === 'student') {
-            profileEndpoint = 'https://new-lms-backend-vmgr.onrender.com/api/v1/students/profile';
+          if (userRole === "instructor") {
+            profileEndpoint =
+              "https://new-lms-backend-vmgr.onrender.com/api/v1/instructors/profile";
+          } else if (userRole === "student") {
+            profileEndpoint =
+              "https://new-lms-backend-vmgr.onrender.com/api/v1/students/profile";
           } else {
-            throw new Error('Unknown or missing user role in token');
+            throw new Error("Unknown or missing user role in token");
           }
 
           const response = await axios.get(profileEndpoint, {
@@ -70,23 +78,26 @@ const Header = () => {
           if (response.data.success) {
             setUser(response.data.data);
           } else {
-            console.error('API response unsuccessful:', response.data.message);
-            
-            localStorage.removeItem('Token');
+            console.error("API response unsuccessful:", response.data.message);
+
+            localStorage.removeItem("Token");
             setUser(null);
             setIsLogin(false);
           }
-
-       
         } catch (error) {
-          console.error('Error fetching user profile:', error.response?.data || error.message);
+          console.error(
+            "Error fetching user profile:",
+            error.response?.data || error.message
+          );
           if (error.response?.status === 403) {
             // Handle unauthorized access
-            console.warn('Unauthorized access. Clearing token and redirecting to login.');
-            localStorage.removeItem('Token');
+            console.warn(
+              "Unauthorized access. Clearing token and redirecting to login."
+            );
+            localStorage.removeItem("Token");
             setUser(null);
             setIsLogin(false);
-            window.location.href = '/login'; // Redirect to login page
+            window.location.href = "/login"; // Redirect to login page
           }
         } finally {
           setIsLoading(false);
@@ -95,11 +106,11 @@ const Header = () => {
     };
 
     fetchUserProfile();
-  }, []); 
+  }, []);
 
   // Debugging: Log user state changes
   useEffect(() => {
-    console.log('User state updated:', user);
+    console.log("User state updated:", user);
   }, [user]);
 
   return (
@@ -108,12 +119,17 @@ const Header = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center flex-shrink-0">
-            <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
+            <Link
+              to="/"
+              className="flex items-center hover:opacity-80 transition-opacity"
+            >
               <div className="flex items-center">
                 <div className="w-6 h-6 sm:w-8 sm:h-8 bg-teal-600 rounded-full flex items-center justify-center mr-2 sm:mr-3">
                   <FaGraduationCap className="text-white text-sm sm:text-xl" />
                 </div>
-                <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">BrainBridge</h3>
+                <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
+                  BrainBridge
+                </h3>
               </div>
             </Link>
           </div>
@@ -191,14 +207,14 @@ const Header = () => {
                     Job Support Reviews
                   </Link>
                   <button
-                    onClick={() => handleComingSoonClick('MouthShut Reviews')}
+                    onClick={() => handleComingSoonClick("MouthShut Reviews")}
                     className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-teal-600"
                     role="menuitem"
                   >
                     Mouth Shut Reviews
                   </button>
                   <button
-                    onClick={() => handleComingSoonClick('JustDial Reviews')}
+                    onClick={() => handleComingSoonClick("JustDial Reviews")}
                     className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-teal-600"
                     role="menuitem"
                   >
@@ -212,14 +228,14 @@ const Header = () => {
                     Reviews Reporter
                   </Link>
                   <button
-                    onClick={() => handleComingSoonClick('LinkedIn Reviews')}
+                    onClick={() => handleComingSoonClick("LinkedIn Reviews")}
                     className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-teal-600"
                     role="menuitem"
                   >
                     LinkedIn Reviews
                   </button>
                   <button
-                    onClick={() => handleComingSoonClick('YouTube Reviews')}
+                    onClick={() => handleComingSoonClick("YouTube Reviews")}
                     className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-teal-600"
                     role="menuitem"
                   >
@@ -233,7 +249,7 @@ const Header = () => {
                     Learner Reviews & Complaints
                   </Link>
                   <button
-                    onClick={() => handleComingSoonClick('Medium Reviews')}
+                    onClick={() => handleComingSoonClick("Medium Reviews")}
                     className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-teal-600"
                     role="menuitem"
                   >
@@ -275,14 +291,14 @@ const Header = () => {
                     Events
                   </Link>
                   <button
-                    onClick={() => handleComingSoonClick('Internship Support')}
+                    onClick={() => handleComingSoonClick("Internship Support")}
                     className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-teal-600"
                     role="menuitem"
                   >
                     Internship Support
                   </button>
                   <button
-                    onClick={() => handleComingSoonClick('Career Support')}
+                    onClick={() => handleComingSoonClick("Career Support")}
                     className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-teal-600"
                     role="menuitem"
                   >
@@ -358,9 +374,13 @@ const Header = () => {
             {isLoading ? (
               <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse"></div>
             ) : user ? (
-              <Link to="/profile-dashboard" className="flex items-center" aria-label="View profile">
+              <Link
+                to="/profile-dashboard"
+                className="flex items-center"
+                aria-label="View profile"
+              >
                 <img
-                  src={user.avatar || 'https://via.placeholder.com/32'}
+                  src={user.avatar || "https://via.placeholder.com/32"}
                   alt={`${user.firstName} ${user.lastName}'s profile`}
                   className="w-8 h-8 rounded-full object-cover border border-teal-600"
                 />
@@ -368,25 +388,25 @@ const Header = () => {
             ) : (
               <div className="flex mb-4 mt-4 sm:mb-6 justify-center">
                 <button
-    className={`
+                  className={`
       px-3 py-1.5 sm:px-5 sm:py-2  
       text-white font-medium
       rounded-l-md rounded-r-md 
-      ${isLogin ? 'bg-teal-600' : 'bg-teal-400'} 
-      hover:${isLogin ? 'bg-teal-700' : 'bg-teal-500'}
+      ${isLogin ? "bg-teal-600" : "bg-teal-400"} 
+      hover:${isLogin ? "bg-teal-700" : "bg-teal-500"}
       focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-1 
       transition-colors duration-200
       text-xs sm:text-sm  
       shadow-sm
     `}
-    onClick={() => {
-      showSignUpPopup();
-      setIsLogin(true);
-    }}
-  >
-    LOGIN
-  </button>
- 
+                  onClick={() => {
+                    showSignUpPopup();
+                    setIsLogin(true);
+                  }}
+                >
+                  LOGIN
+                </button>
+
                 {/* <button
                   className={`px-4 py-2 sm:px-6 sm:py-2 text-white rounded-r-md bg-teal-300 text-sm sm:text-base`}
                   onClick={() => {
@@ -408,17 +428,17 @@ const Header = () => {
           >
             <span
               className={`w-6 h-0.5 bg-gray-700 transition-all duration-300 ${
-                isMobileMenuOpen ? 'rotate-45 translate-y-1.5' : ''
+                isMobileMenuOpen ? "rotate-45 translate-y-1.5" : ""
               }`}
             ></span>
             <span
               className={`w-6 h-0.5 bg-gray-700 transition-all duration-300 ${
-                isMobileMenuOpen ? 'opacity-0' : ''
+                isMobileMenuOpen ? "opacity-0" : ""
               }`}
             ></span>
             <span
               className={`w-6 h-0.5 bg-gray-700 transition-all duration-300 ${
-                isMobileMenuOpen ? '-rotate-45 -translate-y-1.5' : ''
+                isMobileMenuOpen ? "-rotate-45 -translate-y-1.5" : ""
               }`}
             ></span>
           </button>
@@ -427,7 +447,7 @@ const Header = () => {
         {/* Mobile Menu */}
         <div
           className={`lg:hidden transition-all duration-300 overflow-hidden ${
-            isMobileMenuOpen ? 'max-h-screen pb-4' : 'max-h-0'
+            isMobileMenuOpen ? "max-h-screen pb-4" : "max-h-0"
           }`}
         >
           <nav className="px-4 py-4 bg-white border-t border-gray-200">
@@ -465,9 +485,9 @@ const Header = () => {
                   onClick={(e) => {
                     e.preventDefault();
                     const submenu = e.currentTarget.nextElementSibling;
-                    submenu.classList.toggle('hidden');
-                    const icon = e.currentTarget.querySelector('svg');
-                    icon.classList.toggle('rotate-180');
+                    submenu.classList.toggle("hidden");
+                    const icon = e.currentTarget.querySelector("svg");
+                    icon.classList.toggle("rotate-180");
                   }}
                   aria-label="Review menu"
                 >
@@ -512,7 +532,7 @@ const Header = () => {
                   </Link>
                   <button
                     onClick={() => {
-                      handleComingSoonClick('MouthShut Reviews');
+                      handleComingSoonClick("MouthShut Reviews");
                       setIsMobileMenuOpen(false);
                     }}
                     className="block w-full text-left py-2 text-sm text-gray-600 hover:text-teal-600 hover:bg-teal-50 px-2 rounded transition-colors"
@@ -521,7 +541,7 @@ const Header = () => {
                   </button>
                   <button
                     onClick={() => {
-                      handleComingSoonClick('JustDial Reviews');
+                      handleComingSoonClick("JustDial Reviews");
                       setIsMobileMenuOpen(false);
                     }}
                     className="block w-full text-left py-2 text-sm text-gray-600 hover:text-teal-600 hover:bg-teal-50 px-2 rounded transition-colors"
@@ -537,7 +557,7 @@ const Header = () => {
                   </Link>
                   <button
                     onClick={() => {
-                      handleComingSoonClick('LinkedIn Reviews');
+                      handleComingSoonClick("LinkedIn Reviews");
                       setIsMobileMenuOpen(false);
                     }}
                     className="block w-full text-left py-2 text-sm text-gray-600 hover:text-teal-600 hover:bg-teal-50 px-2 rounded transition-colors"
@@ -546,7 +566,7 @@ const Header = () => {
                   </button>
                   <button
                     onClick={() => {
-                      handleComingSoonClick('YouTube Reviews');
+                      handleComingSoonClick("YouTube Reviews");
                       setIsMobileMenuOpen(false);
                     }}
                     className="block w-full text-left py-2 text-sm text-gray-600 hover:text-teal-600 hover:bg-teal-50 px-2 rounded transition-colors"
@@ -562,7 +582,7 @@ const Header = () => {
                   </Link>
                   <button
                     onClick={() => {
-                      handleComingSoonClick('Medium Reviews');
+                      handleComingSoonClick("Medium Reviews");
                       setIsMobileMenuOpen(false);
                     }}
                     className="block w-full text-left py-2 text-sm text-gray-600 hover:text-teal-600 hover:bg-teal-50 px-2 rounded transition-colors"
@@ -586,9 +606,9 @@ const Header = () => {
                   onClick={(e) => {
                     e.preventDefault();
                     const submenu = e.currentTarget.nextElementSibling;
-                    submenu.classList.toggle('hidden');
-                    const icon = e.currentTarget.querySelector('svg');
-                    icon.classList.toggle('rotate-180');
+                    submenu.classList.toggle("hidden");
+                    const icon = e.currentTarget.querySelector("svg");
+                    icon.classList.toggle("rotate-180");
                   }}
                   aria-label="Existing Students menu"
                 >
@@ -609,10 +629,10 @@ const Header = () => {
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Events
-                  </ Link>
+                  </Link>
                   <button
                     onClick={() => {
-                      handleComingSoonClick('Internship Support');
+                      handleComingSoonClick("Internship Support");
                       setIsMobileMenuOpen(false);
                     }}
                     className="block w-full text-left py-2 text-sm text-gray-600 hover:text-teal-600 hover:bg-teal-50 px-2 rounded transition-colors"
@@ -621,7 +641,7 @@ const Header = () => {
                   </button>
                   <button
                     onClick={() => {
-                      handleComingSoonClick('Career Support');
+                      handleComingSoonClick("Career Support");
                       setIsMobileMenuOpen(false);
                     }}
                     className="block w-full text-left py-2 text-sm text-gray-600 hover:text-teal-600 hover:bg-teal-50 px-2 rounded transition-colors"
@@ -650,9 +670,9 @@ const Header = () => {
                   onClick={(e) => {
                     e.preventDefault();
                     const submenu = e.currentTarget.nextElementSibling;
-                    submenu.classList.toggle('hidden');
-                    const icon = e.currentTarget.querySelector('svg');
-                    icon.classList.toggle('rotate-180');
+                    submenu.classList.toggle("hidden");
+                    const icon = e.currentTarget.querySelector("svg");
+                    icon.classList.toggle("rotate-180");
                   }}
                   aria-label="About Us menu"
                 >
@@ -708,24 +728,36 @@ const Header = () => {
                     aria-label="View profile"
                   >
                     <img
-                      src={user.avatar || 'https://via.placeholder.com/32'}
+                      src={user.avatar || "https://via.placeholder.com/32"}
                       alt={`${user.firstName} ${user.lastName}'s profile`}
                       className="w-10 h-10 rounded-full object-cover border border-teal-600 mr-2"
                     />
                     <span className="font-medium text-gray-700">{`${user.firstName} ${user.lastName}`}</span>
                   </Link>
                 ) : (
-                  <div className="flex mb-4 sm:mb-6 justify-center">
-                    <button
-                      className={`px-4 py-2 sm:px-6 sm:py-2 text-white rounded-l-md bg-teal-500 text-sm sm:text-base`}
-                      onClick={() => {
-                        showSignUpPopup();
-                        setIsLogin(true);
-                      }}
-                    >
-                      LOGIN
-                    </button>
-                    <button
+                  <div className="flex mb-4 mt-4 sm:mb-6 justify-center">
+                 <button
+  className={`
+    w-32 sm:w-40                      // ⬅️ Added width classes
+    px-3 py-1.5 sm:px-5 sm:py-2  
+    text-white font-medium
+    rounded-l-md rounded-r-md 
+    ${isLogin ? "bg-teal-600" : "bg-teal-400"} 
+    hover:${isLogin ? "bg-teal-700" : "bg-teal-500"}
+    focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-1 
+    transition-colors duration-200
+    text-xs sm:text-sm  
+    shadow-sm
+  `}
+  onClick={() => {
+    showSignUpPopup();
+    setIsLogin(true);
+  }}
+>
+  LOGIN
+</button>
+
+                    {/* <button
                       className={`px-4 py-2 sm:px-6 sm:py-2 text-white rounded-r-md bg-teal-300 text-sm sm:text-base`}
                       onClick={() => {
                         showSignUpPopup();
@@ -733,7 +765,7 @@ const Header = () => {
                       }}
                     >
                       REGISTER
-                    </button>
+                    </button> */}
                   </div>
                 )}
               </li>
