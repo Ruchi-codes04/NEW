@@ -12,6 +12,7 @@ const Contact = ({ relatedCourseId }) => {
     relatedCourse: relatedCourseId || '',
   });
   const [loading, setLoading] = useState(false);
+  const [coursesLoading, setCoursesLoading] = useState(true);
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [courses, setCourses] = useState([]);
@@ -20,6 +21,12 @@ const Contact = ({ relatedCourseId }) => {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem('Token');
+        if (!token) {
+          setErrorMsg('Please log in to access this feature.');
+          setCoursesLoading(false);
+          return;
+        }
+
         const profileRes = await axios.get(
           'https://lms-backend-flwq.onrender.com/api/v1/students/profile',
           {
@@ -35,14 +42,23 @@ const Contact = ({ relatedCourseId }) => {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-        if (coursesRes.data.success) {
-          setCourses(coursesRes.data.data.map((enrollment) => ({
-            _id: enrollment.course._id,
-            title: enrollment.course.title,
-          })));
+
+        if (coursesRes.data.success && Array.isArray(coursesRes.data.data)) {
+          const validCourses = coursesRes.data.data
+            .filter((enrollment) => enrollment.course !== null)
+            .map((enrollment) => ({
+              _id: enrollment.course._id,
+              title: enrollment.course.title,
+            }));
+          setCourses(validCourses);
+        } else {
+          setErrorMsg('Failed to load courses.');
         }
       } catch (error) {
         console.error('Failed to fetch data:', error);
+        setErrorMsg('Failed to load profile or courses.');
+      } finally {
+        setCoursesLoading(false);
       }
     };
 
@@ -69,6 +85,12 @@ const Contact = ({ relatedCourseId }) => {
 
     try {
       const token = localStorage.getItem('Token');
+      if (!token) {
+        setErrorMsg('Please log in to submit a ticket.');
+        setLoading(false);
+        return;
+      }
+
       const response = await axios.post(
         'https://lms-backend-flwq.onrender.com/api/v1/students/support',
         {
@@ -95,10 +117,10 @@ const Contact = ({ relatedCourseId }) => {
         setErrorMsg('Failed to submit the ticket. Server returned success: false.');
       }
     } catch (error) {
-      console.error("Error submitting ticket:", error);
+      console.error('Error submitting ticket:', error);
       setErrorMsg(
         error?.response?.data?.message ||
-        'Failed to submit the ticket due to a network or server error.'
+          'Failed to submit the ticket due to a network or server error.'
       );
     } finally {
       setLoading(false);
@@ -154,7 +176,9 @@ const Contact = ({ relatedCourseId }) => {
               value={form.name}
               disabled
               className={`w-full border rounded-lg p-2 sm:p-3 bg-gray-100 cursor-not-allowed text-sm sm:text-base focus:ring-0 ${
-                theme === 'dark' ? 'border-gray-600 bg-gray-800 text-gray-400' : 'border-gray-300 bg-gray-100 text-gray-600'
+                theme === 'dark'
+                  ? 'border-gray-600 bg-gray-800 text-gray-400'
+                  : 'border-gray-300 bg-gray-100 text-gray-600'
               }`}
             />
           </div>
@@ -170,18 +194,29 @@ const Contact = ({ relatedCourseId }) => {
               name="relatedCourse"
               value={form.relatedCourse}
               onChange={handleChange}
+              disabled={coursesLoading}
               className={`w-full border rounded-lg p-2 sm:p-3 text-sm sm:text-base focus:ring-2 focus:border-blue-500 ${
                 theme === 'dark'
                   ? 'border-gray-600 bg-gray-800 text-gray-100 focus:ring-blue-400'
                   : 'border-gray-300 bg-white text-gray-900 focus:ring-blue-500'
               }`}
             >
-              <option value="">Select a course (optional)</option>
-              {courses.map((course) => (
-                <option key={course._id} value={course._id}>
-                  {course.title}
-                </option>
-              ))}
+              {coursesLoading ? (
+                <option>Loading courses...</option>
+              ) : (
+                <>
+                  <option value="">Select a course (optional)</option>
+                  {courses.length === 0 ? (
+                    <option disabled>No courses available</option>
+                  ) : (
+                    courses.map((course) => (
+                      <option key={course._id} value={course._id}>
+                        {course.title}
+                      </option>
+                    ))
+                  )}
+                </>
+              )}
             </select>
           </div>
           <div>
