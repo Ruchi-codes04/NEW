@@ -8,7 +8,7 @@ import { ThemeContext } from '../pages/Profiledashboard/ThemeContext';
 
 export default function CoursePlayer() {
   const context = useContext(ThemeContext);
-  const theme = context ? context.theme : 'light'; // Fallback to 'light' if context is undefined
+  const theme = context ? context.theme : 'light';
   const { courseId } = useParams();
   const navigate = useNavigate();
   const [modules, setModules] = useState([]);
@@ -96,7 +96,7 @@ export default function CoursePlayer() {
             setInstructorName(`${course.course.instructor.firstName} ${course.course.instructor.lastName}`);
           } else {
             setCourseTitle('Course Not Found');
-            setInstructorName('ixo');
+            setInstructorName('Unknown Instructor');
           }
 
           setContactCourses(
@@ -153,9 +153,11 @@ export default function CoursePlayer() {
         }
 
         if (assessmentsRes.data.success) {
+          console.log('Assessments fetched:', assessmentsRes.data.data); // Debug assessments
           setAssessments(assessmentsRes.data.data);
         } else {
           setAssessmentsError('No assessments found for this course.');
+          console.error('Assessments API Error:', assessmentsRes.error?.message || 'Unknown error');
         }
 
         if (notificationsRes.data.success) {
@@ -171,11 +173,14 @@ export default function CoursePlayer() {
             ? 'Unauthorized access. Please log in again.'
             : 'Failed to load course data. Please try again later.'
         );
+        if (error.response?.status === 401) {
+          navigate('/login'); // Redirect to login if unauthorized
+        }
       }
     };
 
     fetchData();
-  }, [courseId]);
+  }, [courseId, navigate]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -220,7 +225,7 @@ export default function CoursePlayer() {
       const token = localStorage.getItem('Token');
       if (!token) {
         setNotificationsError('Authentication failed. Please log in again.');
-        navigate('/');
+        navigate('/login');
         return;
       }
 
@@ -246,6 +251,12 @@ export default function CoursePlayer() {
   };
 
   const handleAttemptAssessment = (assessmentId) => {
+    if (!courseId || !assessmentId) {
+      console.error('Invalid courseId or assessmentId:', { courseId, assessmentId });
+      setAssessmentsError('Cannot navigate to assessment. Invalid IDs.');
+      return;
+    }
+    console.log('Navigating to:', `/courses/${courseId}/assessments/${assessmentId}`);
     navigate(`/courses/${courseId}/assessments/${assessmentId}`);
     setIsAssessmentsModalOpen(false);
   };
@@ -625,14 +636,14 @@ export default function CoursePlayer() {
                             theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
                           }`}
                         >
-                          {assessment.title}
+                          {assessment.title || 'Untitled Assessment'}
                         </h3>
                         <p
                           className={`text-sm ${
                             theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
                           }`}
                         >
-                          {assessment.description}
+                          {assessment.description || 'No description available.'}
                         </p>
                       </div>
                       <button
@@ -642,6 +653,7 @@ export default function CoursePlayer() {
                             ? 'bg-green-600 hover:bg-green-700'
                             : 'bg-green-500 hover:bg-green-600'
                         }`}
+                        disabled={!assessment._id}
                       >
                         Attempt
                       </button>
@@ -681,9 +693,9 @@ export default function CoursePlayer() {
                 onClick={toggleHelpSidebar}
                 className={`hover:${
                   theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
-                  } ${
-                    theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                  }`}
+                } ${
+                  theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                }`}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />

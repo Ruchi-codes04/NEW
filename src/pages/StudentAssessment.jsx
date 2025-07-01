@@ -18,6 +18,14 @@ export default function StudentAssessment() {
     const fetchAssessment = async () => {
       try {
         const token = localStorage.getItem('Token');
+        if (!token) {
+          throw new Error('No authentication token found');
+        }
+        if (!courseId || !assessmentId) {
+          throw new Error('Invalid course or assessment ID');
+        }
+
+        console.log('Fetching assessment for:', { courseId, assessmentId }); // Debug
         const response = await axios.get(
           `https://lms-backend-flwq.onrender.com/api/v1/students/courses/${courseId}/assessments/${assessmentId}`,
           {
@@ -26,23 +34,32 @@ export default function StudentAssessment() {
             },
           }
         );
+        console.log('Assessment response:', response.data); // Debug
         if (response.data.success) {
           setAssessment(response.data.data);
-          // Assuming the API returns an isSubmitted field to indicate prior submission
-          // If this field doesn't exist, you'll need to provide the correct API or field
           setIsSubmitted(response.data.data.isSubmitted || false);
         } else {
           setError('Failed to load assessment.');
         }
       } catch (err) {
-        setError('Failed to load assessment.');
+        console.error('Error fetching assessment:', err);
+        setError(
+          err.response?.status === 404
+            ? 'Assessment not found.'
+            : err.response?.status === 401
+            ? 'Unauthorized. Please log in again.'
+            : err.message || 'Failed to load assessment.'
+        );
+        if (err.response?.status === 401) {
+          navigate('/login');
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchAssessment();
-  }, [courseId, assessmentId]);
+  }, [courseId, assessmentId, navigate]);
 
   const handleAnswerSelect = (questionId, optionId) => {
     if (!isSubmitted) {
@@ -56,13 +73,13 @@ export default function StudentAssessment() {
   const handleSubmit = async () => {
     if (isSubmitted) return;
 
-    if (Object.keys(answers).length !== assessment.questions.length) {
-        setError('Please answer all questions before submitting.');
-        setTimeout(() => {
-          navigate(`/course-player/${courseId}`);
-        }, 1500);
-        return;
-      }
+    if (Object.keys(answers).length !== assessment?.questions?.length) {
+      setError('Please answer all questions before submitting.');
+      setTimeout(() => {
+        navigate(`/course-player/${courseId}`);
+      }, 2000);
+      return;
+    }
 
     setSubmitting(true);
     setError('');
@@ -70,7 +87,12 @@ export default function StudentAssessment() {
 
     try {
       const token = localStorage.getItem('Token');
-      await axios.post(
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      console.log('Submitting answers:', answers); // Debug
+      const response = await axios.post(
         `https://lms-backend-flwq.onrender.com/api/v1/students/courses/${courseId}/assessments/${assessmentId}/submit`,
         { answers },
         {
@@ -79,15 +101,29 @@ export default function StudentAssessment() {
           },
         }
       );
-      setSubmissionResult('Assessment submitted successfully!');
-      setAnswers({});
-      setIsSubmitted(true);
-      // Redirect to CoursePlayer after a brief delay to show success message
-      setTimeout(() => {
-        navigate(`/course-player/${courseId}`);
-      }, 1500);
+      console.log('Submission response:', response.data); // Debug
+      if (response.data.success) {
+        setSubmissionResult('Assessment submitted successfully!');
+        setAnswers({});
+        setIsSubmitted(true);
+        setTimeout(() => {
+          navigate(`/course-player/${courseId}`);
+        }, 2000);
+      } else {
+        setError('Failed to submit assessment.');
+      }
     } catch (err) {
-      setError('Failed to submit assessment.');
+      console.error('Error submitting assessment:', err);
+      setError(
+        err.response?.status === 404
+          ? 'Assessment not found.'
+          : err.response?.status === 401
+          ? 'Unauthorized. Please log in again.'
+          : err.message || 'Failed to submit assessment.'
+      );
+      if (err.response?.status === 401) {
+        navigate('/login');
+      }
     } finally {
       setSubmitting(false);
     }
@@ -104,7 +140,15 @@ export default function StudentAssessment() {
         {loading ? (
           <p className="text-gray-600 text-sm text-center">Loading assessment...</p>
         ) : error ? (
-          <p className="text-red-500 text-sm text-center">{error}</p>
+          <div className="text-center">
+            <p className="text-red-500 text-sm mb-4">{error}</p>
+            <button
+              onClick={() => navigate(`/course-player/${courseId}`)}
+              className="bg-[#49BBBD] text-white px-6 py-2 rounded-md text-sm sm:text-base hover:bg-[#3AA8AA] transition"
+            >
+              Back to Course
+            </button>
+          </div>
         ) : assessment ? (
           <>
             <h2 className="text-lg sm:text-xl font-semibold mb-2">{assessment.title}</h2>
@@ -116,7 +160,7 @@ export default function StudentAssessment() {
                 </p>
                 <button
                   onClick={() => navigate(`/course-player/${courseId}`)}
-                  className="bg-[#49BBBD] text-white px-6 py-2 rounded-md text-sm sm:text-base hover:bg-[#49BBBD] transition"
+                  className="bg-[#49BBBD] text-white px-6 py-2 rounded-md text-sm sm:text-base hover:bg-[#3AA8AA] transition"
                 >
                   Back to Course
                 </button>
@@ -124,13 +168,13 @@ export default function StudentAssessment() {
             ) : (
               <>
                 <div className="space-y-6">
-                  {assessment.questions.map((question, index) => (
+                  {assessment.questions?.map((question, index) => (
                     <div key={question._id} className="border rounded-lg p-3 sm:p-4">
                       <h3 className="text-sm sm:text-base font-medium mb-2">
-                        {index + 1}. {question.questionText}
+                        {index + 1}. {question.questionText || 'Untitled Question'}
                       </h3>
                       <div className="space-y-2">
-                        {question.options.map((option) => (
+                        {question.options?.map((option) => (
                           <label
                             key={option._id}
                             className="flex items-center gap-2 text-xs sm:text-sm cursor-pointer"
@@ -144,12 +188,14 @@ export default function StudentAssessment() {
                               className="h-4 w-4 text-blue-500"
                               disabled={submitting}
                             />
-                            {option.text}
+                            {option.text || 'No option text'}
                           </label>
                         ))}
                       </div>
                     </div>
-                  ))}
+                  )) || (
+                    <p className="text-sm text-gray-600">No questions available for this assessment.</p>
+                  )}
                 </div>
                 {submissionResult && (
                   <p className="text-green-500 text-sm mt-4 text-center">{submissionResult}</p>
@@ -160,8 +206,8 @@ export default function StudentAssessment() {
                 <div className="mt-6 flex justify-center">
                   <button
                     onClick={handleSubmit}
-                    disabled={submitting}
-                    className="bg-[#49BBBD] text-white px-6 py-2 rounded-md text-sm sm:text-base hover:bg-[#49BBBD] transition disabled:bg-blue-300"
+                    disabled={submitting || !assessment?.questions?.length}
+                    className="bg-[#49BBBD] text-white px-6 py-2 rounded-md text-sm sm:text-base hover:bg-[#3AA8AA] transition disabled:bg-blue-300"
                   >
                     {submitting ? 'Submitting...' : 'Submit Test'}
                   </button>
@@ -170,7 +216,15 @@ export default function StudentAssessment() {
             )}
           </>
         ) : (
-          <p className="text-gray-600 text-sm text-center">No assessment data available.</p>
+          <div className="text-center">
+            <p className="text-gray-600 text-sm">No assessment data available.</p>
+            <button
+              onClick={() => navigate(`/course-player/${courseId}`)}
+              className="bg-[#49BBBD] text-white px-6 py-2 rounded-md text-sm sm:text-base hover:bg-[#3AA8AA] transition mt-4"
+            >
+              Back to Course
+            </button>
+          </div>
         )}
       </motion.div>
     </div>

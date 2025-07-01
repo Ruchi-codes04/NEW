@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, useNavigationType } from 'react-router-dom';
 import { SignUpProvider } from './contexts/SignUpContext';
-import { ThemeProvider } from './contexts/ThemeContext'; 
+import { ThemeProvider } from './contexts/ThemeContext';
 import Header from './components/Header';
 import HeroSection from './components/HeroSection';
 import Courses from './components/Courses';
@@ -17,6 +17,7 @@ import SignUpPopup from './components/SignUpPopup';
 import NotFound from './pages/NotFound';
 import ProfileDashboard from './pages/Profiledashboard/parentLayout';
 import CoursePlayer from './pages/CoursePlayer';
+import StudentAssessment from './pages/StudentAssessment'; // Import the assessment page
 import AllReviews from './pages/courses/Allreviews';
 import {
   ParticipantReviews,
@@ -74,19 +75,19 @@ const AppLayout = () => {
 
   // Scroll to top on route change, including back/forward navigation
   useEffect(() => {
-    // Disable browser's default scroll restoration
     if ('scrollRestoration' in window.history) {
       window.history.scrollRestoration = 'manual';
     }
-    console.log('Navigation type:', navigationType, 'Pathname:', location.pathname); // Debug navigation
+    console.log('Navigation type:', navigationType, 'Pathname:', location.pathname);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [location.pathname, navigationType]);
 
   // Hide Header and Footer for specific routes
-  const hideHeaderAndFooter = 
+  const hideHeaderAndFooter =
     location.pathname === '/profile-dashboard' ||
     location.pathname.startsWith('/course-player') ||
-    location.pathname.startsWith('/courses') && location.pathname.endsWith('/reviews');
+    location.pathname.match(/^\/courses\/\w+\/assessments\/\w+$/) || // Hide for assessments
+    (location.pathname.startsWith('/courses') && location.pathname.endsWith('/reviews'));
 
   return (
     <div className="min-h-screen overflow-x-hidden">
@@ -96,6 +97,7 @@ const AppLayout = () => {
         <Route path="/" element={<Home />} />
         <Route path="/profile-dashboard" element={<ProfileDashboard />} />
         <Route path="/course-player/:courseId" element={<CoursePlayer />} />
+        <Route path="/courses/:courseId/assessments/:assessmentId" element={<StudentAssessment />} />
         <Route path="/reviews/participant" element={<ParticipantReviews />} />
         <Route path="/reviews/video" element={<VideoReviews />} />
         <Route path="/reviews/corporate" element={<CorporateTrainingReviews />} />
@@ -133,7 +135,7 @@ const AppLayout = () => {
 function App() {
   return (
     <SignUpProvider>
-      <ThemeProvider> 
+      <ThemeProvider>
         <Router>
           <AppLayout />
         </Router>
