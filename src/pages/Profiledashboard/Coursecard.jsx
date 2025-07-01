@@ -311,14 +311,16 @@ const CoursesPage = () => {
                           theme === "dark" ? "text-gray-200" : "text-gray-800"
                         }`}
                       >
-                        <span className="font-bold">₹{course.price || "N/A"}</span>
-                        {course.discountPrice && course.price && (
+                        <span className="font-bold">
+                          ₹{course.discountPrice ? course.price - course.discountPrice : course.price || "N/A"}
+                        </span>
+                        {course.price && (
                           <span
                             className={`line-through ${
                               theme === "dark" ? "text-gray-400" : "text-gray-500"
                             }`}
                           >
-                            ₹{course.discountPrice}
+                            ₹{course.price}
                           </span>
                         )}
                       </div>
@@ -417,7 +419,7 @@ const CoursesPage = () => {
                                 )}
                                 {course.title.includes("MERN") && (
                                   <img
-                                    src="https://via.placeholder.com/300x200?text=MERN"
+                                    src=" https://via.placeholder.com/300x200?text=MERN"
                                     alt="MERN Thumbnail"
                                     className="w-full h-full object-contain"
                                   />
@@ -487,14 +489,16 @@ const CoursesPage = () => {
                                 theme === "dark" ? "text-gray-200" : "text-gray-800"
                               }`}
                             >
-                              <span className="font-bold">₹{course.price || "N/A"}</span>
-                              {course.discountPrice && course.price && (
+                              <span className="font-bold">
+                                ₹{course.discountPrice ? course.price - course.discountPrice : course.price || "N/A"}
+                              </span>
+                              {course.price && (
                                 <span
-                                  className strikethrough className={`line-through ${
+                                  className={`line-through ${
                                     theme === "dark" ? "text-gray-400" : "text-gray-500"
                                   }`}
                                 >
-                                  ₹{course.discountPrice}
+                                  ₹{course.price}
                                 </span>
                               )}
                             </div>
