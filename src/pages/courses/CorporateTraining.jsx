@@ -11,18 +11,18 @@ import {
 } from "react-icons/fa";
 import FAQ from "../../components/FAQ";
 
-import accentureLogo from "../../assets/logo/accenture.png";
-import amazonLogo from "../../assets/logo/Amazon.png";
-import deloitteLogo from "../../assets/logo/Deloitte.png";
-import eyLogo from "../../assets/logo/EY.png";
-import googleLogo from "../../assets/logo/Google.png";
-import hclLogo from "../../assets/logo/Hcl.png";
-import ibmLogo from "../../assets/logo/IBM.png";
-import infosysLogo from "../../assets/logo/infosys.png";
-import kpmgLogo from "../../assets/logo/KPMG.png";
-import microsoftLogo from "../../assets/logo/Microsoft.png";
-import pwcLogo from "../../assets/logo/Pwc.png";
-import wiproLogo from "../../assets/logo/Wipro.png";
+import accentureLogo from "../../assets/Logo/accenture.png";
+import amazonLogo from "../../assets/Logo/Amazon.png";
+import deloitteLogo from "../../assets/Logo/Deloitte.png";
+import eyLogo from "../../assets/Logo/EY.png";
+import googleLogo from "../../assets/Logo/Google.png";
+import hclLogo from "../../assets/Logo/Hcl.png";
+import ibmLogo from "../../assets/Logo/IBM.png";
+import infosysLogo from "../../assets/Logo/infosys.png";
+import kpmgLogo from "../../assets/Logo/KPMG.png";
+import microsoftLogo from "../../assets/Logo/Microsoft.png";
+import pwcLogo from "../../assets/Logo/Pwc.png";
+import wiproLogo from "../../assets/Logo/Wipro.png";
 
 // Static Counter
 const AnimatedCounter = ({ end, suffix = "" }) => (

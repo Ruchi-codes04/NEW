@@ -48,7 +48,9 @@ import {
   Certification,
   SubmitFeedback,
 } from './pages/students';
-import { AllCourses, CorporateTraining, ViewCourse } from './pages/Courses';
+import AllCourses from './pages/courses/AllCourses';
+import CorporateTraining from './pages/courses/CorporateTraining';
+import ViewCourse from './pages/courses/ViewCourse';
 
 // Home page component
 const Home = () => {
