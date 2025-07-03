@@ -1,12 +1,12 @@
-
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FaTimes, FaRocket, FaStar, FaGraduationCap } from 'react-icons/fa';
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
 import { useSignUp } from '../contexts/SignUpContext';
+import { useNavigate } from 'react-router-dom';
 
 const SignUpPopup = () => {
-  const { isPopupVisible, hideSignUpPopup, showSignUpPopup, } = useSignUp();
+  const { isPopupVisible, hideSignUpPopup, showSignUpPopup } = useSignUp();
   const [isLogin, setIsLogin] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
@@ -28,6 +28,53 @@ const SignUpPopup = () => {
     confirmPassword: '',
     role: 'student',
   });
+  const navigate = useNavigate();
+
+  // Initialize Google Sign-In
+  useEffect(() => {
+    // Load the Google Sign-In script
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    document.body.appendChild(script);
+
+    window.handleCredentialResponse = async (response) => {
+      try {
+        setIsLoading(true);
+        setErrorMessage('');
+        setSuccessMessage('');
+
+        // Send the Google ID token to the backend for verification
+        const res = await axios.post(
+          'https://new-lms-backend-vmgr.onrender.com/api/v1/auth/google',
+          { idToken: response.credential },
+          { headers: { 'Content-Type': 'application/json' } }
+        );
+
+        if (res.data.success) {
+          // Store the token and user data
+          localStorage.setItem('Token', res.data.token);
+          setSuccessMessage('Google authentication successful! Welcome!');
+          setTimeout(() => {
+            hideSignUpPopup();
+            navigate('/profile-dashboard');
+            window.location.reload();
+          }, 2000);
+        } else {
+          setErrorMessage(res.data.message || 'Google authentication failed.');
+        }
+      } catch (error) {
+        console.error('Google authentication error:', error);
+        setErrorMessage(error.response?.data?.message || 'An error occurred during Google authentication.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, [hideSignUpPopup, navigate]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -51,6 +98,16 @@ const SignUpPopup = () => {
     setIsLogin(false);
     setShowOtpPopup(false);
     setOtp('');
+    setLoginData({ email: '', password: '' });
+    setRegisterData({
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+      password: '',
+      confirmPassword: '',
+      role: 'student',
+    });
   };
 
   const handleLoginChange = (e) => {
@@ -115,8 +172,8 @@ const SignUpPopup = () => {
     }
   };
 
-  const handleOtpSubmit = async (e)=>{
-     e.preventDefault();
+  const handleOtpSubmit = async (e) => {
+    e.preventDefault();
     setIsLoading(true);
     setErrorMessage('');
     setSuccessMessage('');
@@ -129,7 +186,7 @@ const SignUpPopup = () => {
 
     try {
       const response = await axios.post(
-        'https://lms-backend-flwq.onrender.com/api/v1/auth/verify-email',
+        'https://new-lms-backend-vmgr.onrender.com/api/v1/auth/verify-email',
         {
           email: registerData.email,
           otp: otp,
@@ -153,7 +210,10 @@ const SignUpPopup = () => {
         confirmPassword: '',
         role: 'student',
       });
-      // await fetchUserProfile();
+      setTimeout(() => {
+        setIsLogin(true);
+        setSuccessMessage('');
+      }, 2000);
     } catch (error) {
       console.error('OTP verification error:', error);
       setErrorMessage(error.response?.data?.message || 'Invalid OTP. Please try again.');
@@ -196,12 +256,11 @@ const SignUpPopup = () => {
       localStorage.setItem('Token', data.token);
       setSuccessMessage('Login successful! Welcome back!');
       setLoginData({ email: '', password: '' });
-      // await fetchUserProfile(); // Fetch profile after login
       setTimeout(() => {
         handleClose();
+        navigate('/profile-dashboard');
+        window.location.reload();
       }, 2000);
-
-      window.location.reload();
     } catch (error) {
       console.error('Login error:', error);
       setErrorMessage(error.response?.data?.message || 'Invalid email or password. Please try again.');
@@ -252,7 +311,7 @@ const SignUpPopup = () => {
                     type="text"
                     value={otp}
                     onChange={(e) => setOtp(e.target.value)}
-                    className="w-full p-2 sm:p-3 border border-teal-500 benne rounded-md text-sm sm:text-base"
+                    className="w-full p-2 sm:p-3 border border-teal-500 rounded-md text-sm sm:text-base"
                     required
                     maxLength="6"
                     placeholder="Enter 6-digit OTP"
@@ -320,15 +379,6 @@ const SignUpPopup = () => {
               {successMessage && (
                 <div className="text-center">
                   <p className="text-green-500 mb-4 text-sm sm:text-base">{successMessage}</p>
-                  {/* <button
-                    onClick={() => {
-                      setSuccessMessage('');
-                      setIsLogin(true);
-                    }}
-                    className="bg-teal-500 text-white px-3 py-2 sm:px-4 sm:py-2 rounded hover:bg-teal-600 text-sm sm:text-base"
-                  >
-                    Back to Login
-                  </button> */}
                 </div>
               )}
 
@@ -349,171 +399,207 @@ const SignUpPopup = () => {
 
               <div className="w-full max-w-xs sm:max-w-sm">
                 {isLogin ? (
-                  <form onSubmit={handleLogin} className="space-y-3 sm:space-y-4">
-                    <div className="mb-3 sm:mb-4">
-                      <label className="block text-gray-700 mb-1 sm:mb-2 text-sm sm:text-base">Email</label>
-                      <input
-                        type="email"
-                        name="email"
-                        value={loginData.email}
-                        onChange={handleLoginChange}
-                        className="w-full p-2 sm:p-3 border border-teal-500 rounded-md text-sm sm:text-base"
-                        required
-                      />
+                  <div className="space-y-3 sm:space-y-4">
+                    <form onSubmit={handleLogin} className="space-y-3 sm:space-y-4">
+                      <div className="mb-3 sm:mb-4">
+                        <label className="block text-gray-700 mb-1 sm:mb-2 text-sm sm:text-base">Email</label>
+                        <input
+                          type="email"
+                          name="email"
+                          value={loginData.email}
+                          onChange={handleLoginChange}
+                          className="w-full p-2 sm:p-3 border border-teal-500 rounded-md text-sm sm:text-base"
+                          required
+                        />
+                      </div>
+                      <div className="mb-3 sm:mb-4 relative">
+                        <label className="block text-gray-700 mb-1 sm:mb-2 text-sm sm:text-base">Password</label>
+                        <input
+                          type={showLoginPassword ? 'text' : 'password'}
+                          name="password"
+                          value={loginData.password}
+                          onChange={handleLoginChange}
+                          className="w-full p-2 sm:p-3 border border-teal-500 rounded-md pr-8 sm:pr-10 text-sm sm:text-base"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowLoginPassword(!showLoginPassword)}
+                          className="absolute right-2 sm:right-3 top-9 sm:top-11 text-gray-600 hover:text-gray-800"
+                        >
+                          {showLoginPassword ? (
+                            <AiOutlineEyeInvisible className="w-4 h-4 sm:w-5 sm:h-5" />
+                          ) : (
+                            <AiOutlineEye className="w-4 h-4 sm:w-5 sm:h-5" />
+                          )}
+                        </button>
+                      </div>
+                      <div className="flex justify-between items-center mb-4 sm:mb-5">
+                        <button
+                          type="submit"
+                          disabled={isLoading}
+                          className={`py-2 px-4 sm:py-3 sm:px-6 bg-teal-500 text-white rounded-md hover:bg-teal-600 text-sm sm:text-base ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                          {isLoading ? 'Logging in...' : 'Login'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setErrorMessage('Forgot Password functionality not implemented.')}
+                          className="text-teal-600 hover:underline text-sm sm:text-base"
+                        >
+                          Forgot Password?
+                        </button>
+                      </div>
+                    </form>
+                    <div
+                      id="g_id_onload"
+                      data-client_id="YOUR_GOOGLE_CLIENT_ID" // Replace with your actual Google Client ID
+                      data-callback="handleCredentialResponse"
+                      data-auto_prompt="false"
+                      className="w-full flex justify-center"
+                    >
+                      <div
+                        className="g_id_signin"
+                        data-type="standard"
+                        data-size="large"
+                        data-theme="outline"
+                        data-text="signin_with"
+                        data-shape="rectangular"
+                        data-logo_alignment="left"
+                      ></div>
                     </div>
-                    <div className="mb-3 sm:mb-4 relative">
-                      <label className="block text-gray-700 mb-1 sm:mb-2 text-sm sm:text-base">Password</label>
-                      <input
-                        type={showLoginPassword ? 'text' : 'password'}
-                        name="password"
-                        value={loginData.password}
-                        onChange={handleLoginChange}
-                        className="w-full p-2 sm:p-3 border border-teal-500 rounded-md pr-8 sm:pr-10 text-sm sm:text-base"
-                        required
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowLoginPassword(!showLoginPassword)}
-                        className="absolute right-2 sm:right-3 top-9 sm:top-11 text-gray-600 hover:text-gray-800"
-                      >
-                        {showLoginPassword ? (
-                          <AiOutlineEyeInvisible className="w-4 h-4 sm:w-5 sm:h-5" />
-                        ) : (
-                          <AiOutlineEye className="w-4 h-4 sm:w-5 sm:h-5" />
-                        )}
-                      </button>
-                    </div>
-                    <div className="flex justify-between items-center mb-4 sm:mb-5">
+                  </div>
+                ) : (
+                  <div className="space-y-3 sm:space-y-4">
+                    <form onSubmit={handleRegisterSubmit} className="space-y-3 sm:space-y-4 max-h-80 sm:max-h-96 overflow-y-auto scrollbar-hide">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                        <div>
+                          <label className="block text-gray-700 mb-1 sm:mb-2 text-sm sm:text-base">First Name</label>
+                          <input
+                            type="text"
+                            name="firstName"
+                            value={registerData.firstName}
+                            onChange={handleRegisterChange}
+                            className="w-full p-2 sm:p-3 border border-teal-500 rounded-md text-sm sm:text-base"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-gray-700 mb-1 sm:mb-2 text-sm sm:text-base">Last Name</label>
+                          <input
+                            type="text"
+                            name="lastName"
+                            value={registerData.lastName}
+                            onChange={handleRegisterChange}
+                            className="w-full p-2 sm:p-3 border border-teal-500 rounded-md text-sm sm:text-base"
+                            required
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-gray-700 mb-1 sm:mb-2 text-sm sm:text-base">Email</label>
+                        <input
+                          type="email"
+                          name="email"
+                          value={registerData.email}
+                          onChange={handleRegisterChange}
+                          className="w-full p-2 sm:p-3 border border-teal-500 rounded-md text-sm sm:text-base"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-gray-700 mb-1 sm:mb-2 text-sm sm:text-base">Phone Number</label>
+                        <div className="flex">
+                          <div className="flex items-center bg-gray-50 border border-teal-500 rounded-l-md px-3">
+                            <img
+                              src="https://flagcdn.com/w20/in.png"
+                              alt="India"
+                              className="w-5 h-3 mr-2"
+                            />
+                            <span className="text-gray-700 font-medium">+91</span>
+                          </div>
+                          <input
+                            type="tel"
+                            name="phone"
+                            value={registerData.phone}
+                            onChange={handleRegisterChange}
+                            className="flex-1 p-2 sm:p-3 border border-l-0 border-teal-500 rounded-r-md text-sm sm:text-base"
+                            required
+                          />
+                        </div>
+                      </div>
+                      <div className="relative">
+                        <label className="block text-gray-700 mb-1 sm:mb-2 text-sm sm:text-base">Password</label>
+                        <input
+                          type={showRegisterPassword ? 'text' : 'password'}
+                          name="password"
+                          value={registerData.password}
+                          onChange={handleRegisterChange}
+                          className="w-full p-2 sm:p-3 border border-teal-500 rounded-md pr-8 sm:pr-10 text-sm sm:text-base"
+                          required
+                          minLength="6"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowRegisterPassword(!showRegisterPassword)}
+                          className="absolute right-2 sm:right-3 top-9 sm:top-11 text-gray-600 hover:text-gray-800"
+                        >
+                          {showRegisterPassword ? (
+                            <AiOutlineEyeInvisible className="w-4 h-4 sm:w-5 sm:h-5" />
+                          ) : (
+                            <AiOutlineEye className="w-4 h-4 sm:w-5 sm:h-5" />
+                          )}
+                        </button>
+                      </div>
+                      <div className="relative">
+                        <label className="block text-gray-700 mb-1 sm:mb-2 text-sm sm:text-base">Confirm Password</label>
+                        <input
+                          type={showRegisterPassword ? 'text' : 'password'}
+                          name="confirmPassword"
+                          value={registerData.confirmPassword}
+                          onChange={handleRegisterChange}
+                          className="w-full p-2 sm:p-3 border border-teal-500 rounded-md pr-8 sm:pr-10 text-sm sm:text-base"
+                          required
+                          minLength="6"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowRegisterPassword(!showRegisterPassword)}
+                          className="absolute right-2 sm:right-3 top-9 sm:top-11 text-gray-600 hover:text-gray-800"
+                        >
+                          {showRegisterPassword ? (
+                            <AiOutlineEyeInvisible className="w-4 h-4 sm:w-5 sm:h-5" />
+                          ) : (
+                            <AiOutlineEye className="w-4 h-4 sm:w-5 sm:h-5" />
+                          )}
+                        </button>
+                      </div>
                       <button
                         type="submit"
                         disabled={isLoading}
-                        className={`py-2 px-4 sm:py-3 sm:px-6 bg-teal-500 text-white rounded-md hover:bg-teal-600 text-sm sm:text-base ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        className={`w-full py-2 px-4 sm:py-3 sm:px-6 bg-teal-500 text-white rounded-md hover:bg-teal-600 text-sm sm:text-base ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                       >
-                        {isLoading ? 'Logging in...' : 'Login'}
+                        {isLoading ? 'Registering...' : 'Create Account'}
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => setErrorMessage('Forgot Password functionality not implemented.')}
-                        className="text-teal-600 hover:underline text-sm sm:text-base"
-                      >
-                        Forgot Password?
-                      </button>
-                    </div>
-                  </form>
-                ) : (
-                  <form onSubmit={handleRegisterSubmit} className="space-y-3 sm:space-y-4 max-h-80 sm:max-h-96 overflow-y-auto scrollbar-hide">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                      <div>
-                        <label className="block text-gray-700 mb-1 sm:mb-2 text-sm sm:text-base">First Name</label>
-                        <input
-                          type="text"
-                          name="firstName"
-                          value={registerData.firstName}
-                          onChange={handleRegisterChange}
-                          className="w-full p-2 sm:p-3 border border-teal-500 rounded-md text-sm sm:text-base"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-gray-700 mb-1 sm:mb-2 text-sm sm:text-base">Last Name</label>
-                        <input
-                          type="text"
-                          name="lastName"
-                          value={registerData.lastName}
-                          onChange={handleRegisterChange}
-                          className="w-full p-2 sm:p-3 border border-teal-500 rounded-md text-sm sm:text-base"
-                          required
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-gray-700 mb-1 sm:mb-2 text-sm sm:text-base">Email</label>
-                      <input
-                        type="email"
-                        name="email"
-                        value={registerData.email}
-                        onChange={handleRegisterChange}
-                        className="w-full p-2 sm:p-3 border border-teal-500 rounded-md text-sm sm:text-base"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-gray-700 mb-1 sm:mb-2 text-sm sm:text-base">Phone Number</label>
-                      <div className="flex">
-                        <div className="flex items-center bg-gray-50 border border-teal-500 rounded-l-md px-3">
-                          <img
-                            src="https://flagcdn.com/w20/in.png"
-                            alt="India"
-                            className="w-5 h-3 mr-2"
-                          />
-                          <span className="text-gray-700 font-medium">+91</span>
-                        </div>
-                        <input
-                          type="tel"
-                          name="phone"
-                          value={registerData.phone}
-                          onChange={handleRegisterChange}
-                          className="flex-1 p-2 sm:p-3 border border-l-0 border-teal-500 rounded-r-md text-sm sm:text-base"
-                          required
-                        />
-                      </div>
-                    </div>
-                    <div className="relative">
-                      <label className="block text-gray-700 mb-1 sm:mb-2 text-sm sm:text-base">Password</label>
-                      <input
-                        type={showRegisterPassword ? 'text' : 'password'}
-                        name="password"
-                        value={registerData.password}
-                        onChange={handleRegisterChange}
-                        className="w-full p-2 sm:p-3 border border-teal-500 rounded-md pr-8 sm:pr-10 text-sm sm:text-base"
-                        required
-                        minLength="6"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowRegisterPassword(!showRegisterPassword)}
-                        className="absolute right-2 sm:right-3 top-9 sm:top-11 text-gray-600 hover:text-gray-800"
-                      >
-                        {showRegisterPassword ? (
-                          <AiOutlineEyeInvisible className="w-4 h-4 sm:w-5 sm:h-5" />
-                        ) : (
-                          <AiOutlineEye className="w-4 h-4 sm:w-5 sm:h-5" />
-                        )}
-                      </button>
-                    </div>
-                    <div className="relative">
-                      <label className="block text-gray-700 mb-1 sm:mb-2 text-sm sm:text-base">Confirm Password</label>
-                      <input
-                        type={showRegisterPassword ? 'text' : 'password'}
-                        name="confirmPassword"
-                        value={registerData.confirmPassword}
-                        onChange={handleRegisterChange}
-                        className="w-full p-2 sm:p-3 border border-teal-500 rounded-md pr-8 sm:pr-10 text-sm sm:text-base"
-                        required
-                        minLength="6"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowRegisterPassword(!showRegisterPassword)}
-                        className="absolute right-2 sm:right-3 top-9 sm:top-11 text-gray-600 hover:text-gray-800"
-                      >
-                        {showRegisterPassword ? (
-                          <AiOutlineEyeInvisible className="w-4 h-4 sm:w-5 sm:h-5" />
-                        ) : (
-                          <AiOutlineEye className="w-4 h-4 sm:w-5 sm:h-5" />
-                        )}
-                      </button>
-                    </div>
-                    <button
-                      type="submit"
-                      disabled={isLoading}
-                      className={`w-full py-2 px-4 sm:py-3 sm:px-6 bg-teal-500 text-white
-
- rounded-md hover:bg-teal-600 text-sm sm:text-base ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    </form>
+                    <div
+                      id="g_id_onload"
+                      data-client_id="YOUR_GOOGLE_CLIENT_ID" // Replace with your actual Google Client ID
+                      data-callback="handleCredentialResponse"
+                      data-auto_prompt="false"
+                      className="w-full flex justify-center"
                     >
-                      {isLoading ? 'Registering...' : 'Create Account'}
-                    </button>
-                  </form>
+                      <div
+                        className="g_id_signin"
+                        data-type="standard"
+                        data-size="large"
+                        data-theme="outline"
+                        data-text="signup_with"
+                        data-shape="rectangular"
+                        data-logo_alignment="left"
+                      ></div>
+                    </div>
+                  </div>
                 )}
               </div>
 
