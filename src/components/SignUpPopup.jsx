@@ -57,7 +57,7 @@ const SignUpPopup = () => {
           setSuccessMessage('Google authentication successful! Welcome!');
           setTimeout(() => {
             hideSignUpPopup();
-            navigate('/');
+            navigate('/profile-dashboard');
             window.location.reload();
           }, 2000);
         } else {
