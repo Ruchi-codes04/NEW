@@ -340,7 +340,7 @@ const CoursesPage = () => {
                       theme === "dark" ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-500 hover:bg-blue-600"
                     }`}
                   >
-                    View All Bookmarked Courses
+                    View All Courses
                   </button>
                 </div>
               )}

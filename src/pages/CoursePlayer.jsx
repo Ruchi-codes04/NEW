@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ChevronDown, HelpCircle, Star, Bell } from 'lucide-react';
+import { ChevronDown, HelpCircle, Star, Bell, Video } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import arrowLeft from '../assets/image (1).png';
@@ -22,6 +22,9 @@ export default function CoursePlayer() {
   const [isHelpSidebarOpen, setIsHelpSidebarOpen] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isLiveClassesOpen, setIsLiveClassesOpen] = useState(false);
+  const [liveClasses, setLiveClasses] = useState([]);
+  const [liveClassesError, setLiveClassesError] = useState('');
   const [notifications, setNotifications] = useState([]);
   const [notificationsError, setNotificationsError] = useState('');
   const [assessmentsError, setAssessmentsError] = useState('');
@@ -45,6 +48,7 @@ export default function CoursePlayer() {
   const [errorMsg, setErrorMsg] = useState('');
   const [contactCourses, setContactCourses] = useState([]);
   const notificationsPopupRef = useRef(null);
+  const liveClassesPopupRef = useRef(null);
 
   useEffect(() => {
     console.log('CoursePlayer: Context:', context);
@@ -60,7 +64,10 @@ export default function CoursePlayer() {
           throw new Error('No authentication token found');
         }
 
-        const [contentRes, enrollmentRes, coursesRes, assessmentsRes, profileRes, notificationsRes] = await Promise.all([
+        console.log('Fetching data for courseId:', courseId); // Debug courseId
+        console.log('Using token:', token); // Debug token
+
+        const [contentRes, enrollmentRes, coursesRes, assessmentsRes, profileRes, notificationsRes, liveClassesRes] = await Promise.all([
           axios.get(`https://lms-backend-flwq.onrender.com/api/v1/courses/${courseId}/content`, {
             headers: { Authorization: `Bearer ${token}` },
           }).catch((err) => ({ data: { success: false }, error: err })),
@@ -79,6 +86,12 @@ export default function CoursePlayer() {
           axios.get(`https://new-lms-backend-vmgr.onrender.com/api/v1/notifications/course/${courseId}?page=1&limit=10&isRead=false`, {
             headers: { Authorization: `Bearer ${token}` },
           }).catch((err) => ({ data: { success: false }, error: err })),
+          axios.get(`https://new-lms-backend-vmgr.onrender.com/api/v1/live-classes/course/${courseId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }).catch((err) => {
+            console.error('Live Classes API Error:', err.response?.data || err.message);
+            return { data: { success: false }, error: err };
+          }),
         ]);
 
         if (profileRes.data.data) {
@@ -153,7 +166,7 @@ export default function CoursePlayer() {
         }
 
         if (assessmentsRes.data.success) {
-          console.log('Assessments fetched:', assessmentsRes.data.data); // Debug assessments
+          console.log('Assessments fetched:', assessmentsRes.data.data);
           setAssessments(assessmentsRes.data.data);
         } else {
           setAssessmentsError('No assessments found for this course.');
@@ -166,6 +179,15 @@ export default function CoursePlayer() {
           setNotificationsError('Failed to load notifications.');
           console.error('Notifications API Error:', notificationsRes.error?.message || 'Unknown error');
         }
+
+        if (liveClassesRes.data.success) {
+          console.log('Live Classes fetched:', liveClassesRes.data.data); // Debug live classes
+          setLiveClasses(liveClassesRes.data.data);
+        } else {
+          const errorMessage = liveClassesRes.error?.response?.data?.message || liveClassesRes.error?.message || 'Failed to load live classes.';
+          setLiveClassesError(errorMessage);
+          console.error('Live Classes API Error:', liveClassesRes.error?.response?.data || liveClassesRes.error);
+        }
       } catch (error) {
         console.error('Failed to fetch data:', error);
         setErrorMsg(
@@ -174,7 +196,7 @@ export default function CoursePlayer() {
             : 'Failed to load course data. Please try again later.'
         );
         if (error.response?.status === 401) {
-          navigate('/login'); // Redirect to login if unauthorized
+          navigate('/login');
         }
       }
     };
@@ -187,13 +209,16 @@ export default function CoursePlayer() {
       if (isNotificationsOpen && notificationsPopupRef.current && !notificationsPopupRef.current.contains(event.target)) {
         setIsNotificationsOpen(false);
       }
+      if (isLiveClassesOpen && liveClassesPopupRef.current && !liveClassesPopupRef.current.contains(event.target)) {
+        setIsLiveClassesOpen(false);
+      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isNotificationsOpen]);
+  }, [isNotificationsOpen, isLiveClassesOpen]);
 
   const toggleModule = (index) => {
     setModules((prevModules) =>
@@ -218,6 +243,10 @@ export default function CoursePlayer() {
 
   const toggleNotificationsModal = () => {
     setIsNotificationsOpen((prev) => !prev);
+  };
+
+  const toggleLiveClassesModal = () => {
+    setIsLiveClassesOpen((prev) => !prev);
   };
 
   const markAllNotificationsAsRead = async () => {
@@ -266,6 +295,13 @@ export default function CoursePlayer() {
       window.location.href = actionUrl;
     }
     setIsNotificationsOpen(false);
+  };
+
+  const handleLiveClassClick = (joinUrl) => {
+    if (joinUrl) {
+      window.open(joinUrl, '_blank');
+    }
+    setIsLiveClassesOpen(false);
   };
 
   const handleChange = (e) => {
@@ -407,6 +443,24 @@ export default function CoursePlayer() {
         <div className="flex flex-row gap-2 w-full sm:flex-row justify-end sm:gap-2">
           <div className="relative flex items-center">
             <button
+              onClick={toggleLiveClassesModal}
+              className={`bg-transparent px-4 py-2 rounded-md text-sm border border-[#49BBBD] transition flex items-center gap-1 flex-1 sm:flex-none justify-center sm:justify-start ${
+                theme === 'dark'
+                  ? 'text-gray-100 hover:bg-[#49BBBD] hover:text-white'
+                  : 'text-gray-900 hover:bg-[#49BBBD] hover:text-white'
+              }`}
+            >
+              <Video className="w-4 h-4" />
+              Live Classes
+              {liveClasses.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {liveClasses.length}
+                </span>
+              )}
+            </button>
+          </div>
+          <div className="relative flex items-center">
+            <button
               onClick={toggleNotificationsModal}
               className={`bg-transparent px-4 py-2 rounded-md text-sm border border-[#49BBBD] transition flex items-center gap-1 flex-1 sm:flex-none justify-center sm:justify-start ${
                 theme === 'dark'
@@ -454,6 +508,112 @@ export default function CoursePlayer() {
           {contentError}
         </div>
       )}
+
+      <AnimatePresence>
+        {isLiveClassesOpen && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className={`fixed inset-0 bg-black flex items-center justify-center z-50 p-4 ${
+              theme === 'dark' ? 'bg-opacity-75' : 'bg-opacity-50'
+            }`}
+          >
+            <div
+              ref={liveClassesPopupRef}
+              className={`rounded-lg p-6 max-w-lg w-full max-h-[80vh] overflow-y-auto ${
+                theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+              }`}
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h2
+                  className={`text-xl font-semibold ${
+                    theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+                  }`}
+                >
+                  Live Classes
+                </h2>
+                <button
+                  onClick={toggleLiveClassesModal}
+                  className={`hover:${
+                    theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
+                  } ${
+                    theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                  }`}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              {liveClassesError ? (
+                <p
+                  className={`text-sm ${
+                    theme === 'dark' ? 'text-red-400' : 'text-red-500'
+                  }`}
+                >
+                  {liveClassesError}
+                </p>
+              ) : liveClasses.length === 0 ? (
+                <p
+                  className={`text-sm ${
+                    theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                  }`}
+                >
+                  No live classes available.
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  {liveClasses.map((liveClass) => (
+                    <div
+                      key={liveClass._id}
+                      className={`border rounded-lg p-3 flex justify-between items-center cursor-pointer hover:${
+                        theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'
+                      } ${
+                        theme === 'dark'
+                          ? 'bg-gray-800 border-gray-700'
+                          : 'bg-white border-gray-200'
+                      }`}
+                      onClick={() => handleLiveClassClick(liveClass.joinUrl)}
+                    >
+                      <div>
+                        <h3
+                          className={`text-base font-semibold ${
+                            theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+                          }`}
+                        >
+                          {liveClass.title}
+                        </h3>
+                        <p
+                          className={`text-sm ${
+                            theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                          }`}
+                        >
+                          {liveClass.description}
+                        </p>
+                        <p
+                          className={`text-xs ${
+                            theme === 'dark' ? 'text-gray-500' : 'text-gray-500'
+                          }`}
+                        >
+                          {new Date(liveClass.startTime).toLocaleString()} ({liveClass.duration} min)
+                        </p>
+                        <p
+                          className={`text-xs ${
+                            theme === 'dark' ? 'text-gray-500' : 'text-gray-500'
+                          }`}
+                        >
+                          Instructor: {liveClass.instructor.firstName} {liveClass.instructor.lastName}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {isNotificationsOpen && (

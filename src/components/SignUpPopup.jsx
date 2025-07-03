@@ -453,7 +453,7 @@ const SignUpPopup = () => {
                     </form>
                     <div
                       id="g_id_onload"
-                      data-client_id="YOUR_GOOGLE_CLIENT_ID" // Replace with your actual Google Client ID
+                      data-client_id="http://985947726470-5lflb818ib5ee246iucdbkpru7m5i1c8.apps.googleusercontent.com" // Replace with your actual Google Client ID
                       data-callback="handleCredentialResponse"
                       data-auto_prompt="false"
                       className="w-full flex justify-center"
@@ -584,7 +584,7 @@ const SignUpPopup = () => {
                     </form>
                     <div
                       id="g_id_onload"
-                      data-client_id="YOUR_GOOGLE_CLIENT_ID" // Replace with your actual Google Client ID
+                      data-client_id="http://985947726470-5lflb818ib5ee246iucdbkpru7m5i1c8.apps.googleusercontent.com" // Replace with your actual Google Client ID
                       data-callback="handleCredentialResponse"
                       data-auto_prompt="false"
                       className="w-full flex justify-center"
