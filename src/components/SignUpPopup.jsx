@@ -301,7 +301,7 @@ const SignUpPopup = () => {
         setLoginData({ email: '', password: '' });
         setTimeout(() => {
           handleClose();
-          navigate('/profile-dashboard');
+          navigate('/');
           window.location.reload();
         }, 2000);
       } else {
