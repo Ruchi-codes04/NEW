@@ -67,7 +67,7 @@ const SignUpPopup = () => {
 
         // Send the Google ID token to the backend for verification
         const res = await axios.post(
-          'https://new-lms-backend-vmgr.onrender.com/api/v1/google',
+          'https://new-lms-backend-vmgr.onrender.com/api/v1/auth/google',
           { idToken: response.credential },
           { headers: { 'Content-Type': 'application/json' } }
         );
