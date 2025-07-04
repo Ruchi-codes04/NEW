@@ -36,6 +36,11 @@ const SignUpPopup = () => {
     const script = document.createElement('script');
     script.src = 'https://accounts.google.com/gsi/client';
     script.async = true;
+    // Handle script load errors
+    script.onerror = () => {
+      setErrorMessage('Failed to load Google Sign-In script. Please try again later.');
+      console.error('Google Sign-In script failed to load.');
+    };
     document.body.appendChild(script);
 
     window.handleCredentialResponse = async (response) => {
@@ -44,7 +49,11 @@ const SignUpPopup = () => {
         setErrorMessage('');
         setSuccessMessage('');
 
+        // Log the Google ID token for debugging
+        console.log('Google ID Token:', response.credential);
+
         // Send the Google ID token to the backend for verification
+        // Verify the endpoint 'https://new-lms-backend-vmgr.onrender.com/api/v1/auth/google' exists in your backend
         const res = await axios.post(
           'https://new-lms-backend-vmgr.onrender.com/api/v1/auth/google',
           { idToken: response.credential },
@@ -64,8 +73,14 @@ const SignUpPopup = () => {
           setErrorMessage(res.data.message || 'Google authentication failed.');
         }
       } catch (error) {
+        // Enhanced error logging for debugging
         console.error('Google authentication error:', error);
-        setErrorMessage(error.response?.data?.message || 'An error occurred during Google authentication.');
+        console.log('Error response:', error.response?.data);
+        console.log('Error status:', error.response?.status);
+        setErrorMessage(
+          error.response?.data?.message ||
+            `Google authentication failed with status ${error.response?.status || 'unknown'}. Please try again.`
+        );
       } finally {
         setIsLoading(false);
       }
@@ -73,6 +88,8 @@ const SignUpPopup = () => {
 
     return () => {
       document.body.removeChild(script);
+      // Clean up the global callback
+      delete window.handleCredentialResponse;
     };
   }, [hideSignUpPopup, navigate]);
 
@@ -276,7 +293,7 @@ const SignUpPopup = () => {
       <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden relative">
         <button
           onClick={handleClose}
-          className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 w-7 h-7 sm:w-8 sm:h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors"
+          className="absolute top-3 right-3 sm:top-4 sm:right-4 w-7 h-7 sm:w-8 sm:h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors"
         >
           <FaTimes className="text-gray-600 text-sm sm:text-base" />
         </button>
@@ -453,7 +470,7 @@ const SignUpPopup = () => {
                     </form>
                     <div
                       id="g_id_onload"
-                      data-client_id="985947726470-5lflb818ib5ee246iucdbkpru7m5i1c8.apps.googleusercontent.com" // Replace with your actual Google Client ID
+                      data-client_id="985947726470-5lflb818ib5ee246iucdbkpru7m5i1c8.apps.googleusercontent.com" // Verify this Client ID in Google Cloud Console
                       data-callback="handleCredentialResponse"
                       data-auto_prompt="false"
                       className="w-full flex justify-center"
@@ -584,7 +601,7 @@ const SignUpPopup = () => {
                     </form>
                     <div
                       id="g_id_onload"
-                      data-client_id="985947726470-5lflb818ib5ee246iucdbkpru7m5i1c8.apps.googleusercontent.com" // Replace with your actual Google Client ID
+                      data-client_id="985947726470-5lflb818ib5ee246iucdbkpru7m5i1c8.apps.googleusercontent.com" // Verify this Client ID in Google Cloud Console
                       data-callback="handleCredentialResponse"
                       data-auto_prompt="false"
                       className="w-full flex justify-center"
