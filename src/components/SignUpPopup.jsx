@@ -53,9 +53,8 @@ const SignUpPopup = () => {
         console.log('Google ID Token:', response.credential);
 
         // Send the Google ID token to the backend for verification
-        // Verify the endpoint 'https://new-lms-backend-vmgr.onrender.com/api/v1/auth/google' exists in your backend
         const res = await axios.post(
-          'https://new-lms-backend-vmgr.onrender.com/api/v1/auth/google',
+          'https://new-lms-backend-vmgr.onrender.com/api/v1/google',
           { idToken: response.credential },
           { headers: { 'Content-Type': 'application/json' } }
         );
@@ -470,7 +469,7 @@ const SignUpPopup = () => {
                     </form>
                     <div
                       id="g_id_onload"
-                      data-client_id="985947726470-5lflb818ib5ee246iucdbkpru7m5i1c8.apps.googleusercontent.com" // Verify this Client ID in Google Cloud Console
+                      data-client_id="985947726470-5lflb818ib5ee246iucdbkpru7m5i1c8.apps.googleusercontent.com"
                       data-callback="handleCredentialResponse"
                       data-auto_prompt="false"
                       className="w-full flex justify-center"
@@ -601,7 +600,7 @@ const SignUpPopup = () => {
                     </form>
                     <div
                       id="g_id_onload"
-                      data-client_id="985947726470-5lflb818ib5ee246iucdbkpru7m5i1c8.apps.googleusercontent.com" // Verify this Client ID in Google Cloud Console
+                      data-client_id="985947726470-5lflb818ib5ee246iucdbkpru7m5i1c8.apps.googleusercontent.com"
                       data-callback="handleCredentialResponse"
                       data-auto_prompt="false"
                       className="w-full flex justify-center"
