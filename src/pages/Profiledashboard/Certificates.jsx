@@ -19,7 +19,7 @@ const Certificates = () => {
         const token = localStorage.getItem('Token');
         if (!token) {
           setError('Please log in to view certificates');
-          navigate('/login');
+          navigate('/');
           return;
         }
 
@@ -41,7 +41,7 @@ const Certificates = () => {
         if (err.response?.status === 401) {
           setError('Unauthorized: Invalid or expired token. Please log in again.');
           localStorage.removeItem('Token');
-          navigate('/login');
+          navigate('/');
         } else {
           setError(`Error fetching certificates: ${err.message}`);
         }
@@ -60,7 +60,7 @@ const Certificates = () => {
       const token = localStorage.getItem('Token');
       if (!token) {
         setModalError('Please log in to view certificate details');
-        navigate('/login');
+        navigate('/');
         return;
       }
 
@@ -82,7 +82,7 @@ const Certificates = () => {
       if (err.response?.status === 401) {
         setModalError('Unauthorized: Invalid or expired token. Please log in again.');
         localStorage.removeItem('Token');
-        navigate('/login');
+        navigate('/');
       } else {
         setModalError(`Error fetching certificate details: ${err.message}`);
       }
