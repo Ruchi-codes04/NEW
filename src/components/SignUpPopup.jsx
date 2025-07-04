@@ -30,8 +30,21 @@ const SignUpPopup = () => {
   });
   const navigate = useNavigate();
 
-  // Initialize Google Sign-In
+  // Initialize Google Sign-In and clean up invalid tokens
   useEffect(() => {
+    // Clear invalid token on app initialization
+    const token = localStorage.getItem('Token');
+    if (token) {
+      try {
+        // Basic token validation (check format)
+        const parts = token.split('.');
+        if (parts.length !== 3) throw new Error('Invalid token format');
+      } catch (error) {
+        console.error('Invalid token detected:', error);
+        localStorage.removeItem('Token');
+      }
+    }
+
     // Load the Google Sign-In script
     const script = document.createElement('script');
     script.src = 'https://accounts.google.com/gsi/client';
@@ -65,13 +78,13 @@ const SignUpPopup = () => {
           setSuccessMessage('Google authentication successful! Welcome!');
           setTimeout(() => {
             hideSignUpPopup();
-            navigate('/');
+            navigate('/profile-dashboard');
             window.location.reload();
           }, 2000);
         } else {
           console.error('Google Sign-In failed: No token received', res.data);
           setErrorMessage(res.data.message || 'Google authentication failed: No token received.');
-          localStorage.removeItem('Token'); // Clear invalid token
+          localStorage.removeItem('Token');
         }
       } catch (error) {
         // Enhanced error logging for debugging
@@ -79,11 +92,11 @@ const SignUpPopup = () => {
         console.log('Error response:', error.response?.data);
         console.log('Error status:', error.response?.status);
         console.log('Error URL:', error.config?.url);
-        setErrorMessage(
-          error.response?.data?.message ||
-            `Google authentication failed with status ${error.response?.status || 'unknown'}. Please try again.`
-        );
-        localStorage.removeItem('Token'); // Clear invalid token
+        const errorMsg = error.response?.status === 404
+          ? 'Google Sign-In endpoint not found. Please try again later or contact support.'
+          : error.response?.data?.message || 'Google authentication failed. Please try again.';
+        setErrorMessage(errorMsg);
+        localStorage.removeItem('Token');
       } finally {
         setIsLoading(false);
       }
@@ -91,7 +104,6 @@ const SignUpPopup = () => {
 
     return () => {
       document.body.removeChild(script);
-      // Clean up the global callback
       delete window.handleCredentialResponse;
     };
   }, [hideSignUpPopup, navigate]);
@@ -496,6 +508,7 @@ const SignUpPopup = () => {
                       data-client_id="985947726470-5lflb818ib5ee246iucdbkpru7m5i1c8.apps.googleusercontent.com"
                       data-callback="handleCredentialResponse"
                       data-auto_prompt="false"
+                      data-ux_mode="popup"
                       className="w-full flex justify-center"
                     >
                       <div
@@ -627,6 +640,7 @@ const SignUpPopup = () => {
                       data-client_id="985947726470-5lflb818ib5ee246iucdbkpru7m5i1c8.apps.googleusercontent.com"
                       data-callback="handleCredentialResponse"
                       data-auto_prompt="false"
+                      data-ux_mode="popup"
                       className="w-full flex justify-center"
                     >
                       <div
