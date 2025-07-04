@@ -59,27 +59,31 @@ const SignUpPopup = () => {
           { headers: { 'Content-Type': 'application/json' } }
         );
 
-        if (res.data.success) {
-          // Store the token and user data
-          localStorage.setItem('Token', res.data.token);
+        if (res.data.success && res.data.data.token) {
+          // Store the token only if it exists
+          localStorage.setItem('Token', res.data.data.token);
           setSuccessMessage('Google authentication successful! Welcome!');
           setTimeout(() => {
             hideSignUpPopup();
-            navigate('/profile-dashboard');
+            navigate('/');
             window.location.reload();
           }, 2000);
         } else {
-          setErrorMessage(res.data.message || 'Google authentication failed.');
+          console.error('Google Sign-In failed: No token received', res.data);
+          setErrorMessage(res.data.message || 'Google authentication failed: No token received.');
+          localStorage.removeItem('Token'); // Clear invalid token
         }
       } catch (error) {
         // Enhanced error logging for debugging
         console.error('Google authentication error:', error);
         console.log('Error response:', error.response?.data);
         console.log('Error status:', error.response?.status);
+        console.log('Error URL:', error.config?.url);
         setErrorMessage(
           error.response?.data?.message ||
             `Google authentication failed with status ${error.response?.status || 'unknown'}. Please try again.`
         );
+        localStorage.removeItem('Token'); // Clear invalid token
       } finally {
         setIsLoading(false);
       }
@@ -182,6 +186,9 @@ const SignUpPopup = () => {
       setSuccessMessage('Registration successful! Please verify OTP sent to your email.');
     } catch (error) {
       console.error('Registration error:', error);
+      console.log('Error response:', error.response?.data);
+      console.log('Error status:', error.response?.status);
+      console.log('Error URL:', error.config?.url);
       setErrorMessage(error.response?.data?.message || 'An error occurred during registration. Please try again.');
     } finally {
       setIsLoading(false);
@@ -214,25 +221,36 @@ const SignUpPopup = () => {
         }
       );
 
-      setSuccessMessage('Thank you for signing up! Welcome to our learning platform!');
-      setShowOtpPopup(false);
-      setOtp('');
-      setRegisterData({
-        firstName: '',
-        lastName: '',
-        email: '',
-        phone: '',
-        password: '',
-        confirmPassword: '',
-        role: 'student',
-      });
-      setTimeout(() => {
-        setIsLogin(true);
-        setSuccessMessage('');
-      }, 2000);
+      if (response.data.success && response.data.data.token) {
+        localStorage.setItem('Token', response.data.data.token);
+        setSuccessMessage('Thank you for signing up! Welcome to our learning platform!');
+        setShowOtpPopup(false);
+        setOtp('');
+        setRegisterData({
+          firstName: '',
+          lastName: '',
+          email: '',
+          phone: '',
+          password: '',
+          confirmPassword: '',
+          role: 'student',
+        });
+        setTimeout(() => {
+          setIsLogin(true);
+          setSuccessMessage('');
+        }, 2000);
+      } else {
+        console.error('OTP verification failed: No token received', response.data);
+        setErrorMessage(response.data.message || 'OTP verification failed: No token received.');
+        localStorage.removeItem('Token');
+      }
     } catch (error) {
       console.error('OTP verification error:', error);
+      console.log('Error response:', error.response?.data);
+      console.log('Error status:', error.response?.status);
+      console.log('Error URL:', error.config?.url);
       setErrorMessage(error.response?.data?.message || 'Invalid OTP. Please try again.');
+      localStorage.removeItem('Token');
     } finally {
       setIsLoading(false);
     }
@@ -265,21 +283,27 @@ const SignUpPopup = () => {
       );
 
       const { success, message, data } = response.data;
-      if (!success) {
-        throw new Error(message || 'Login failed');
+      if (success && data.token) {
+        localStorage.setItem('Token', data.token);
+        setSuccessMessage('Login successful! Welcome back!');
+        setLoginData({ email: '', password: '' });
+        setTimeout(() => {
+          handleClose();
+          navigate('/profile-dashboard');
+          window.location.reload();
+        }, 2000);
+      } else {
+        console.error('Login failed: No token received', response.data);
+        setErrorMessage(message || 'Login failed: No token received.');
+        localStorage.removeItem('Token');
       }
-
-      localStorage.setItem('Token', data.token);
-      setSuccessMessage('Login successful! Welcome back!');
-      setLoginData({ email: '', password: '' });
-      setTimeout(() => {
-        handleClose();
-        navigate('/profile-dashboard');
-        window.location.reload();
-      }, 2000);
     } catch (error) {
       console.error('Login error:', error);
+      console.log('Error response:', error.response?.data);
+      console.log('Error status:', error.response?.status);
+      console.log('Error URL:', error.config?.url);
       setErrorMessage(error.response?.data?.message || 'Invalid email or password. Please try again.');
+      localStorage.removeItem('Token');
     } finally {
       setIsLoading(false);
     }
