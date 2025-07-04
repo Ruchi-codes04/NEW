@@ -344,13 +344,13 @@ const SettingsAndPayment = () => {
                 >
                   {student.email}
                 </p>
-                <p
+                {/* <p
                   className={`text-xs ${
                     theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
                   }`}
                 >
                   1 month ago
-                </p>
+                </p> */}
               </div>
             </div>
             <div className="grid grid-cols-1 gap-3 sm:gap-4">
